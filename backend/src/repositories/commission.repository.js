@@ -1,0 +1,455 @@
+/**
+ * Commission Repository
+ * Data access layer for commission operations
+ * @module repositories/commission
+ */
+
+const { prisma } = require('../config/database');
+const logger = require('../utils/logger');
+
+/**
+ * Create a new commission record
+ * @param {Object} commissionData - Commission data
+ * @returns {Promise<Object>} Created commission
+ */
+const createCommission = async (commissionData) => {
+  try {
+    const commission = await prisma.commission.create({
+      data: commissionData,
+      include: {
+        order: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+        producer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+    logger.info('Commission created', { commissionId: commission.id });
+    return commission;
+  } catch (error) {
+    logger.error('Error creating commission:', error);
+    throw error;
+  }
+};
+
+/**
+ * Find commission by ID
+ * @param {string} commissionId - Commission ID
+ * @returns {Promise<Object|null>} Commission or null
+ */
+const findCommissionById = async (commissionId) => {
+  try {
+    return await prisma.commission.findUnique({
+      where: { id: commissionId },
+      include: {
+        order: {
+          include: {
+            product: true,
+          },
+        },
+        producer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            pixKey: true,
+          },
+        },
+      },
+    });
+  } catch (error) {
+    logger.error('Error finding commission by ID:', error);
+    throw error;
+  }
+};
+
+/**
+ * Find commission by order ID
+ * @param {string} orderId - Order ID
+ * @returns {Promise<Object|null>} Commission or null
+ */
+const findCommissionByOrderId = async (orderId) => {
+  try {
+    return await prisma.commission.findUnique({
+      where: { orderId },
+      include: {
+        producer: {
+          select: {
+            id: true,
+            name: true,
+            pixKey: true,
+          },
+        },
+      },
+    });
+  } catch (error) {
+    logger.error('Error finding commission by order ID:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update commission by ID
+ * @param {string} commissionId - Commission ID
+ * @param {Object} updateData - Data to update
+ * @returns {Promise<Object>} Updated commission
+ */
+const updateCommission = async (commissionId, updateData) => {
+  try {
+    const commission = await prisma.commission.update({
+      where: { id: commissionId },
+      data: updateData,
+      include: {
+        producer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+    logger.info('Commission updated', { commissionId: commission.id });
+    return commission;
+  } catch (error) {
+    logger.error('Error updating commission:', error);
+    throw error;
+  }
+};
+
+/**
+ * List commissions with pagination and filters
+ * @param {Object} filters - Filter options
+ * @param {Object} pagination - Pagination options (page, limit)
+ * @param {Object} sorting - Sorting options (sortBy, order)
+ * @returns {Promise<Object>} Commissions list with pagination metadata
+ */
+const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
+  try {
+    const { page = 1, limit = 10 } = pagination;
+    const { sortBy = 'createdAt', order = 'desc' } = sorting;
+    const skip = (page - 1) * limit;
+
+    const where = {};
+
+    // Apply filters
+    if (filters.producerId) {
+      where.producerId = filters.producerId;
+    }
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    if (filters.startDate || filters.endDate) {
+      where.createdAt = {};
+      if (filters.startDate) {
+        where.createdAt.gte = new Date(filters.startDate);
+      }
+      if (filters.endDate) {
+        where.createdAt.lte = new Date(filters.endDate);
+      }
+    }
+
+    // Execute query with pagination
+    const [commissions, total] = await Promise.all([
+      prisma.commission.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: order },
+        include: {
+          order: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  title: true,
+                },
+              },
+            },
+          },
+          producer: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      }),
+      prisma.commission.count({ where }),
+    ]);
+
+    return {
+      commissions,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  } catch (error) {
+    logger.error('Error listing commissions:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get producer's total commissions
+ * @param {string} producerId - Producer ID
+ * @param {Object} filters - Filter options (status, startDate, endDate)
+ * @returns {Promise<Object>} Commission totals
+ */
+const getProducerCommissions = async (producerId, filters = {}) => {
+  try {
+    const where = {
+      producerId,
+    };
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    if (filters.startDate || filters.endDate) {
+      where.createdAt = {};
+      if (filters.startDate) {
+        where.createdAt.gte = new Date(filters.startDate);
+      }
+      if (filters.endDate) {
+        where.createdAt.lte = new Date(filters.endDate);
+      }
+    }
+
+    const [totalCommissions, totalAmount, pendingAmount, paidAmount] = await Promise.all([
+      prisma.commission.count({ where }),
+      prisma.commission.aggregate({
+        where,
+        _sum: {
+          amount: true,
+        },
+      }),
+      prisma.commission.aggregate({
+        where: { ...where, status: 'PENDING' },
+        _sum: {
+          amount: true,
+        },
+      }),
+      prisma.commission.aggregate({
+        where: { ...where, status: 'PAID' },
+        _sum: {
+          amount: true,
+        },
+      }),
+    ]);
+
+    return {
+      totalCommissions,
+      totalAmount: totalAmount._sum.amount || 0,
+      pendingAmount: pendingAmount._sum.amount || 0,
+      paidAmount: paidAmount._sum.amount || 0,
+    };
+  } catch (error) {
+    logger.error('Error getting producer commissions:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get pending commissions for producer
+ * @param {string} producerId - Producer ID
+ * @returns {Promise<Array>} Pending commissions
+ */
+const getPendingCommissions = async (producerId) => {
+  try {
+    return await prisma.commission.findMany({
+      where: {
+        producerId,
+        status: 'PENDING',
+      },
+      include: {
+        order: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  } catch (error) {
+    logger.error('Error getting pending commissions:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mark commission as paid
+ * @param {string} commissionId - Commission ID
+ * @param {Object} paymentDetails - Payment details (transferId, paidAt)
+ * @returns {Promise<Object>} Updated commission
+ */
+const markCommissionAsPaid = async (commissionId, paymentDetails = {}) => {
+  try {
+    return await updateCommission(commissionId, {
+      status: 'PAID',
+      paidAt: paymentDetails.paidAt || new Date(),
+      transferId: paymentDetails.transferId || null,
+    });
+  } catch (error) {
+    logger.error('Error marking commission as paid:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mark commission as processing
+ * @param {string} commissionId - Commission ID
+ * @returns {Promise<Object>} Updated commission
+ */
+const markCommissionAsProcessing = async (commissionId) => {
+  try {
+    return await updateCommission(commissionId, {
+      status: 'PROCESSING',
+      processingAt: new Date(),
+    });
+  } catch (error) {
+    logger.error('Error marking commission as processing:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mark commission as failed
+ * @param {string} commissionId - Commission ID
+ * @param {string} reason - Failure reason
+ * @returns {Promise<Object>} Updated commission
+ */
+const markCommissionAsFailed = async (commissionId, reason) => {
+  try {
+    return await updateCommission(commissionId, {
+      status: 'FAILED',
+      failureReason: reason,
+      failedAt: new Date(),
+    });
+  } catch (error) {
+    logger.error('Error marking commission as failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get commission statistics
+ * @param {Object} filters - Filter options (startDate, endDate)
+ * @returns {Promise<Object>} Commission statistics
+ */
+const getCommissionStats = async (filters = {}) => {
+  try {
+    const where = {};
+
+    if (filters.startDate || filters.endDate) {
+      where.createdAt = {};
+      if (filters.startDate) {
+        where.createdAt.gte = new Date(filters.startDate);
+      }
+      if (filters.endDate) {
+        where.createdAt.lte = new Date(filters.endDate);
+      }
+    }
+
+    const [statusCounts, totalAmount] = await Promise.all([
+      prisma.commission.groupBy({
+        by: ['status'],
+        where,
+        _count: {
+          status: true,
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+      prisma.commission.aggregate({
+        where,
+        _sum: {
+          amount: true,
+        },
+      }),
+    ]);
+
+    const stats = statusCounts.reduce(
+      (acc, item) => {
+        acc.byStatus[item.status] = {
+          count: item._count.status,
+          amount: item._sum.amount || 0,
+        };
+        return acc;
+      },
+      { byStatus: {}, totalAmount: totalAmount._sum.amount || 0 }
+    );
+
+    return stats;
+  } catch (error) {
+    logger.error('Error getting commission stats:', error);
+    throw error;
+  }
+};
+
+/**
+ * Batch update commissions status
+ * @param {Array<string>} commissionIds - Array of commission IDs
+ * @param {string} status - New status
+ * @returns {Promise<Object>} Update result
+ */
+const batchUpdateStatus = async (commissionIds, status) => {
+  try {
+    const result = await prisma.commission.updateMany({
+      where: {
+        id: {
+          in: commissionIds,
+        },
+      },
+      data: {
+        status,
+      },
+    });
+    logger.info('Batch commission status updated', { count: result.count, status });
+    return result;
+  } catch (error) {
+    logger.error('Error batch updating commission status:', error);
+    throw error;
+  }
+};
+
+module.exports = {
+  createCommission,
+  findCommissionById,
+  findCommissionByOrderId,
+  updateCommission,
+  listCommissions,
+  getProducerCommissions,
+  getPendingCommissions,
+  markCommissionAsPaid,
+  markCommissionAsProcessing,
+  markCommissionAsFailed,
+  getCommissionStats,
+  batchUpdateStatus,
+};

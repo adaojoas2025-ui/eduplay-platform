@@ -1,0 +1,139 @@
+/**
+ * Application constants
+ * Centralized configuration values and enums
+ * @module utils/constants
+ */
+
+/**
+ * User roles
+ */
+const USER_ROLES = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  ADMIN: 'ADMIN',
+  PRODUCER: 'PRODUCER',
+  BUYER: 'BUYER',
+  AFFILIATE: 'AFFILIATE',
+};
+
+/**
+ * User status
+ */
+const USER_STATUS = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  BANNED: 'BANNED',
+};
+
+/**
+ * Product status
+ */
+const PRODUCT_STATUS = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  ARCHIVED: 'ARCHIVED',
+};
+
+/**
+ * Approval status
+ */
+const APPROVAL_STATUS = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+};
+
+/**
+ * Payment status
+ */
+const PAYMENT_STATUS = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  CANCELLED: 'CANCELLED',
+  REFUNDED: 'REFUNDED',
+  CHARGED_BACK: 'CHARGED_BACK',
+};
+
+/**
+ * Order status
+ */
+const ORDER_STATUS = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  REFUNDED: 'REFUNDED',
+};
+
+/**
+ * Commission status
+ */
+const COMMISSION_STATUS = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  PAID: 'PAID',
+  CANCELLED: 'CANCELLED',
+};
+
+/**
+ * File types
+ */
+const FILE_TYPES = {
+  PDF: 'PDF',
+  VIDEO: 'VIDEO',
+  IMAGE: 'IMAGE',
+  AUDIO: 'AUDIO',
+  DOCUMENT: 'DOCUMENT',
+  OTHER: 'OTHER',
+};
+
+/**
+ * HTTP Status Codes
+ */
+const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  NO_CONTENT: 204,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  UNPROCESSABLE_ENTITY: 422,
+  INTERNAL_SERVER_ERROR: 500,
+};
+
+/**
+ * Pagination defaults
+ */
+const PAGINATION = {
+  DEFAULT_PAGE: 1,
+  DEFAULT_LIMIT: 12,
+  MAX_LIMIT: 100,
+};
+
+/**
+ * Token types
+ */
+const TOKEN_TYPES = {
+  ACCESS: 'ACCESS',
+  REFRESH: 'REFRESH',
+  RESET_PASSWORD: 'RESET_PASSWORD',
+  VERIFY_EMAIL: 'VERIFY_EMAIL',
+};
+
+module.exports = {
+  USER_ROLES,
+  USER_STATUS,
+  PRODUCT_STATUS,
+  APPROVAL_STATUS,
+  PAYMENT_STATUS,
+  ORDER_STATUS,
+  COMMISSION_STATUS,
+  FILE_TYPES,
+  HTTP_STATUS,
+  PAGINATION,
+  TOKEN_TYPES,
+};

@@ -1,0 +1,308 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+
+export default function SellerDashboard() {
+  const [stats, setStats] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [recentSales, setRecentSales] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+
+      // Buscar estatísticas do vendedor
+      const statsResponse = await axios.get(
+        'http://localhost:3000/api/v1/seller/stats',
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      // Buscar produtos do vendedor
+      const productsResponse = await axios.get(
+        'http://localhost:3000/api/v1/seller/products',
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      // Buscar vendas recentes
+      const salesResponse = await axios.get(
+        'http://localhost:3000/api/v1/seller/sales?limit=5',
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      setStats(statsResponse.data.data);
+      setProducts(productsResponse.data.data.items || []);
+      setRecentSales(salesResponse.data.data.items || []);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(err.response?.data?.message || 'Erro ao carregar dados do dashboard');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-lg">
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard do Vendedor</h1>
+          <p className="text-gray-600">Gerencie seus produtos e acompanhe suas vendas</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-gray-600">Receita Total</h3>
+              <span className="text-2xl">💰</span>
+            </div>
+            <p className="text-3xl font-bold text-gray-800">
+              R$ {stats?.totalRevenue?.toFixed(2) || '0.00'}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              {stats?.totalSales || 0} vendas realizadas
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-gray-600">Produtos Ativos</h3>
+              <span className="text-2xl">📦</span>
+            </div>
+            <p className="text-3xl font-bold text-gray-800">
+              {stats?.totalProducts || 0}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              {stats?.publishedProducts || 0} publicados
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-gray-600">Vendas este Mês</h3>
+              <span className="text-2xl">📈</span>
+            </div>
+            <p className="text-3xl font-bold text-gray-800">
+              {stats?.salesThisMonth || 0}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              R$ {stats?.revenueThisMonth?.toFixed(2) || '0.00'}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-gray-600">Ticket Médio</h3>
+              <span className="text-2xl">💳</span>
+            </div>
+            <p className="text-3xl font-bold text-gray-800">
+              R$ {stats?.averageTicket?.toFixed(2) || '0.00'}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Por venda
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Produtos */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-800">Meus Produtos</h2>
+              <Link
+                to="/seller/products/new"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold"
+              >
+                + Novo Produto
+              </Link>
+            </div>
+
+            {products.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-3">📦</div>
+                <p className="text-gray-600 mb-4">Você ainda não tem produtos cadastrados</p>
+                <Link
+                  to="/seller/products/new"
+                  className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+                >
+                  Criar Primeiro Produto
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {products.slice(0, 5).map((product) => (
+                  <div
+                    key={product.id}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                  >
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-800">{product.title}</h3>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-sm text-gray-600">
+                          R$ {product.price?.toFixed(2)}
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          product.status === 'PUBLISHED'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {product.status === 'PUBLISHED' ? 'Publicado' : 'Rascunho'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600">{product.sales || 0} vendas</p>
+                      <p className="text-sm text-gray-600">{product.views || 0} visualizações</p>
+                    </div>
+                  </div>
+                ))}
+
+                {products.length > 5 && (
+                  <Link
+                    to="/seller/products"
+                    className="block text-center text-blue-600 hover:underline mt-4"
+                  >
+                    Ver todos os produtos ({products.length})
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Vendas Recentes */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-800">Vendas Recentes</h2>
+              <Link
+                to="/seller/sales"
+                className="text-blue-600 hover:underline text-sm font-semibold"
+              >
+                Ver todas
+              </Link>
+            </div>
+
+            {recentSales.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-3">💳</div>
+                <p className="text-gray-600">Nenhuma venda ainda</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentSales.map((sale) => (
+                  <div
+                    key={sale.id}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                  >
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-800">
+                        {sale.product?.title || 'Produto'}
+                      </h3>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-sm text-gray-600">
+                          {sale.buyer?.name || 'Cliente'}
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          sale.status === 'APPROVED'
+                            ? 'bg-green-100 text-green-800'
+                            : sale.status === 'PENDING'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {sale.status === 'APPROVED' ? 'Aprovado' :
+                           sale.status === 'PENDING' ? 'Pendente' : 'Falhou'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(sale.createdAt).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-gray-800">
+                        R$ {sale.amount?.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Ações Rápidas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link
+              to="/seller/products/new"
+              className="flex items-center gap-3 p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition"
+            >
+              <span className="text-3xl">➕</span>
+              <div>
+                <h3 className="font-semibold text-gray-800">Adicionar Produto</h3>
+                <p className="text-sm text-gray-600">Criar novo curso ou infoproduto</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/seller/sales"
+              className="flex items-center gap-3 p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition"
+            >
+              <span className="text-3xl">📊</span>
+              <div>
+                <h3 className="font-semibold text-gray-800">Ver Relatórios</h3>
+                <p className="text-sm text-gray-600">Análise detalhada de vendas</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/seller/settings"
+              className="flex items-center gap-3 p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition"
+            >
+              <span className="text-3xl">⚙️</span>
+              <div>
+                <h3 className="font-semibold text-gray-800">Configurações</h3>
+                <p className="text-sm text-gray-600">Dados de pagamento e perfil</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
