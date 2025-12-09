@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgrade para Produtor - EDUPLAY</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .features {
+            margin: 20px 0;
+        }
+
+        .features h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 14px;
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Upgrade para Produtor</h1>
+        <p class="subtitle">Transforme sua conta em uma conta de vendedor</p>
+
+        <div class="info-box">
+            <p><strong>IMPORTANTE:</strong> Esta ferramenta vai atualizar seu usuário atual para a role de PRODUCER, permitindo que você crie e venda produtos digitais na plataforma EDUPLAY.</p>
+        </div>
+
+        <div class="features">
+            <h3>O que você ganha ao se tornar um Produtor:</h3>
+            <ul>
+                <li>Criar e vender produtos digitais</li>
+                <li>Gerenciar seus cursos e infoprodutos</li>
+                <li>Acompanhar estatísticas de vendas</li>
+                <li>Receber comissões pelos seus produtos</li>
+                <li>Acesso ao dashboard de produtor</li>
+            </ul>
+        </div>
+
+        <button onclick="upgradeToProducer()" id="upgradeBtn">
+            Fazer Upgrade Agora
+        </button>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://eduplay-backend-yvk3.onrender.com/api/v1';
+
+        async function upgradeToProducer() {
+            const btn = document.getElementById('upgradeBtn');
+            const result = document.getElementById('result');
+
+            // Get token from localStorage
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                result.className = 'result error';
+                result.textContent = '❌ Você precisa estar logado! Faça login em https://eduplay-frontend.onrender.com/login e tente novamente.';
+                return;
+            }
+
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Processando...';
+            result.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_URL}/auth/upgrade-to-producer`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <strong>✅ Sucesso!</strong><br>
+                        Sua conta foi atualizada para PRODUCER!<br><br>
+                        <strong>Próximos passos:</strong><br>
+                        1. Recarregue a página do site (F5)<br>
+                        2. Acesse o menu "Meus Produtos"<br>
+                        3. Comece a criar seus produtos digitais!<br><br>
+                        <em>Você pode fechar esta página agora.</em>
+                    `;
+
+                    // Update user in localStorage
+                    if (data.data) {
+                        localStorage.setItem('user', JSON.stringify(data.data));
+                    }
+                } else {
+                    throw new Error(data.message || 'Erro ao fazer upgrade');
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <strong>❌ Erro:</strong><br>
+                    ${error.message}<br><br>
+                    <em>Tente novamente ou entre em contato com o suporte.</em>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Fazer Upgrade Agora';
+            }
+        }
+
+        // Check if user is already logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+            if (!token) {
+                const result = document.getElementById('result');
+                result.className = 'result error';
+                result.innerHTML = `
+                    <strong>⚠️ Aviso:</strong><br>
+                    Você não está logado. Por favor:<br>
+                    1. Acesse <a href="https://eduplay-frontend.onrender.com/login" target="_blank">https://eduplay-frontend.onrender.com/login</a><br>
+                    2. Faça login<br>
+                    3. Volte para esta página<br>
+                `;
+            } else if (user.role === 'PRODUCER') {
+                const result = document.getElementById('result');
+                result.className = 'result success';
+                result.innerHTML = `
+                    <strong>✅ Você já é um Produtor!</strong><br>
+                    Sua conta já tem permissões de produtor.<br>
+                    Você pode fechar esta página e começar a criar produtos!
+                `;
+                document.getElementById('upgradeBtn').disabled = true;
+                document.getElementById('upgradeBtn').textContent = 'Você já é Produtor';
+            }
+        });
+    </script>
+</body>
+</html>

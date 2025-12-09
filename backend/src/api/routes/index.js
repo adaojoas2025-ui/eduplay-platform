@@ -17,6 +17,7 @@ const paymentRoutes = require('./payment.routes');
 const adminRoutes = require('./admin.routes');
 const sellerRoutes = require('./seller.routes');
 const gamificationRoutes = require('./gamification.routes');
+const tempUpgradeRoutes = require('./temp-upgrade.routes'); // TEMPORARY - Remove after use
 
 /**
  * Health check route
@@ -43,6 +44,7 @@ router.use('/payments', paymentRoutes);
 router.use('/admin', adminRoutes);
 router.use('/seller', sellerRoutes);
 router.use('/gamification', gamificationRoutes);
+router.use('/temp-upgrade', tempUpgradeRoutes); // TEMPORARY - Remove after use
 
 /**
  * 404 handler for API routes
