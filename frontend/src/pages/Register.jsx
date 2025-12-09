@@ -11,6 +11,7 @@ export default function Register() {
     password: '',
     cpf: '',
     phone: '',
+    role: 'BUYER', // Default role
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -92,6 +93,25 @@ export default function Register() {
             />
             <p className="text-xs text-gray-500 mt-1">
               Deve conter maiúscula, minúscula e número
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-2">Tipo de Conta</label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="input-field"
+              required
+            >
+              <option value="BUYER">Comprador</option>
+              <option value="PRODUCER">Vendedor</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              {formData.role === 'PRODUCER'
+                ? 'Como vendedor, você poderá criar e vender produtos digitais'
+                : 'Como comprador, você poderá adquirir produtos digitais'}
             </p>
           </div>
 
