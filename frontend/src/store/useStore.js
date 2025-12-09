@@ -4,15 +4,15 @@ import api from '../services/api';
 const useStore = create((set, get) => ({
   // User state
   user: JSON.parse(localStorage.getItem('user')) || null,
-  isAuthenticated: !!localStorage.getItem('accessToken'),
-  
+  isAuthenticated: !!localStorage.getItem('token'),
+
   setUser: (user) => {
     localStorage.setItem('user', JSON.stringify(user));
     set({ user, isAuthenticated: true });
   },
-  
+
   logout: () => {
-    localStorage.removeItem('accessToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     set({ user: null, isAuthenticated: false, cart: [] });

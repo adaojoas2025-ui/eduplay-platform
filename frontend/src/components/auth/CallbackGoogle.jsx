@@ -31,7 +31,7 @@ export default function CallbackGoogle() {
     if (token && refreshToken) {
       try {
         // Save tokens to localStorage with correct keys
-        localStorage.setItem('accessToken', token);
+        localStorage.setItem('token', token);
         localStorage.setItem('refreshToken', refreshToken);
 
         console.log('Tokens saved to localStorage');
