@@ -21,6 +21,11 @@ const passport = require('./config/passport');
 const app = express();
 
 /**
+ * Trust proxy - Required for Render and other reverse proxies
+ */
+app.set('trust proxy', 1);
+
+/**
  * Security middleware
  */
 app.use(helmet());
