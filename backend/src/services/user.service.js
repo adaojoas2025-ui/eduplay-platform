@@ -362,6 +362,41 @@ const getUserStats = async () => {
   }
 };
 
+/**
+ * Update user role (admin only)
+ * @param {string} userId - User ID
+ * @param {string} role - New role
+ * @returns {Promise<Object>} Updated user
+ */
+const updateUserRole = async (userId, role) => {
+  try {
+    const user = await userRepository.findUserById(userId);
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
+
+    // Validate role
+    if (!Object.values(USER_ROLES).includes(role)) {
+      throw ApiError.badRequest('Invalid role');
+    }
+
+    // Prevent changing admin role
+    if (user.role === USER_ROLES.ADMIN || role === USER_ROLES.ADMIN) {
+      throw ApiError.forbidden('Cannot change admin role');
+    }
+
+    const updatedUser = await userRepository.updateUser(userId, { role });
+    delete updatedUser.password;
+
+    logger.info('User role updated', { userId, oldRole: user.role, newRole: role });
+
+    return updatedUser;
+  } catch (error) {
+    logger.error('Error updating user role:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   getUserById,
   updateProfile,
@@ -375,4 +410,5 @@ module.exports = {
   unbanUser,
   getProducerStats,
   getUserStats,
+  updateUserRole,
 };

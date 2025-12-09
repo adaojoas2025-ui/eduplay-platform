@@ -374,6 +374,41 @@ const updateLastLogin = async (userId) => {
   }
 };
 
+/**
+ * Upgrade user to producer role
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Updated user
+ */
+const upgradeToProducer = async (userId) => {
+  try {
+    const user = await userRepository.findUserById(userId);
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
+
+    if (user.role === USER_ROLES.PRODUCER) {
+      throw ApiError.badRequest('User is already a producer');
+    }
+
+    if (user.role === USER_ROLES.ADMIN) {
+      throw ApiError.forbidden('Cannot change admin role');
+    }
+
+    const updatedUser = await userRepository.updateUser(userId, {
+      role: USER_ROLES.PRODUCER,
+    });
+
+    delete updatedUser.password;
+
+    logger.info('User upgraded to producer', { userId });
+
+    return updatedUser;
+  } catch (error) {
+    logger.error('Error upgrading user to producer:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -385,4 +420,5 @@ module.exports = {
   getProfile,
   generateTokens,
   updateLastLogin,
+  upgradeToProducer,
 };

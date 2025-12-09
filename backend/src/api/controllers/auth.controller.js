@@ -148,6 +148,21 @@ const logout = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Upgrade user to producer
+ * @route POST /api/v1/auth/upgrade-to-producer
+ * @access Private
+ */
+const upgradeToProducer = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+
+  const updatedUser = await authService.upgradeToProducer(userId);
+
+  logger.info('User upgraded to producer', { userId });
+
+  return ApiResponse.success(res, 200, updatedUser, 'Account upgraded to producer successfully');
+});
+
+/**
  * Google OAuth callback
  * @route GET /api/v1/auth/google/callback
  * @access Public
@@ -181,5 +196,6 @@ module.exports = {
   resetPassword,
   verifyEmail,
   logout,
+  upgradeToProducer,
   googleCallback,
 };

@@ -78,4 +78,11 @@ router.post('/commissions/batch-update', adminController.batchUpdateCommissionSt
  */
 router.patch('/orders/:id/status', adminController.updateOrderStatus);
 
+/**
+ * @route   PATCH /api/v1/admin/users/:id/role
+ * @desc    Update user role
+ * @access  Private (Admin)
+ */
+router.patch('/users/:id/role', adminController.updateUserRole);
+
 module.exports = router;

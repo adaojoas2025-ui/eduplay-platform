@@ -105,6 +105,13 @@ router.post(
 router.post('/logout', authenticate, authController.logout);
 
 /**
+ * @route   POST /api/v1/auth/upgrade-to-producer
+ * @desc    Upgrade user account to producer
+ * @access  Private
+ */
+router.post('/upgrade-to-producer', authenticate, authController.upgradeToProducer);
+
+/**
  * @route   GET /api/v1/auth/google
  * @desc    Redirect to Google OAuth consent screen
  * @access  Public

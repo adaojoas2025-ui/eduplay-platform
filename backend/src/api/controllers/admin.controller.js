@@ -176,6 +176,20 @@ const getPlatformStats = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 200, stats, 'Platform statistics retrieved successfully');
 });
 
+/**
+ * Update user role
+ * @route PATCH /api/v1/admin/users/:id/role
+ * @access Private (Admin)
+ */
+const updateUserRole = asyncHandler(async (req, res) => {
+  const { role } = req.body;
+  const userId = req.params.id;
+
+  const user = await userService.updateUserRole(userId, role);
+
+  return ApiResponse.success(res, 200, user, 'User role updated successfully');
+});
+
 module.exports = {
   getDashboardStats,
   getCommissionStats,
@@ -186,4 +200,5 @@ module.exports = {
   batchUpdateCommissionStatus,
   updateOrderStatus,
   getPlatformStats,
+  updateUserRole,
 };
