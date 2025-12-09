@@ -19,8 +19,8 @@ import AdminCommissions from './pages/AdminCommissions';
 import Gamification from './pages/Gamification';
 import GamificationAdmin from './pages/admin/GamificationAdmin';
 import { AchievementQueueManager } from './components/AchievementNotification';
+import { API_URL } from './config/api.config';
 
-const API_URL = 'http://localhost:3000/api/v1';
 
 // ============================================
 // COMPONENTES GLOBAIS
