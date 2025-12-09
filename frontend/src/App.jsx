@@ -534,7 +534,7 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:3000/api/v1/auth/google';
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   if (showForgotPassword) {
@@ -712,7 +712,7 @@ const Register = () => {
   };
 
   const handleGoogleSignup = () => {
-    window.location.href = 'http://localhost:3000/api/v1/auth/google';
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   return (
