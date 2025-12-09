@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config/api.config';
 
 export default function SellerProducts() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function SellerProducts() {
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        'http://localhost:3000/api/v1/seller/products',
+        `${API_URL}/seller/products`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params: filter !== 'all' ? { status: filter.toUpperCase() } : {}
@@ -41,7 +42,7 @@ export default function SellerProducts() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `http://localhost:3000/api/v1/products/${productId}`,
+        `${API_URL}/products/${productId}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -59,7 +60,7 @@ export default function SellerProducts() {
       const newStatus = currentStatus === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
 
       await axios.patch(
-        `http://localhost:3000/api/v1/products/${productId}`,
+        `${API_URL}/products/${productId}`,
         { status: newStatus },
         {
           headers: { Authorization: `Bearer ${token}` }

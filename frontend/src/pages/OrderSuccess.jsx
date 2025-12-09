@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config/api.config';
 
 function OrderSuccess() {
   const { id } = useParams();
@@ -13,7 +14,7 @@ function OrderSuccess() {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `http://localhost:3000/api/v1/orders/${id}`,
+          `${API_URL}/orders/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`

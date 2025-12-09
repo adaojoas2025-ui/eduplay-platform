@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config/api.config';
 
 export default function AdminCommissions() {
   const [commissions, setCommissions] = useState([]);
@@ -30,7 +31,7 @@ export default function AdminCommissions() {
       }
 
       const response = await axios.get(
-        'http://localhost:3000/api/v1/admin/commissions',
+        `${API_URL}/admin/commissions`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params
@@ -54,20 +55,20 @@ export default function AdminCommissions() {
 
       switch (newStatus) {
         case 'PROCESSING':
-          endpoint = `/api/v1/admin/commissions/${commissionId}/process`;
+          endpoint = `${API_URL}/admin/commissions/${commissionId}/process`;
           break;
         case 'PAID':
-          endpoint = `/api/v1/admin/commissions/${commissionId}/pay`;
+          endpoint = `${API_URL}/admin/commissions/${commissionId}/pay`;
           break;
         case 'FAILED':
-          endpoint = `/api/v1/admin/commissions/${commissionId}/fail`;
+          endpoint = `${API_URL}/admin/commissions/${commissionId}/fail`;
           break;
         default:
           return;
       }
 
       await axios.post(
-        `http://localhost:3000${endpoint}`,
+        endpoint,
         {},
         {
           headers: { Authorization: `Bearer ${token}` }

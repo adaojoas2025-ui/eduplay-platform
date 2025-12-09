@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config/api.config';
 
 export default function SellerDashboard() {
   const [stats, setStats] = useState(null);
@@ -20,7 +21,7 @@ export default function SellerDashboard() {
 
       // Buscar estatísticas do vendedor
       const statsResponse = await axios.get(
-        'http://localhost:3000/api/v1/seller/stats',
+        `${API_URL}/seller/stats`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -28,7 +29,7 @@ export default function SellerDashboard() {
 
       // Buscar produtos do vendedor
       const productsResponse = await axios.get(
-        'http://localhost:3000/api/v1/seller/products',
+        `${API_URL}/seller/products`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -36,7 +37,7 @@ export default function SellerDashboard() {
 
       // Buscar vendas recentes
       const salesResponse = await axios.get(
-        'http://localhost:3000/api/v1/seller/sales?limit=5',
+        `${API_URL}/seller/sales?limit=5`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

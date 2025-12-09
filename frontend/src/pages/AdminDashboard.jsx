@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config/api.config';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -40,7 +41,7 @@ export default function AdminDashboard() {
       }
 
       const response = await axios.get(
-        'http://localhost:3000/api/v1/admin/stats',
+        `${API_URL}/admin/stats`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params

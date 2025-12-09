@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config/api.config';
 
 const CartContext = createContext();
 
@@ -36,7 +37,7 @@ export const CartProvider = ({ children }) => {
   const fetchCart = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:3000/api/v1/cart', {
+      const response = await axios.get(`${API_URL}/cart`, {
         headers: getAuthHeaders(),
       });
       setCart(response.data.data);
@@ -62,7 +63,7 @@ export const CartProvider = ({ children }) => {
 
       setLoading(true);
       await axios.post(
-        'http://localhost:3000/api/v1/cart',
+        `${API_URL}/cart`,
         { productId, quantity },
         { headers: getAuthHeaders() }
       );
@@ -84,7 +85,7 @@ export const CartProvider = ({ children }) => {
     try {
       setLoading(true);
       await axios.put(
-        `http://localhost:3000/api/v1/cart/${productId}`,
+        `${API_URL}/cart/${productId}`,
         { quantity },
         { headers: getAuthHeaders() }
       );
@@ -101,7 +102,7 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (productId) => {
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:3000/api/v1/cart/${productId}`, {
+      await axios.delete(`${API_URL}/cart/${productId}`, {
         headers: getAuthHeaders(),
       });
       await fetchCart();
@@ -117,7 +118,7 @@ export const CartProvider = ({ children }) => {
   const clearCart = async () => {
     try {
       setLoading(true);
-      await axios.delete('http://localhost:3000/api/v1/cart', {
+      await axios.delete(`${API_URL}/cart`, {
         headers: getAuthHeaders(),
       });
       setCart({ items: [], total: 0, count: 0 });

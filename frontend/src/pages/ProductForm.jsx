@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config/api.config';
 
 export default function ProductForm() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function ProductForm() {
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:3000/api/v1/products/${id}`,
+        `${API_URL}/products/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -125,7 +126,7 @@ export default function ProductForm() {
 
       if (isEdit) {
         await axios.put(
-          `http://localhost:3000/api/v1/products/${id}`,
+          `${API_URL}/products/${id}`,
           productData,
           {
             headers: { Authorization: `Bearer ${token}` }
@@ -133,7 +134,7 @@ export default function ProductForm() {
         );
       } else {
         await axios.post(
-          'http://localhost:3000/api/v1/products',
+          `${API_URL}/products`,
           productData,
           {
             headers: { Authorization: `Bearer ${token}` }
