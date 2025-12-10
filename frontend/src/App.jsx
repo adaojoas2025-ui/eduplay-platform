@@ -7,7 +7,7 @@ import axios from 'axios';
 import CallbackGoogle from './components/auth/CallbackGoogle';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useCart } from './contexts/CartContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 import OrderSuccess from './pages/OrderSuccess';
 import OrderFailure from './pages/OrderFailure';
 import OrderPending from './pages/OrderPending';
@@ -986,7 +986,7 @@ const Profile = () => <div className="p-8"><h1 className="text-3xl font-bold">Pe
 // APP PRINCIPAL
 // ============================================
 
-function AppContent() {
+function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <AchievementQueueManager />
@@ -1018,14 +1018,6 @@ function AppContent() {
       </Routes>
       <Footer />
     </div>
-  );
-}
-
-function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
   );
 }
 
