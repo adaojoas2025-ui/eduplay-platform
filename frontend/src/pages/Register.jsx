@@ -40,8 +40,8 @@ export default function Register() {
 
       toast.success('Conta criada com sucesso!');
 
-      // Force full page reload to ensure state is fresh
-      window.location.reload();
+      // Navigate to home (this automatically reloads the page)
+      window.location.href = '/';
     } catch (error) {
       console.error('Register error:', error);
     } finally {

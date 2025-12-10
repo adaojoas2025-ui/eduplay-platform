@@ -37,8 +37,8 @@ export default function Login() {
       console.log('Login successful - User role:', user.role);
       toast.success('Login realizado com sucesso!');
 
-      // Force full page reload to ensure state is fresh
-      window.location.reload();
+      // Navigate to home (this automatically reloads the page)
+      window.location.href = '/';
     } catch (error) {
       console.error('Login error:', error);
       toast.error(error.response?.data?.message || 'Erro ao fazer login');
