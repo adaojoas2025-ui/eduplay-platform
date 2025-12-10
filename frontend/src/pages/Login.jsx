@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import useStore from '../store/useStore';
@@ -10,7 +10,6 @@ export default function Login() {
     password: '',
   });
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { setUser } = useStore();
 
   const handleChange = (e) => {
@@ -38,8 +37,10 @@ export default function Login() {
       console.log('Login successful - User role:', user.role);
       toast.success('Login realizado com sucesso!');
 
-      // Navigate using React Router (no reload needed, persist handles it)
-      navigate('/');
+      // Small delay to ensure persist middleware has saved, then reload
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     } catch (error) {
       console.error('Login error:', error);
       toast.error(error.response?.data?.message || 'Erro ao fazer login');
