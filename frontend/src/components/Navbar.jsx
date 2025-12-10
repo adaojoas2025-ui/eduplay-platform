@@ -10,9 +10,10 @@ export default function Navbar() {
   const { cart } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [, forceUpdate] = useState({});
   const navigate = useNavigate();
 
-  console.log('🎯 Navbar renderizou - isAuthenticated:', isAuthenticated, 'user:', user);
+  console.log('🎯 Navbar RENDER - isAuth:', isAuthenticated, 'user:', user?.name || 'null');
 
   const handleLogout = () => {
     logout();
