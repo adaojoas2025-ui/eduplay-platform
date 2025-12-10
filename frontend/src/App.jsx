@@ -7,6 +7,7 @@ import axios from 'axios';
 import CallbackGoogle from './components/auth/CallbackGoogle';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useCart } from './contexts/CartContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import OrderSuccess from './pages/OrderSuccess';
 import OrderFailure from './pages/OrderFailure';
 import OrderPending from './pages/OrderPending';
@@ -21,7 +22,6 @@ import GamificationAdmin from './pages/admin/GamificationAdmin';
 import UpgradeToProducer from './pages/UpgradeToProducer';
 import { AchievementQueueManager } from './components/AchievementNotification';
 import { API_URL } from './config/api.config';
-import useStore from './store/useStore';
 
 
 // ============================================
@@ -34,10 +34,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { cart } = useCart();
 
-  // Use Zustand store for user state
-  const user = useStore((state) => state.user);
-  const isAuthenticated = useStore((state) => state.isAuthenticated);
-  const logout = useStore((state) => state.logout);
+  // Use AuthContext for user state
+  const { user, isAuthenticated, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -501,6 +499,7 @@ const Login = () => {
   const [resetEmail, setResetEmail] = useState('');
   const [resetMessage, setResetMessage] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -510,9 +509,11 @@ const Login = () => {
     try {
       const response = await axios.post(`${API_URL}/auth/login`, { email, password });
       if (response.data.success) {
-        const { user, accessToken } = response.data.data;
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('token', accessToken);
+        const { user, accessToken, refreshToken } = response.data.data;
+
+        // Use AuthContext login - atualiza estado imediatamente
+        login(user, accessToken, refreshToken);
+
         alert('Login realizado com sucesso!');
         navigate('/');
       }
@@ -699,6 +700,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -708,9 +710,11 @@ const Register = () => {
     try {
       const response = await axios.post(`${API_URL}/auth/register`, formData);
       if (response.data.success) {
-        const { user, accessToken } = response.data.data;
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('token', accessToken);
+        const { user, accessToken, refreshToken } = response.data.data;
+
+        // Use AuthContext login - atualiza estado imediatamente
+        login(user, accessToken, refreshToken);
+
         alert('Conta criada com sucesso!');
         navigate('/');
       }
@@ -982,35 +986,7 @@ const Profile = () => <div className="p-8"><h1 className="text-3xl font-bold">Pe
 // APP PRINCIPAL
 // ============================================
 
-function App() {
-  // Auto-refresh user data on app load to fix stale localStorage
-  useEffect(() => {
-    const refreshUserData = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const response = await axios.get(`${API_URL}/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-
-          if (response.data.success) {
-            const freshUser = response.data.data;
-            localStorage.setItem('user', JSON.stringify(freshUser));
-            console.log('✅ User data refreshed:', freshUser.role);
-          }
-        } catch (error) {
-          console.error('Failed to refresh user data:', error);
-          // If token is invalid, clear localStorage
-          if (error.response?.status === 401) {
-            localStorage.clear();
-          }
-        }
-      }
-    };
-
-    refreshUserData();
-  }, []);
-
+function AppContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <AchievementQueueManager />
@@ -1042,6 +1018,14 @@ function App() {
       </Routes>
       <Footer />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
