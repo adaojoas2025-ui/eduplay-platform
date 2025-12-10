@@ -31,15 +31,18 @@ import { API_URL } from './config/api.config';
 // Navbar Profissional
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const navigate = useNavigate();
   const { cart } = useCart();
 
-  // Use AuthContext for user state
-  const { user, isAuthenticated, logout } = useAuth();
+  // Lê do localStorage direto
+  const userData = localStorage.getItem('userData');
+  const user = userData ? JSON.parse(userData) : null;
+  const isAuthenticated = !!localStorage.getItem('token') && !!userData;
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userData');
+    window.location.href = '/';
   };
 
   return (
@@ -498,8 +501,6 @@ const Login = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetMessage, setResetMessage] = useState('');
-  const navigate = useNavigate();
-  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -511,11 +512,15 @@ const Login = () => {
       if (response.data.success) {
         const { user, accessToken, refreshToken } = response.data.data;
 
-        // Use AuthContext login - atualiza estado imediatamente
-        login(user, accessToken, refreshToken);
+        // Salva no localStorage
+        localStorage.setItem('token', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('userData', JSON.stringify(user));
 
         alert('Login realizado com sucesso!');
-        navigate('/');
+
+        // Reload completo da página
+        window.location.href = '/';
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao fazer login');
@@ -699,8 +704,6 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -712,11 +715,15 @@ const Register = () => {
       if (response.data.success) {
         const { user, accessToken, refreshToken } = response.data.data;
 
-        // Use AuthContext login - atualiza estado imediatamente
-        login(user, accessToken, refreshToken);
+        // Salva no localStorage
+        localStorage.setItem('token', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('userData', JSON.stringify(user));
 
         alert('Conta criada com sucesso!');
-        navigate('/');
+
+        // Reload completo da página
+        window.location.href = '/';
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao criar conta');
