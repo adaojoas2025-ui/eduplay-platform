@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import useStore from '../store/useStore';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -10,7 +10,8 @@ export default function Login() {
     password: '',
   });
   const [loading, setLoading] = useState(false);
-  const { setUser } = useStore();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -27,18 +28,14 @@ export default function Login() {
       const response = await api.post('/auth/login', formData);
       const { user, accessToken, refreshToken } = response.data.data;
 
-      // Set tokens in localStorage
-      localStorage.setItem('token', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-
-      // Update Zustand store (persist middleware will handle localStorage)
-      setUser(user);
+      // Use AuthContext login - atualiza estado imediatamente
+      login(user, accessToken, refreshToken);
 
       console.log('Login successful - User role:', user.role);
       toast.success('Login realizado com sucesso!');
 
-      // Navigate to home (this automatically reloads the page)
-      window.location.href = '/';
+      // Navigate to home - SEM window.location.href
+      navigate('/');
     } catch (error) {
       console.error('Login error:', error);
       toast.error(error.response?.data?.message || 'Erro ao fazer login');

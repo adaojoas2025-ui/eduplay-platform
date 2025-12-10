@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import useStore from '../store/useStore';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -14,7 +14,8 @@ export default function Register() {
     role: 'BUYER', // Default role
   });
   const [loading, setLoading] = useState(false);
-  const { setUser } = useStore();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -31,19 +32,16 @@ export default function Register() {
       const response = await api.post('/auth/register', formData);
       const { user, accessToken, refreshToken } = response.data.data;
 
-      // Set tokens in localStorage
-      localStorage.setItem('token', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-
-      // Update Zustand store (persist middleware will handle localStorage)
-      setUser(user);
+      // Use AuthContext login - atualiza estado imediatamente
+      login(user, accessToken, refreshToken);
 
       toast.success('Conta criada com sucesso!');
 
-      // Navigate to home (this automatically reloads the page)
-      window.location.href = '/';
+      // Navigate to home - SEM window.location.href
+      navigate('/');
     } catch (error) {
       console.error('Register error:', error);
+      toast.error(error.response?.data?.message || 'Erro ao criar conta');
     } finally {
       setLoading(false);
     }

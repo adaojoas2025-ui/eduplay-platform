@@ -1,23 +1,21 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import useStore from '../store/useStore';
 import { toast } from 'react-toastify';
 
 export default function Navbar() {
-  const { isAuthenticated, user, cart, logout } = useStore();
+  const { isAuthenticated, user, logout } = useAuth();
+  const { cart } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    // Clear tokens from localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
     toast.success('Logout realizado com sucesso!');
-    // Force reload to clear all state
-    window.location.href = '/';
+    navigate('/');
   };
 
   return (

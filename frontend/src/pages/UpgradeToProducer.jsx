@@ -2,27 +2,27 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import useStore from '../store/useStore';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function UpgradeToProducer() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, logout } = useStore();
+  const { user, logout, updateUser } = useAuth();
 
   const handleUpgrade = async () => {
     setLoading(true);
 
     try {
       const response = await api.post('/auth/upgrade-to-producer');
+      const updatedUser = response.data.data;
+
+      // Atualiza o usuário no contexto imediatamente
+      updateUser(updatedUser);
 
       toast.success('Conta atualizada para Vendedor com sucesso!');
-      toast.info('Fazendo logout para atualizar suas permissões...');
 
-      // Logout and redirect to login
-      setTimeout(() => {
-        logout();
-        navigate('/login');
-      }, 2000);
+      // Redireciona para o dashboard do vendedor
+      navigate('/seller/dashboard');
     } catch (error) {
       console.error('Upgrade error:', error);
       toast.error(error.response?.data?.message || 'Erro ao fazer upgrade');
