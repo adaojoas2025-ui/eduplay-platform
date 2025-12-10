@@ -12,8 +12,12 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout();
+    // Clear tokens from localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     toast.success('Logout realizado com sucesso!');
-    navigate('/');
+    // Force reload to clear all state
+    window.location.href = '/';
   };
 
   return (
