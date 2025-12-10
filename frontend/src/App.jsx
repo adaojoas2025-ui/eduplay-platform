@@ -21,6 +21,7 @@ import GamificationAdmin from './pages/admin/GamificationAdmin';
 import UpgradeToProducer from './pages/UpgradeToProducer';
 import { AchievementQueueManager } from './components/AchievementNotification';
 import { API_URL } from './config/api.config';
+import useStore from './store/useStore';
 
 
 // ============================================
@@ -29,35 +30,17 @@ import { API_URL } from './config/api.config';
 
 // Navbar Profissional
 const Navbar = () => {
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { cart } = useCart();
 
-  // Listen for localStorage changes to update user state
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const updatedUser = JSON.parse(localStorage.getItem('user'));
-      setUser(updatedUser);
-    };
-
-    // Listen for storage events (from other tabs)
-    window.addEventListener('storage', handleStorageChange);
-
-    // Check for user updates every second (for same-tab changes)
-    const interval = setInterval(handleStorageChange, 1000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, []);
+  // Use Zustand store for user state
+  const user = useStore((state) => state.user);
+  const isAuthenticated = useStore((state) => state.isAuthenticated);
+  const logout = useStore((state) => state.logout);
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    setUser(null);
+    logout();
     navigate('/');
   };
 
