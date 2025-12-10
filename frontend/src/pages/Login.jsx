@@ -27,23 +27,17 @@ export default function Login() {
       const response = await api.post('/auth/login', formData);
       const { user, accessToken, refreshToken } = response.data.data;
 
-      // Clear old data first
-      localStorage.clear();
-
-      // Set new tokens
+      // Set tokens in localStorage
       localStorage.setItem('token', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
 
-      // Store user data directly in localStorage to ensure consistency
-      localStorage.setItem('user', JSON.stringify(user));
-
-      // Update Zustand store
+      // Update Zustand store (persist middleware will handle localStorage)
       setUser(user);
 
       console.log('Login successful - User role:', user.role);
       toast.success('Login realizado com sucesso!');
 
-      // Force page reload to ensure Zustand store is properly initialized
+      // Force page reload to ensure clean state
       window.location.href = '/';
     } catch (error) {
       console.error('Login error:', error);

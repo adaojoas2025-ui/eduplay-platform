@@ -31,14 +31,16 @@ export default function Register() {
       const response = await api.post('/auth/register', formData);
       const { user, accessToken, refreshToken } = response.data.data;
 
+      // Set tokens in localStorage
       localStorage.setItem('token', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('user', JSON.stringify(user));
+
+      // Update Zustand store (persist middleware will handle localStorage)
       setUser(user);
 
       toast.success('Conta criada com sucesso!');
 
-      // Force page reload to ensure Zustand store is properly initialized
+      // Force page reload to ensure clean state
       window.location.href = '/';
     } catch (error) {
       console.error('Register error:', error);
