@@ -64,8 +64,15 @@ const useStore = create(
         isAuthenticated: state.isAuthenticated,
         cart: state.cart,
       }),
+      // Ensure store rehydrates synchronously on init
+      skipHydration: false,
     }
   )
 );
+
+// Force rehydration on page load
+if (typeof window !== 'undefined') {
+  useStore.persist.rehydrate();
+}
 
 export default useStore;
