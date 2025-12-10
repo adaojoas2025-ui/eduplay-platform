@@ -2,21 +2,11 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import { simpleAuth } from '../utils/simpleAuth';
+import { saveAuth } from '../lib/auth';
 
 export default function Login() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,17 +16,13 @@ export default function Login() {
       const response = await api.post('/auth/login', formData);
       const { user, accessToken, refreshToken } = response.data.data;
 
-      console.log('✅ Login API sucesso - User role:', user.role);
-
-      // Salva no localStorage e dispara evento
-      simpleAuth.login(user, accessToken, refreshToken);
-
+      saveAuth(user, accessToken, refreshToken);
       toast.success('Login realizado com sucesso!');
-      console.log('🎉 Login completo');
+
+      // Reload da página para carregar novo estado
+      window.location.href = '/';
     } catch (error) {
-      console.error('❌ Login error:', error);
       toast.error(error.response?.data?.message || 'Erro ao fazer login');
-    } finally {
       setLoading(false);
     }
   };
@@ -56,9 +42,8 @@ export default function Login() {
               type="email"
               name="email"
               value={formData.email}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="input-field"
-              placeholder="seu@email.com"
               required
             />
           </div>
@@ -69,18 +54,13 @@ export default function Login() {
               type="password"
               name="password"
               value={formData.password}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="input-field"
-              placeholder="********"
               required
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
 
@@ -91,17 +71,6 @@ export default function Login() {
             </Link>
           </p>
         </form>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm font-semibold text-yellow-800 mb-2">Credenciais de Teste:</p>
-          <p className="text-xs text-yellow-700">
-            <strong>Admin:</strong> admin@eduplay.com.br / admin123
-          </p>
-          <p className="text-xs text-yellow-700">
-            <strong>Usuário:</strong> teste@exemplo.com / Senha123
-          </p>
-        </div>
       </div>
     </div>
   );

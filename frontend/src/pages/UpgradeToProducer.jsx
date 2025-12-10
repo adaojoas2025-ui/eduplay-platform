@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import { simpleAuth } from '../utils/simpleAuth';
+import { getUser, saveAuth, getToken } from '../lib/auth';
 
 export default function UpgradeToProducer() {
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const user = simpleAuth.getUser();
+  const user = getUser();
 
   const handleUpgrade = async () => {
     setLoading(true);
@@ -16,17 +14,15 @@ export default function UpgradeToProducer() {
       const response = await api.post('/auth/upgrade-to-producer');
       const updatedUser = response.data.data;
 
-      console.log('✅ Upgrade API sucesso - Nova role:', updatedUser.role);
-
-      // Atualiza o usuário e dispara evento
-      simpleAuth.updateUser(updatedUser);
+      // Atualiza localStorage com novo user
+      const token = getToken();
+      const refreshToken = localStorage.getItem('refreshToken');
+      saveAuth(updatedUser, token, refreshToken);
 
       toast.success('Conta atualizada para Vendedor com sucesso!');
 
-      // Redireciona para o dashboard do vendedor
-      setTimeout(() => {
-        navigate('/seller/dashboard');
-      }, 100);
+      // Reload para carregar novo estado
+      window.location.href = '/seller/dashboard';
     } catch (error) {
       console.error('Upgrade error:', error);
       toast.error(error.response?.data?.message || 'Erro ao fazer upgrade');

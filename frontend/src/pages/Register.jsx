@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import { simpleAuth } from '../utils/simpleAuth';
+import { saveAuth } from '../lib/auth';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -15,13 +15,6 @@ export default function Register() {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -30,17 +23,12 @@ export default function Register() {
       const response = await api.post('/auth/register', formData);
       const { user, accessToken, refreshToken } = response.data.data;
 
-      console.log('✅ Register API sucesso - User:', user.name);
-
-      // Salva no localStorage e dispara evento
-      simpleAuth.login(user, accessToken, refreshToken);
-
+      saveAuth(user, accessToken, refreshToken);
       toast.success('Conta criada com sucesso!');
-      console.log('🎉 Registro completo');
+
+      window.location.href = '/';
     } catch (error) {
-      console.error('❌ Register error:', error);
       toast.error(error.response?.data?.message || 'Erro ao criar conta');
-    } finally {
       setLoading(false);
     }
   };
@@ -48,21 +36,16 @@ export default function Register() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">Criar Conta</h1>
-          <p className="text-gray-600">Comece sua jornada na EDUPLAY</p>
-        </div>
+        <h1 className="text-4xl font-bold text-center mb-8">Criar Conta</h1>
 
         <form onSubmit={handleSubmit} className="card space-y-6">
           <div>
-            <label className="block text-sm font-semibold mb-2">Nome Completo</label>
+            <label className="block text-sm font-semibold mb-2">Nome</label>
             <input
               type="text"
-              name="name"
               value={formData.name}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="input-field"
-              placeholder="Seu nome"
               required
             />
           </div>
@@ -71,11 +54,9 @@ export default function Register() {
             <label className="block text-sm font-semibold mb-2">Email</label>
             <input
               type="email"
-              name="email"
               value={formData.email}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="input-field"
-              placeholder="seu@email.com"
               required
             />
           </div>
@@ -84,75 +65,43 @@ export default function Register() {
             <label className="block text-sm font-semibold mb-2">Senha</label>
             <input
               type="password"
-              name="password"
               value={formData.password}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="input-field"
-              placeholder="Mínimo 8 caracteres"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Deve conter maiúscula, minúscula e número
-            </p>
           </div>
 
           <div>
             <label className="block text-sm font-semibold mb-2">Tipo de Conta</label>
             <select
-              name="role"
               value={formData.role}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               className="input-field"
-              required
             >
               <option value="BUYER">Comprador</option>
               <option value="PRODUCER">Vendedor</option>
             </select>
-            <p className="text-xs text-gray-500 mt-1">
-              {formData.role === 'PRODUCER'
-                ? 'Como vendedor, você poderá criar e vender produtos digitais'
-                : 'Como comprador, você poderá adquirir produtos digitais'}
-            </p>
           </div>
 
           <div>
             <label className="block text-sm font-semibold mb-2">CPF</label>
             <input
               type="text"
-              name="cpf"
               value={formData.cpf}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
               className="input-field"
-              placeholder="000.000.000-00"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold mb-2">Telefone (opcional)</label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="(00) 00000-0000"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Criando conta...' : 'Criar Conta'}
+          <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
+            {loading ? 'Criando...' : 'Criar Conta'}
           </button>
 
-          <p className="text-center text-gray-600">
+          <p className="text-center">
             Já tem uma conta?{' '}
-            <Link to="/login" className="text-primary-500 font-semibold hover:underline">
-              Fazer login
-            </Link>
+            <Link to="/login" className="text-primary-500 font-semibold">Fazer login</Link>
           </p>
         </form>
       </div>
