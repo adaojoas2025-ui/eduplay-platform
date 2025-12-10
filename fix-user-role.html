@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atualizar Permissões - EDUPLAY</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .info-box strong {
+            color: #333;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 10px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .result.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            display: block;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .user-info {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .user-info.show {
+            display: block;
+        }
+
+        .user-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .steps {
+            background: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .steps ol {
+            margin-left: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .steps li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Corrigir Permissões</h1>
+        <p class="subtitle">Atualize os dados do seu usuário no navegador</p>
+
+        <div class="info-box">
+            <p><strong>PROBLEMA DETECTADO:</strong></p>
+            <p>Seu usuário JÁ É PRODUTOR no banco de dados, mas o navegador está usando dados antigos em cache.</p>
+            <p><strong>SOLUÇÃO:</strong> Esta ferramenta vai buscar seus dados atualizados do servidor e corrigir as permissões.</p>
+        </div>
+
+        <div class="user-info" id="currentUserInfo">
+            <p><strong>Dados atuais no navegador:</strong></p>
+            <p id="currentData"></p>
+        </div>
+
+        <button onclick="fixUserPermissions()" id="fixBtn">
+            🔄 Atualizar Permissões Agora
+        </button>
+
+        <button onclick="clearAndReload()" id="clearBtn" style="background: #dc3545;">
+            🗑️ Limpar Cache e Fazer Logout
+        </button>
+
+        <div class="steps">
+            <strong>Como funciona:</strong>
+            <ol>
+                <li>Clique em "Atualizar Permissões Agora"</li>
+                <li>O sistema vai buscar seus dados atualizados do servidor</li>
+                <li>Seus dados serão atualizados no navegador</li>
+                <li>Volte para a página de criar produto e recarregue (F5)</li>
+            </ol>
+        </div>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://eduplay-backend-yvk3.onrender.com/api/v1';
+
+        // Show current user data
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+            if (user && user.email) {
+                const userInfo = document.getElementById('currentUserInfo');
+                const currentData = document.getElementById('currentData');
+
+                userInfo.classList.add('show');
+                currentData.innerHTML = `
+                    Email: <strong>${user.email}</strong><br>
+                    Nome: <strong>${user.name || 'N/A'}</strong><br>
+                    Role: <strong style="color: ${user.role === 'PRODUCER' ? 'green' : 'red'}">${user.role || 'N/A'}</strong>
+                `;
+            }
+        });
+
+        async function fixUserPermissions() {
+            const btn = document.getElementById('fixBtn');
+            const result = document.getElementById('result');
+
+            // Get token from localStorage
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <strong>❌ Erro:</strong><br>
+                    Você não está logado. Faça login primeiro em:<br>
+                    <a href="https://eduplay-frontend.onrender.com/login" target="_blank">https://eduplay-frontend.onrender.com/login</a>
+                `;
+                return;
+            }
+
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Buscando dados atualizados...';
+            result.style.display = 'none';
+
+            try {
+                // Fetch updated user data from server
+                const response = await fetch(`${API_URL}/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    const updatedUser = data.data;
+
+                    // Update localStorage with fresh data
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <strong>✅ SUCESSO!</strong><br><br>
+                        <strong>Dados atualizados:</strong><br>
+                        Email: ${updatedUser.email}<br>
+                        Nome: ${updatedUser.name}<br>
+                        Role: <strong style="color: green">${updatedUser.role}</strong><br><br>
+
+                        <strong>Próximos passos:</strong><br>
+                        1. Volte para a aba de criar produto<br>
+                        2. Pressione F5 para recarregar a página<br>
+                        3. Tente criar o produto novamente!<br><br>
+
+                        <em>O erro de permissões deve estar RESOLVIDO!</em>
+                    `;
+
+                    // Update current user info
+                    const userInfo = document.getElementById('currentUserInfo');
+                    const currentData = document.getElementById('currentData');
+                    userInfo.classList.add('show');
+                    currentData.innerHTML = `
+                        Email: <strong>${updatedUser.email}</strong><br>
+                        Nome: <strong>${updatedUser.name}</strong><br>
+                        Role: <strong style="color: green">${updatedUser.role}</strong>
+                    `;
+
+                } else {
+                    throw new Error(data.message || 'Erro ao buscar dados do usuário');
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <strong>❌ Erro:</strong><br>
+                    ${error.message}<br><br>
+                    <strong>Possíveis causas:</strong><br>
+                    • Backend ainda em deploy no Render<br>
+                    • Token expirado<br>
+                    • Sem conexão com internet<br><br>
+                    <em>Tente usar o botão "Limpar Cache e Fazer Logout" abaixo</em>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🔄 Atualizar Permissões Agora';
+            }
+        }
+
+        function clearAndReload() {
+            if (confirm('Isso vai fazer logout e limpar todos os dados. Confirma?')) {
+                localStorage.clear();
+                sessionStorage.clear();
+
+                alert('✅ Cache limpo! Você será redirecionado para o login.');
+                window.location.href = 'https://eduplay-frontend.onrender.com/login';
+            }
+        }
+    </script>
+</body>
+</html>

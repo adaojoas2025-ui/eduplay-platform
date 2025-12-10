@@ -973,6 +973,34 @@ const Profile = () => <div className="p-8"><h1 className="text-3xl font-bold">Pe
 // ============================================
 
 function App() {
+  // Auto-refresh user data on app load to fix stale localStorage
+  useEffect(() => {
+    const refreshUserData = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response = await axios.get(`${API_URL}/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          if (response.data.success) {
+            const freshUser = response.data.data;
+            localStorage.setItem('user', JSON.stringify(freshUser));
+            console.log('✅ User data refreshed:', freshUser.role);
+          }
+        } catch (error) {
+          console.error('Failed to refresh user data:', error);
+          // If token is invalid, clear localStorage
+          if (error.response?.status === 401) {
+            localStorage.clear();
+          }
+        }
+      }
+    };
+
+    refreshUserData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AchievementQueueManager />

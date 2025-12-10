@@ -60,7 +60,9 @@
       "Bash(git push:*)",
       "Bash(git remote set-url:*)",
       "Bash(git fetch:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(cmd.exe /c \"start c:\\projetos\\fix-user-role.html\")",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
