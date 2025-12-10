@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import useStore from '../store/useStore';
@@ -14,7 +14,6 @@ export default function Register() {
     role: 'BUYER', // Default role
   });
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { setUser } = useStore();
 
   const handleChange = (e) => {
@@ -34,10 +33,13 @@ export default function Register() {
 
       localStorage.setItem('token', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
 
       toast.success('Conta criada com sucesso!');
-      navigate('/');
+
+      // Force page reload to ensure Zustand store is properly initialized
+      window.location.href = '/';
     } catch (error) {
       console.error('Register error:', error);
     } finally {

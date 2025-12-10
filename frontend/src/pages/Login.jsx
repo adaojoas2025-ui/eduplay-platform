@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import useStore from '../store/useStore';
@@ -10,7 +10,6 @@ export default function Login() {
     password: '',
   });
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { setUser } = useStore();
 
   const handleChange = (e) => {
@@ -43,7 +42,9 @@ export default function Login() {
 
       console.log('Login successful - User role:', user.role);
       toast.success('Login realizado com sucesso!');
-      navigate('/');
+
+      // Force page reload to ensure Zustand store is properly initialized
+      window.location.href = '/';
     } catch (error) {
       console.error('Login error:', error);
       toast.error(error.response?.data?.message || 'Erro ao fazer login');
