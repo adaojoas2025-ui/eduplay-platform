@@ -18,10 +18,34 @@ export default function Navbar() {
 
   console.log('🎯 Navbar RENDER - isAuth:', authState.isAuthenticated, 'user:', authState.user?.name || 'null');
 
-  // Subscribe to auth changes
+  // POLLING - verifica localStorage a cada 100ms
   useEffect(() => {
-    console.log('🔔 Navbar MOUNTING - subscribing to auth');
+    console.log('🔔 Navbar POLLING ATIVO - verificando auth a cada 100ms');
 
+    const interval = setInterval(() => {
+      const newIsAuth = auth.isAuthenticated();
+      const newUser = auth.getUser();
+
+      // Só atualiza se mudou
+      if (newIsAuth !== authState.isAuthenticated ||
+          JSON.stringify(newUser) !== JSON.stringify(authState.user)) {
+        console.log('🔥 MUDANÇA DETECTADA - atualizando Navbar');
+        setAuthState({
+          isAuthenticated: newIsAuth,
+          user: newUser,
+        });
+      }
+    }, 100);
+
+    return () => {
+      console.log('🔔 Navbar POLLING DESATIVADO');
+      clearInterval(interval);
+    };
+  }, [authState]);
+
+  // Subscribe to auth changes (fallback)
+  useEffect(() => {
+    console.log('🔔 Navbar SUBSCRIBED to auth events');
     const unsubscribe = auth.subscribe(() => {
       console.log('🔔 Navbar RECEBEU notificação de mudança de auth');
       setAuthState({
@@ -31,7 +55,7 @@ export default function Navbar() {
     });
 
     return () => {
-      console.log('🔔 Navbar UNMOUNTING - unsubscribing from auth');
+      console.log('🔔 Navbar UNSUBSCRIBED from auth events');
       unsubscribe();
     };
   }, []);
@@ -40,10 +64,11 @@ export default function Navbar() {
     auth.logout();
     toast.success('Logout realizado com sucesso!');
     setUserMenuOpen(false);
-    // Redirect after logout
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 100);
+    // Atualiza imediatamente
+    setAuthState({
+      isAuthenticated: false,
+      user: null,
+    });
   };
 
   const { isAuthenticated, user } = authState;

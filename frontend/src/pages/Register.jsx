@@ -35,10 +35,8 @@ export default function Register() {
 
       toast.success('Conta criada com sucesso!');
 
-      // Pequeno delay para garantir que o evento foi processado
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      // Navbar vai detectar via polling - sem reload necessário
+      console.log('✅ Registro completo - Navbar atualizará automaticamente');
     } catch (error) {
       console.error('Register error:', error);
       toast.error(error.response?.data?.message || 'Erro ao criar conta');
