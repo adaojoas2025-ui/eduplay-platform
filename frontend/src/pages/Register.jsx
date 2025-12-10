@@ -40,10 +40,8 @@ export default function Register() {
 
       toast.success('Conta criada com sucesso!');
 
-      // Small delay to ensure persist middleware has saved, then reload
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      // Force full page reload to ensure state is fresh
+      window.location.reload();
     } catch (error) {
       console.error('Register error:', error);
     } finally {

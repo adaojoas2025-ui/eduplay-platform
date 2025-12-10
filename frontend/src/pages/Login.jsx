@@ -37,10 +37,8 @@ export default function Login() {
       console.log('Login successful - User role:', user.role);
       toast.success('Login realizado com sucesso!');
 
-      // Small delay to ensure persist middleware has saved, then reload
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      // Force full page reload to ensure state is fresh
+      window.location.reload();
     } catch (error) {
       console.error('Login error:', error);
       toast.error(error.response?.data?.message || 'Erro ao fazer login');
