@@ -18,6 +18,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminCommissions from './pages/AdminCommissions';
 import Gamification from './pages/Gamification';
 import GamificationAdmin from './pages/admin/GamificationAdmin';
+import UpgradeToProducer from './pages/UpgradeToProducer';
 import { AchievementQueueManager } from './components/AchievementNotification';
 import { API_URL } from './config/api.config';
 
@@ -101,6 +102,12 @@ const Navbar = () => {
                 {(user.role === 'PRODUCER' || user.role === 'ADMIN') && (
                   <Link to="/seller/dashboard" className="text-gray-700 hover:text-purple-600 font-semibold transition">
                     Vender
+                  </Link>
+                )}
+
+                {user.role === 'BUYER' && (
+                  <Link to="/upgrade-to-producer" className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition">
+                    Tornar-se Vendedor
                   </Link>
                 )}
 
@@ -1048,6 +1055,7 @@ function App() {
         <Route path="/admin/commissions" element={<ProtectedRoute><AdminCommissions /></ProtectedRoute>} />
         <Route path="/admin/gamification" element={<ProtectedRoute><GamificationAdmin /></ProtectedRoute>} />
         <Route path="/gamification" element={<ProtectedRoute><Gamification /></ProtectedRoute>} />
+        <Route path="/upgrade-to-producer" element={<ProtectedRoute><UpgradeToProducer /></ProtectedRoute>} />
       </Routes>
       <Footer />
     </div>
