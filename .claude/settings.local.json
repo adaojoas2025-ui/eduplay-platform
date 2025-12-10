@@ -62,7 +62,12 @@
       "Bash(git fetch:*)",
       "Bash(find:*)",
       "Bash(cmd.exe /c \"start c:\\projetos\\fix-user-role.html\")",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_obni_user:OnMoruRlP3qdbZSKHHij6l3I4XslufsnCadpg-d4s0isuuk2gs73a324ug-a/eduplay_obni\" npx prisma migrate deploy)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_obni_user:OnNoruRlP3qbZSKHN1jGl3I4XslufsnC@dpg-d4s0isuuk2gs73a324ug-a/eduplay_obni\" npx prisma migrate:*)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_obni_user:OnMoruRlP3qdbZSKHHij6l3I4XslufsnCadpg-d4s0isuuk2gs73a324ug-a/eduplay_obni\" node scripts/fix-production-role.js)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_obni_user:OnNoruRlP3qbZSKHN1jGl3I4XslufsnC@dpg-d4s0isuuk2gs73a324ug-a/eduplay_obni\" node:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

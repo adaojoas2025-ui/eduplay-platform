@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useContext } from 'react';
+import { authEvents } from '../utils/authEvents';
 
 const AuthContext = createContext();
 
@@ -57,6 +58,10 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       console.log('✅ Estado atualizado - user:', userData.name, 'isAuth: true');
 
+      // 3. EMITE EVENTO para forçar atualização de componentes
+      authEvents.emit();
+      console.log('🔔 Evento de login emitido');
+
       return { success: true };
     } catch (error) {
       console.error('❌ Erro no login:', error);
@@ -79,6 +84,10 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(false);
       console.log('✅ Estado atualizado - user: null, isAuth: false');
 
+      // 3. EMITE EVENTO para forçar atualização de componentes
+      authEvents.emit();
+      console.log('🔔 Evento de logout emitido');
+
       return { success: true };
     } catch (error) {
       console.error('❌ Erro no logout:', error);
@@ -98,6 +107,10 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       setIsAuthenticated(true);
       console.log('✅ Estado atualizado');
+
+      // 3. EMITE EVENTO para forçar atualização de componentes
+      authEvents.emit();
+      console.log('🔔 Evento de update emitido');
 
       return { success: true };
     } catch (error) {

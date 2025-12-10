@@ -33,8 +33,10 @@ export default function Login() {
       console.log('Login successful - User role:', user.role);
       toast.success('Login realizado com sucesso!');
 
-      // FORCE FULL PAGE RELOAD para garantir que o contexto seja carregado
-      window.location.href = '/';
+      // Pequeno delay para garantir que o evento foi processado
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     } catch (error) {
       console.error('Login error:', error);
       toast.error(error.response?.data?.message || 'Erro ao fazer login');

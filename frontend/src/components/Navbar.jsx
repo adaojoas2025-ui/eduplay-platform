@@ -1,9 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import useStore from '../store/useStore';
 import { toast } from 'react-toastify';
+import { authEvents } from '../utils/authEvents';
 
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -15,11 +16,27 @@ export default function Navbar() {
 
   console.log('🎯 Navbar RENDER - isAuth:', isAuthenticated, 'user:', user?.name || 'null');
 
+  // SUBSCREVE aos eventos de auth para forçar re-render
+  useEffect(() => {
+    console.log('🔔 Navbar SUBSCRIBED to auth events');
+    const unsubscribe = authEvents.subscribe(() => {
+      console.log('🔔 Navbar RECEBEU evento de auth - forçando re-render');
+      forceUpdate({});
+    });
+
+    return () => {
+      console.log('🔔 Navbar UNSUBSCRIBED from auth events');
+      unsubscribe();
+    };
+  }, []);
+
   const handleLogout = () => {
     logout();
     toast.success('Logout realizado com sucesso!');
-    // FORCE FULL PAGE RELOAD
-    window.location.href = '/';
+    // Pequeno delay para garantir que o evento foi processado
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 100);
   };
 
   return (

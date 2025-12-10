@@ -37,8 +37,10 @@ export default function Register() {
 
       toast.success('Conta criada com sucesso!');
 
-      // FORCE FULL PAGE RELOAD para garantir que o contexto seja carregado
-      window.location.href = '/';
+      // Pequeno delay para garantir que o evento foi processado
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     } catch (error) {
       console.error('Register error:', error);
       toast.error(error.response?.data?.message || 'Erro ao criar conta');
