@@ -18,7 +18,8 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     toast.success('Logout realizado com sucesso!');
-    navigate('/');
+    // FORCE FULL PAGE RELOAD
+    window.location.href = '/';
   };
 
   return (

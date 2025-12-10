@@ -37,8 +37,8 @@ export default function Register() {
 
       toast.success('Conta criada com sucesso!');
 
-      // Navigate to home - SEM window.location.href
-      navigate('/');
+      // FORCE FULL PAGE RELOAD para garantir que o contexto seja carregado
+      window.location.href = '/';
     } catch (error) {
       console.error('Register error:', error);
       toast.error(error.response?.data?.message || 'Erro ao criar conta');

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,7 +11,6 @@ export default function Login() {
   });
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -34,8 +33,8 @@ export default function Login() {
       console.log('Login successful - User role:', user.role);
       toast.success('Login realizado com sucesso!');
 
-      // Navigate to home - SEM window.location.href
-      navigate('/');
+      // FORCE FULL PAGE RELOAD para garantir que o contexto seja carregado
+      window.location.href = '/';
     } catch (error) {
       console.error('Login error:', error);
       toast.error(error.response?.data?.message || 'Erro ao fazer login');
