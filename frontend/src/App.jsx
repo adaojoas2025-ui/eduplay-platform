@@ -523,7 +523,12 @@ const Login = () => {
         window.location.href = '/';
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Erro ao fazer login');
+      console.error('❌ ERRO LOGIN:', err);
+      console.error('📦 Response:', err.response);
+      console.error('📝 Data:', err.response?.data);
+      const errorMsg = err.response?.data?.message || err.message || 'Erro desconhecido';
+      const status = err.response?.status || 'sem conexão';
+      setError(`${errorMsg} (Status: ${status})`);
     } finally {
       setLoading(false);
     }
