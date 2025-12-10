@@ -12,6 +12,8 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  console.log('🎯 Navbar renderizou - isAuthenticated:', isAuthenticated, 'user:', user);
+
   const handleLogout = () => {
     logout();
     toast.success('Logout realizado com sucesso!');
