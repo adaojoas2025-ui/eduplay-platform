@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import useStore from '../store/useStore';
@@ -14,6 +14,7 @@ export default function Register() {
     role: 'BUYER', // Default role
   });
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const { setUser } = useStore();
 
   const handleChange = (e) => {
@@ -40,8 +41,8 @@ export default function Register() {
 
       toast.success('Conta criada com sucesso!');
 
-      // Force page reload to ensure clean state
-      window.location.href = '/';
+      // Navigate using React Router (no reload needed, persist handles it)
+      navigate('/');
     } catch (error) {
       console.error('Register error:', error);
     } finally {
