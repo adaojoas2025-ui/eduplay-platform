@@ -16,10 +16,12 @@ export default function Navbar() {
 
   console.log('🎯 Navbar RENDER - isAuth:', authState.isAuthenticated, 'user:', authState.user?.name || 'null');
 
-  // ESCUTA o evento 'auth-changed' do navegador
+  // ESCUTA storage events + atualização manual direta
   useEffect(() => {
-    const handleAuthChange = () => {
-      console.log('🔥 Navbar RECEBEU evento auth-changed');
+    const handleStorageChange = (e) => {
+      console.log('📦 Storage event recebido:', e.key);
+
+      // Atualiza imediatamente quando detecta mudança
       const newState = {
         isAuthenticated: simpleAuth.isAuthenticated(),
         user: simpleAuth.getUser(),
@@ -28,20 +30,42 @@ export default function Navbar() {
       setAuthState(newState);
     };
 
-    console.log('👂 Navbar escutando evento auth-changed');
-    window.addEventListener('auth-changed', handleAuthChange);
+    console.log('👂 Navbar escutando storage events');
+    window.addEventListener('storage', handleStorageChange);
+
+    // TAMBÉM adiciona um setInterval como backup
+    const interval = setInterval(() => {
+      const currentIsAuth = simpleAuth.isAuthenticated();
+      const currentUser = simpleAuth.getUser();
+
+      if (currentIsAuth !== authState.isAuthenticated ||
+          JSON.stringify(currentUser) !== JSON.stringify(authState.user)) {
+        console.log('⏰ Interval detectou mudança');
+        setAuthState({
+          isAuthenticated: currentIsAuth,
+          user: currentUser,
+        });
+      }
+    }, 200);
 
     return () => {
-      console.log('🔇 Navbar parou de escutar auth-changed');
-      window.removeEventListener('auth-changed', handleAuthChange);
+      console.log('🔇 Navbar cleanup');
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
     };
-  }, []);
+  }, [authState]);
 
   const handleLogout = () => {
     console.log('👋 Logout clicado');
     simpleAuth.logout();
     toast.success('Logout realizado com sucesso!');
     setUserMenuOpen(false);
+
+    // Força atualização imediata
+    setAuthState({
+      isAuthenticated: false,
+      user: null,
+    });
   };
 
   const { isAuthenticated, user } = authState;
