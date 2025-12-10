@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import { auth } from '../utils/auth';
+import { simpleAuth } from '../utils/simpleAuth';
 
 export default function UpgradeToProducer() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const user = auth.getUser();
+  const user = simpleAuth.getUser();
 
   const handleUpgrade = async () => {
     setLoading(true);
@@ -16,8 +16,10 @@ export default function UpgradeToProducer() {
       const response = await api.post('/auth/upgrade-to-producer');
       const updatedUser = response.data.data;
 
-      // Atualiza o usuário usando sistema simplificado
-      auth.updateUser(updatedUser);
+      console.log('✅ Upgrade API sucesso - Nova role:', updatedUser.role);
+
+      // Atualiza o usuário e dispara evento
+      simpleAuth.updateUser(updatedUser);
 
       toast.success('Conta atualizada para Vendedor com sucesso!');
 

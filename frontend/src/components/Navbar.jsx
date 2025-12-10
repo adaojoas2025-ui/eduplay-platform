@@ -3,72 +3,45 @@ import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import useStore from '../store/useStore';
 import { toast } from 'react-toastify';
-import { auth } from '../utils/auth';
+import { simpleAuth } from '../utils/simpleAuth';
 
 export default function Navbar() {
   const { cart } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  // Force re-render state
   const [authState, setAuthState] = useState({
-    isAuthenticated: auth.isAuthenticated(),
-    user: auth.getUser(),
+    isAuthenticated: simpleAuth.isAuthenticated(),
+    user: simpleAuth.getUser(),
   });
 
   console.log('🎯 Navbar RENDER - isAuth:', authState.isAuthenticated, 'user:', authState.user?.name || 'null');
 
-  // POLLING - verifica localStorage a cada 100ms
+  // ESCUTA o evento 'auth-changed' do navegador
   useEffect(() => {
-    console.log('🔔 Navbar POLLING ATIVO - verificando auth a cada 100ms');
-
-    const interval = setInterval(() => {
-      const newIsAuth = auth.isAuthenticated();
-      const newUser = auth.getUser();
-
-      // Só atualiza se mudou
-      if (newIsAuth !== authState.isAuthenticated ||
-          JSON.stringify(newUser) !== JSON.stringify(authState.user)) {
-        console.log('🔥 MUDANÇA DETECTADA - atualizando Navbar');
-        setAuthState({
-          isAuthenticated: newIsAuth,
-          user: newUser,
-        });
-      }
-    }, 100);
-
-    return () => {
-      console.log('🔔 Navbar POLLING DESATIVADO');
-      clearInterval(interval);
+    const handleAuthChange = () => {
+      console.log('🔥 Navbar RECEBEU evento auth-changed');
+      const newState = {
+        isAuthenticated: simpleAuth.isAuthenticated(),
+        user: simpleAuth.getUser(),
+      };
+      console.log('🔄 Atualizando estado:', newState);
+      setAuthState(newState);
     };
-  }, [authState]);
 
-  // Subscribe to auth changes (fallback)
-  useEffect(() => {
-    console.log('🔔 Navbar SUBSCRIBED to auth events');
-    const unsubscribe = auth.subscribe(() => {
-      console.log('🔔 Navbar RECEBEU notificação de mudança de auth');
-      setAuthState({
-        isAuthenticated: auth.isAuthenticated(),
-        user: auth.getUser(),
-      });
-    });
+    console.log('👂 Navbar escutando evento auth-changed');
+    window.addEventListener('auth-changed', handleAuthChange);
 
     return () => {
-      console.log('🔔 Navbar UNSUBSCRIBED from auth events');
-      unsubscribe();
+      console.log('🔇 Navbar parou de escutar auth-changed');
+      window.removeEventListener('auth-changed', handleAuthChange);
     };
   }, []);
 
   const handleLogout = () => {
-    auth.logout();
+    console.log('👋 Logout clicado');
+    simpleAuth.logout();
     toast.success('Logout realizado com sucesso!');
     setUserMenuOpen(false);
-    // Atualiza imediatamente
-    setAuthState({
-      isAuthenticated: false,
-      user: null,
-    });
   };
 
   const { isAuthenticated, user } = authState;

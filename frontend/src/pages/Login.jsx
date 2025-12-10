@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import { auth } from '../utils/auth';
+import { simpleAuth } from '../utils/simpleAuth';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -26,17 +26,15 @@ export default function Login() {
       const response = await api.post('/auth/login', formData);
       const { user, accessToken, refreshToken } = response.data.data;
 
-      console.log('Login successful - User role:', user.role);
+      console.log('✅ Login API sucesso - User role:', user.role);
 
-      // Use sistema de auth simplificado
-      auth.login(user, accessToken, refreshToken);
+      // Salva no localStorage e dispara evento
+      simpleAuth.login(user, accessToken, refreshToken);
 
       toast.success('Login realizado com sucesso!');
-
-      // Navbar vai detectar via polling - sem reload necessário
-      console.log('✅ Login completo - Navbar atualizará automaticamente');
+      console.log('🎉 Login completo');
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ Login error:', error);
       toast.error(error.response?.data?.message || 'Erro ao fazer login');
     } finally {
       setLoading(false);

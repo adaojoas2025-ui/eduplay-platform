@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import { auth } from '../utils/auth';
+import { simpleAuth } from '../utils/simpleAuth';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -11,7 +11,7 @@ export default function Register() {
     password: '',
     cpf: '',
     phone: '',
-    role: 'BUYER', // Default role
+    role: 'BUYER',
   });
   const [loading, setLoading] = useState(false);
 
@@ -30,15 +30,15 @@ export default function Register() {
       const response = await api.post('/auth/register', formData);
       const { user, accessToken, refreshToken } = response.data.data;
 
-      // Use sistema de auth simplificado
-      auth.login(user, accessToken, refreshToken);
+      console.log('✅ Register API sucesso - User:', user.name);
+
+      // Salva no localStorage e dispara evento
+      simpleAuth.login(user, accessToken, refreshToken);
 
       toast.success('Conta criada com sucesso!');
-
-      // Navbar vai detectar via polling - sem reload necessário
-      console.log('✅ Registro completo - Navbar atualizará automaticamente');
+      console.log('🎉 Registro completo');
     } catch (error) {
-      console.error('Register error:', error);
+      console.error('❌ Register error:', error);
       toast.error(error.response?.data?.message || 'Erro ao criar conta');
     } finally {
       setLoading(false);
