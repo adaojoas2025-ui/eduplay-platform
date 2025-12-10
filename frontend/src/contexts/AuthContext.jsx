@@ -4,101 +4,126 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  console.log('🔵 AuthProvider renderizou - user:', user);
+  console.log('🔵 AuthProvider RENDER - user:', user, 'isAuth:', isAuthenticated);
 
-  // Verifica o estado de autenticação ao carregar
+  // Carrega usuário do localStorage na inicialização
   useEffect(() => {
-    console.log('🟢 AuthProvider useEffect - verificando localStorage');
-    checkAuthStatus();
+    console.log('🟢 AuthProvider MOUNT - iniciando verificação');
+    loadUserFromStorage();
   }, []);
 
-  const checkAuthStatus = () => {
+  const loadUserFromStorage = () => {
     try {
       const token = localStorage.getItem('token');
       const userData = localStorage.getItem('userData');
 
-      console.log('🟡 checkAuthStatus - token:', !!token, 'userData:', !!userData);
+      console.log('🟡 loadUserFromStorage - token exists:', !!token, 'userData exists:', !!userData);
 
       if (token && userData) {
         const parsedUser = JSON.parse(userData);
-        console.log('✅ Usuário encontrado no localStorage:', parsedUser);
+        console.log('✅ Usuário carregado do localStorage:', parsedUser);
         setUser(parsedUser);
+        setIsAuthenticated(true);
       } else {
         console.log('❌ Nenhum usuário no localStorage');
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error('❌ Erro ao verificar autenticação:', error);
+      console.error('❌ Erro ao carregar do localStorage:', error);
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
+      console.log('✅ Loading completo');
     }
   };
 
   const login = (userData, accessToken, refreshToken) => {
     try {
-      console.log('🔐 LOGIN chamado com userData:', userData);
+      console.log('🔐 LOGIN CHAMADO com:', userData);
 
-      // Salva tokens no localStorage
+      // 1. Salva no localStorage
       localStorage.setItem('token', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('userData', JSON.stringify(userData));
-
       console.log('💾 Dados salvos no localStorage');
 
-      // ATUALIZA O ESTADO IMEDIATAMENTE
+      // 2. Atualiza estado IMEDIATAMENTE e de forma SÍNCRONA
       setUser(userData);
-
-      console.log('✅ Estado atualizado - user agora é:', userData);
+      setIsAuthenticated(true);
+      console.log('✅ Estado atualizado - user:', userData.name, 'isAuth: true');
 
       return { success: true };
     } catch (error) {
-      console.error('❌ Erro ao fazer login:', error);
+      console.error('❌ Erro no login:', error);
       return { success: false, error: 'Erro ao fazer login' };
     }
   };
 
   const logout = () => {
-    console.log('🚪 LOGOUT chamado');
+    try {
+      console.log('🚪 LOGOUT CHAMADO');
 
-    // Remove dados do localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userData');
+      // 1. Remove do localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userData');
+      console.log('💾 localStorage limpo');
 
-    console.log('💾 Dados removidos do localStorage');
+      // 2. Atualiza estado IMEDIATAMENTE
+      setUser(null);
+      setIsAuthenticated(false);
+      console.log('✅ Estado atualizado - user: null, isAuth: false');
 
-    // ATUALIZA O ESTADO IMEDIATAMENTE
-    setUser(null);
-
-    console.log('✅ Estado atualizado - user agora é null');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erro no logout:', error);
+      return { success: false, error: 'Erro ao fazer logout' };
+    }
   };
 
   const updateUser = (userData) => {
-    console.log('🔄 UPDATE USER chamado com:', userData);
+    try {
+      console.log('🔄 UPDATE USER chamado com:', userData);
 
-    // Atualiza dados do usuário
-    localStorage.setItem('userData', JSON.stringify(userData));
-    setUser(userData);
+      // 1. Atualiza localStorage
+      localStorage.setItem('userData', JSON.stringify(userData));
+      console.log('💾 userData atualizado no localStorage');
 
-    console.log('✅ Usuário atualizado');
+      // 2. Atualiza estado
+      setUser(userData);
+      setIsAuthenticated(true);
+      console.log('✅ Estado atualizado');
+
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erro ao atualizar usuário:', error);
+      return { success: false, error: 'Erro ao atualizar usuário' };
+    }
   };
 
+  const value = {
+    user,
+    isAuthenticated,
+    loading,
+    login,
+    logout,
+    updateUser,
+  };
+
+  console.log('🎯 AuthProvider VALUE:', { user: user?.name, isAuthenticated, loading });
+
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      login,
-      logout,
-      updateUser,
-      isAuthenticated: !!user
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook customizado para usar o contexto
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
