@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
+import { auth } from '../utils/auth';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -10,7 +10,6 @@ export default function Login() {
     password: '',
   });
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -27,10 +26,11 @@ export default function Login() {
       const response = await api.post('/auth/login', formData);
       const { user, accessToken, refreshToken } = response.data.data;
 
-      // Use AuthContext login - atualiza estado imediatamente
-      login(user, accessToken, refreshToken);
-
       console.log('Login successful - User role:', user.role);
+
+      // Use sistema de auth simplificado
+      auth.login(user, accessToken, refreshToken);
+
       toast.success('Login realizado com sucesso!');
 
       // Pequeno delay para garantir que o evento foi processado

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
+import { auth } from '../utils/auth';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -14,8 +14,6 @@ export default function Register() {
     role: 'BUYER', // Default role
   });
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -32,8 +30,8 @@ export default function Register() {
       const response = await api.post('/auth/register', formData);
       const { user, accessToken, refreshToken } = response.data.data;
 
-      // Use AuthContext login - atualiza estado imediatamente
-      login(user, accessToken, refreshToken);
+      // Use sistema de auth simplificado
+      auth.login(user, accessToken, refreshToken);
 
       toast.success('Conta criada com sucesso!');
 

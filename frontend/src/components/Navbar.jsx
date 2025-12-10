@@ -1,43 +1,52 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import useStore from '../store/useStore';
 import { toast } from 'react-toastify';
-import { authEvents } from '../utils/authEvents';
+import { auth } from '../utils/auth';
 
 export default function Navbar() {
-  const { isAuthenticated, user, logout } = useAuth();
   const { cart } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [, forceUpdate] = useState({});
-  const navigate = useNavigate();
 
-  console.log('🎯 Navbar RENDER - isAuth:', isAuthenticated, 'user:', user?.name || 'null');
+  // Force re-render state
+  const [authState, setAuthState] = useState({
+    isAuthenticated: auth.isAuthenticated(),
+    user: auth.getUser(),
+  });
 
-  // SUBSCREVE aos eventos de auth para forçar re-render
+  console.log('🎯 Navbar RENDER - isAuth:', authState.isAuthenticated, 'user:', authState.user?.name || 'null');
+
+  // Subscribe to auth changes
   useEffect(() => {
-    console.log('🔔 Navbar SUBSCRIBED to auth events');
-    const unsubscribe = authEvents.subscribe(() => {
-      console.log('🔔 Navbar RECEBEU evento de auth - forçando re-render');
-      forceUpdate({});
+    console.log('🔔 Navbar MOUNTING - subscribing to auth');
+
+    const unsubscribe = auth.subscribe(() => {
+      console.log('🔔 Navbar RECEBEU notificação de mudança de auth');
+      setAuthState({
+        isAuthenticated: auth.isAuthenticated(),
+        user: auth.getUser(),
+      });
     });
 
     return () => {
-      console.log('🔔 Navbar UNSUBSCRIBED from auth events');
+      console.log('🔔 Navbar UNMOUNTING - unsubscribing from auth');
       unsubscribe();
     };
   }, []);
 
   const handleLogout = () => {
-    logout();
+    auth.logout();
     toast.success('Logout realizado com sucesso!');
-    // Pequeno delay para garantir que o evento foi processado
+    setUserMenuOpen(false);
+    // Redirect after logout
     setTimeout(() => {
       window.location.href = '/';
     }, 100);
   };
+
+  const { isAuthenticated, user } = authState;
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -56,7 +65,7 @@ export default function Navbar() {
             <Link to="/marketplace" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
               Marketplace
             </Link>
-            
+
             {isAuthenticated ? (
               <>
                 {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
@@ -70,17 +79,17 @@ export default function Navbar() {
                     Tornar-se Vendedor
                   </Link>
                 )}
-                
+
                 {user?.role === 'ADMIN' && (
                   <Link to="/admin/dashboard" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
                     Admin
                   </Link>
                 )}
-                
+
                 <Link to="/my-courses" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
                   Meus Cursos
                 </Link>
-                
+
                 {/* Cart */}
                 <Link to="/checkout" className="relative">
                   <FiShoppingCart className="text-2xl text-gray-700 hover:text-primary-500 transition-colors" />
@@ -90,7 +99,7 @@ export default function Navbar() {
                     </span>
                   )}
                 </Link>
-                
+
                 {/* User Menu */}
                 <div className="relative">
                   <button
@@ -100,7 +109,7 @@ export default function Navbar() {
                     <FiUser className="text-xl" />
                     <span className="font-medium">{user?.name?.split(' ')[0]}</span>
                   </button>
-                  
+
                   {userMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
                       <Link
