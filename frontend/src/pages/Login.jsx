@@ -28,14 +28,25 @@ export default function Login() {
       const response = await api.post('/auth/login', formData);
       const { user, accessToken, refreshToken } = response.data.data;
 
+      // Clear old data first
+      localStorage.clear();
+
+      // Set new tokens
       localStorage.setItem('token', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
+
+      // Store user data directly in localStorage to ensure consistency
+      localStorage.setItem('user', JSON.stringify(user));
+
+      // Update Zustand store
       setUser(user);
 
+      console.log('Login successful - User role:', user.role);
       toast.success('Login realizado com sucesso!');
       navigate('/');
     } catch (error) {
       console.error('Login error:', error);
+      toast.error(error.response?.data?.message || 'Erro ao fazer login');
     } finally {
       setLoading(false);
     }
