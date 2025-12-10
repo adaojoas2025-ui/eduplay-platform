@@ -33,9 +33,29 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { cart } = useCart();
 
+  // Listen for localStorage changes to update user state
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const updatedUser = JSON.parse(localStorage.getItem('user'));
+      setUser(updatedUser);
+    };
+
+    // Listen for storage events (from other tabs)
+    window.addEventListener('storage', handleStorageChange);
+
+    // Check for user updates every second (for same-tab changes)
+    const interval = setInterval(handleStorageChange, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     setUser(null);
     navigate('/');
   };
