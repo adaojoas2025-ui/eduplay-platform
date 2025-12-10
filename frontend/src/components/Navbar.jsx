@@ -36,11 +36,17 @@ export default function Navbar() {
             
             {isAuthenticated ? (
               <>
-                {user?.role === 'SELLER' || user?.role === 'ADMIN' ? (
+                {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
                   <Link to="/seller/dashboard" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
                     Área do Vendedor
                   </Link>
-                ) : null}
+                )}
+
+                {user?.role === 'BUYER' && (
+                  <Link to="/upgrade-to-producer" className="bg-gradient-to-r from-primary-600 to-primary-800 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+                    Tornar-se Vendedor
+                  </Link>
+                )}
                 
                 {user?.role === 'ADMIN' && (
                   <Link to="/admin/dashboard" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
