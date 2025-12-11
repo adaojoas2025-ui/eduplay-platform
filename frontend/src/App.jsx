@@ -7,7 +7,6 @@ import axios from 'axios';
 import CallbackGoogle from './components/auth/CallbackGoogle';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useCart } from './contexts/CartContext';
-import { useAuth } from './contexts/AuthContext';
 import OrderSuccess from './pages/OrderSuccess';
 import OrderFailure from './pages/OrderFailure';
 import OrderPending from './pages/OrderPending';
