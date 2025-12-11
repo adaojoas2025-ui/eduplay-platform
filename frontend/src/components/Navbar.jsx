@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useStore from '../store/useStore';
 import { toast } from 'react-toastify';
 import { getUser, isAuthenticated, clearAuth } from '../lib/auth';
@@ -10,14 +10,38 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const user = getUser();
-  const authenticated = isAuthenticated();
+  // Estado local que FORÇA re-render quando auth muda
+  const [authState, setAuthState] = useState({
+    user: getUser(),
+    authenticated: isAuthenticated()
+  });
+
+  // Re-verifica auth a cada 500ms para detectar mudanças
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentUser = getUser();
+      const currentAuth = isAuthenticated();
+
+      // Se mudou, atualiza o estado (isso força re-render)
+      if (JSON.stringify(currentUser) !== JSON.stringify(authState.user) ||
+          currentAuth !== authState.authenticated) {
+        setAuthState({
+          user: currentUser,
+          authenticated: currentAuth
+        });
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [authState]);
 
   const handleLogout = () => {
     clearAuth();
     toast.success('Logout realizado com sucesso!');
     window.location.href = '/';
   };
+
+  const { user, authenticated } = authState;
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
