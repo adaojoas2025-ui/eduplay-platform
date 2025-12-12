@@ -33,9 +33,27 @@ app.use(helmet());
 /**
  * CORS configuration
  */
+const allowedOrigins = [
+  config.urls.frontend,
+  'https://eduplay-frontend.onrender.com',
+  'https://eduplay.com',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+];
+
 app.use(
   cors({
-    origin: config.env === 'development' ? true : config.urls.frontend,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or Postman)
+      if (!origin) return callback(null, true);
+
+      if (config.env === 'development' || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
