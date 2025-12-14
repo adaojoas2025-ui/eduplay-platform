@@ -83,6 +83,10 @@ export default function Navbar() {
                   Meus Cursos
                 </Link>
 
+                <Link to="/my-products" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
+                  Meus Produtos
+                </Link>
+
                 <Link to="/checkout" className="relative">
                   <FiShoppingCart className="text-2xl text-gray-700 hover:text-primary-500 transition-colors" />
                   {cart.length > 0 && (
@@ -108,6 +112,9 @@ export default function Navbar() {
                       </Link>
                       <Link to="/orders" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
                         Meus Pedidos
+                      </Link>
+                      <Link to="/my-products" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
+                        Meus Produtos
                       </Link>
                       <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 flex items-center space-x-2">
                         <FiLogOut />
@@ -141,6 +148,9 @@ export default function Navbar() {
               <>
                 <Link to="/my-courses" className="block text-gray-700 hover:text-primary-500 font-medium" onClick={() => setMenuOpen(false)}>
                   Meus Cursos
+                </Link>
+                <Link to="/my-products" className="block text-gray-700 hover:text-primary-500 font-medium" onClick={() => setMenuOpen(false)}>
+                  Meus Produtos
                 </Link>
                 <Link to="/profile" className="block text-gray-700 hover:text-primary-500 font-medium" onClick={() => setMenuOpen(false)}>
                   Meu Perfil
