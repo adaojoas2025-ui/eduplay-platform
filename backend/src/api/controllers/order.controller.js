@@ -28,6 +28,7 @@ const createOrder = asyncHandler(async (req, res) => {
     {
       order,
       payment: paymentPreference,
+      paymentUrl: paymentPreference?.init_point || paymentPreference?.sandbox_init_point,
     },
     'Order created successfully'
   );
