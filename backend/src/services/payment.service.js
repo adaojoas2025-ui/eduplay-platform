@@ -7,6 +7,7 @@
 const mercadopago = require('../config/mercadopago');
 const orderRepository = require('../repositories/order.repository');
 const productRepository = require('../repositories/product.repository');
+const emailService = require('./email.service');
 const ApiError = require('../utils/ApiError');
 const logger = require('../utils/logger');
 const config = require('../config/env');
@@ -152,6 +153,18 @@ const processPaymentWebhook = async (notification) => {
     // Update order status
     const orderService = require('./order.service');
     await orderService.updateOrderStatus(order.id, orderStatus, updateData);
+
+    // If payment approved, send product access email
+    if (payment.status === 'approved') {
+      try {
+        const product = await productRepository.findProductById(order.productId);
+        await emailService.sendProductAccessEmail(order.buyer, product, order);
+        logger.info('Product access email sent', { orderId: order.id, buyerEmail: order.buyer.email });
+      } catch (emailError) {
+        logger.error('Failed to send product access email', { error: emailError, orderId: order.id });
+        // Don't throw - order is still processed successfully
+      }
+    }
 
     logger.info('Payment webhook processed', {
       orderId: order.id,
