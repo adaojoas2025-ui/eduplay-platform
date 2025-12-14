@@ -120,7 +120,11 @@ export default function ProductForm() {
         ...formData,
         price: parseFloat(formData.price),
         level: levelMap[formData.level] || 'BEGINNER',
-        category: formData.category === 'Outra' ? formData.customCategory : formData.category
+        category: formData.category === 'Outra' ? formData.customCategory : formData.category,
+        // Filter out empty strings from filesUrl
+        filesUrl: formData.filesUrl.filter(url => url.trim() !== ''),
+        // Remove videoUrl if empty
+        videoUrl: formData.videoUrl.trim() || undefined
       };
 
       // Remove customCategory from the data sent to backend
@@ -353,7 +357,7 @@ export default function ProductForm() {
               {formData.filesUrl.map((url, index) => (
                 <div key={index} className="flex gap-2 mb-2">
                   <input
-                    type="url"
+                    type="text"
                     value={url}
                     onChange={(e) => {
                       const newFilesUrl = [...formData.filesUrl];
@@ -397,7 +401,7 @@ export default function ProductForm() {
                 Link do Vídeo/Curso (opcional)
               </label>
               <input
-                type="url"
+                type="text"
                 name="videoUrl"
                 value={formData.videoUrl}
                 onChange={handleChange}
