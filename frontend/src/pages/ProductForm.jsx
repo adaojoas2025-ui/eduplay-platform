@@ -22,7 +22,9 @@ export default function ProductForm() {
     language: 'Português',
     certificateIncluded: true,
     hasSupport: true,
-    status: 'DRAFT'
+    status: 'DRAFT',
+    filesUrl: [],
+    videoUrl: ''
   });
 
   useEffect(() => {
@@ -333,6 +335,81 @@ export default function ProductForm() {
             </label>
           </div>
 
+          {/* Product Files Section */}
+          <div className="mb-6 border-t pt-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              📦 Arquivos do Produto
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Adicione os links dos arquivos que o comprador receberá após a compra (PDFs, vídeos, materiais complementares)
+            </p>
+
+            {/* File URLs */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Links de Download dos Arquivos
+              </label>
+
+              {formData.filesUrl.map((url, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(e) => {
+                      const newFilesUrl = [...formData.filesUrl];
+                      newFilesUrl[index] = e.target.value;
+                      setFormData({ ...formData, filesUrl: newFilesUrl });
+                    }}
+                    placeholder="https://drive.google.com/... ou link direto do arquivo"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newFilesUrl = formData.filesUrl.filter((_, i) => i !== index);
+                      setFormData({ ...formData, filesUrl: newFilesUrl });
+                    }}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({ ...formData, filesUrl: [...formData.filesUrl, ''] });
+                }}
+                className="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-medium"
+              >
+                + Adicionar Link de Arquivo
+              </button>
+
+              <p className="text-xs text-gray-500 mt-2">
+                💡 Você pode usar Google Drive, Dropbox, ou qualquer serviço de hospedagem de arquivos
+              </p>
+            </div>
+
+            {/* Video URL */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Link do Vídeo/Curso (opcional)
+              </label>
+              <input
+                type="url"
+                name="videoUrl"
+                value={formData.videoUrl}
+                onChange={handleChange}
+                placeholder="https://youtube.com/... ou link da plataforma de vídeo"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                📹 Link do YouTube, Vimeo, Hotmart, ou plataforma de hospedagem de vídeos
+              </p>
+            </div>
+          </div>
+
           {/* Status */}
           <div className="mb-8">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -375,8 +452,8 @@ export default function ProductForm() {
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 className="font-semibold text-blue-900 mb-2">💡 Dica</h3>
           <p className="text-sm text-blue-800">
-            Depois de criar o produto, você poderá adicionar imagens, vídeos e arquivos complementares
-            na página de edição.
+            Os arquivos e vídeos adicionados estarão disponíveis para download/acesso pelos compradores
+            assim que o pagamento for aprovado. Certifique-se de que os links estão públicos e acessíveis.
           </p>
         </div>
       </div>
