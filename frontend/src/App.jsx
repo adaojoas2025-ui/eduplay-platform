@@ -11,6 +11,7 @@ import OrderSuccess from './pages/OrderSuccess';
 import OrderFailure from './pages/OrderFailure';
 import OrderPending from './pages/OrderPending';
 import Checkout from './pages/Checkout';
+import MyProducts from './pages/MyProducts';
 import SellerDashboard from './pages/SellerDashboard';
 import SellerProducts from './pages/SellerProducts';
 import ProductForm from './pages/ProductForm';
@@ -897,7 +898,7 @@ const Cart = () => {
             {cart.items.map((item) => (
               <div key={item.id} className="bg-white rounded-lg shadow p-6 flex gap-6">
                 <img
-                  src={item.product.thumbnailUrl || 'https://via.placeholder.com/150'}
+                  src={item.product.thumbnailUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect fill="%23ddd" width="150" height="150"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="16" dy="3.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3ESem Imagem%3C/text%3E%3C/svg%3E'}
                   alt={item.product.title}
                   className="w-32 h-32 object-cover rounded"
                 />
@@ -1011,6 +1012,7 @@ function App() {
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
         <Route path="/my-courses" element={<MyCourses />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/order/:id/success" element={<OrderSuccess />} />

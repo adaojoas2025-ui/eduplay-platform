@@ -12,7 +12,7 @@ export default function Checkout() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
+    const userData = localStorage.getItem('userData');
     if (userData) {
       setUser(JSON.parse(userData));
     } else {
@@ -40,14 +40,20 @@ export default function Checkout() {
 
     try {
       const token = localStorage.getItem('token');
+      console.log('🚀 Starting checkout process...');
+      console.log('🔑 Token:', token ? 'exists' : 'missing');
+      console.log('🛒 Cart items:', cart.items);
 
       // Criar pedido para cada produto no carrinho
       for (const item of cart.items) {
         const orderData = {
           productId: item.productId,
           amount: item.price * item.quantity,
-          paymentMethod: 'MERCADOPAGO'
+          paymentMethod: 'PIX' // Mercado Pago permite escolher o método na página de pagamento
         };
+
+        console.log('📦 Creating order with data:', orderData);
+        console.log('🌐 API URL:', `${API_URL}/orders`);
 
         const response = await axios.post(
           `${API_URL}/orders`,
@@ -58,6 +64,8 @@ export default function Checkout() {
             }
           }
         );
+
+        console.log('✅ Order response:', response.data);
 
         if (response.data.success && response.data.data.paymentUrl) {
           // Limpar carrinho
@@ -71,8 +79,11 @@ export default function Checkout() {
 
       setError('Erro ao processar pagamento. Tente novamente.');
     } catch (err) {
-      console.error('Checkout error:', err);
-      setError(err.response?.data?.message || 'Erro ao processar checkout. Tente novamente.');
+      console.error('❌ Checkout error:', err);
+      console.error('❌ Error response:', err.response);
+      console.error('❌ Error data:', err.response?.data);
+      console.error('❌ Error message:', err.message);
+      setError(err.response?.data?.message || err.message || 'Erro ao processar checkout. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -134,7 +145,7 @@ export default function Checkout() {
                     className="flex items-center gap-4 pb-4 border-b border-gray-200 last:border-0"
                   >
                     <img
-                      src={item.product?.thumbnailUrl || 'https://via.placeholder.com/100'}
+                      src={item.product?.thumbnailUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="14" dy="3.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3ESem Imagem%3C/text%3E%3C/svg%3E'}
                       alt={item.product?.title}
                       className="w-20 h-20 object-cover rounded-lg"
                     />

@@ -67,7 +67,11 @@
       "Bash(DATABASE_URL=\"postgresql://eduplay_obni_user:OnNoruRlP3qbZSKHN1jGl3I4XslufsnC@dpg-d4s0isuuk2gs73a324ug-a/eduplay_obni\" npx prisma migrate:*)",
       "Bash(DATABASE_URL=\"postgresql://eduplay_obni_user:OnMoruRlP3qdbZSKHHij6l3I4XslufsnCadpg-d4s0isuuk2gs73a324ug-a/eduplay_obni\" node scripts/fix-production-role.js)",
       "Bash(DATABASE_URL=\"postgresql://eduplay_obni_user:OnNoruRlP3qbZSKHN1jGl3I4XslufsnC@dpg-d4s0isuuk2gs73a324ug-a/eduplay_obni\" node:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_user:e6WRYc525CE1Q5EeQXFbsK1dCL0ZqHml@dpg-d4tjga3uibrs73aohlpg-a.oregon-postgres.render.com:5432/eduplay_db_rsyj\" node scripts/update-user-role.js:*)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_user:e6WRYc525CE1Q5EeQXFbsK1dCL0ZqHml@dpg-d4tjga3uibrs73aohlpg-a.oregon-postgres.render.com:5432/eduplay_db_rsyj\" npx prisma db push:*)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_user:e6WRYc525CE1Q5EeQXFbsK1dCL0ZqHml@dpg-d4tjga3uibrs73aohlpg-a.oregon-postgres.render.com:5432/eduplay_db_rsyj\" node:*)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_user:e6WRYc525CE1Q5EeQXFbsK1dCL0ZqHml@dpg-d4tjga3uibrs73aohlpg-a.oregon-postgres.render.com:5432/eduplay_db_rsyj\" node -e:*)"
     ],
     "deny": [],
     "ask": []
