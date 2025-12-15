@@ -71,7 +71,10 @@
       "Bash(DATABASE_URL=\"postgresql://eduplay_user:e6WRYc525CE1Q5EeQXFbsK1dCL0ZqHml@dpg-d4tjga3uibrs73aohlpg-a.oregon-postgres.render.com:5432/eduplay_db_rsyj\" node scripts/update-user-role.js:*)",
       "Bash(DATABASE_URL=\"postgresql://eduplay_user:e6WRYc525CE1Q5EeQXFbsK1dCL0ZqHml@dpg-d4tjga3uibrs73aohlpg-a.oregon-postgres.render.com:5432/eduplay_db_rsyj\" npx prisma db push:*)",
       "Bash(DATABASE_URL=\"postgresql://eduplay_user:e6WRYc525CE1Q5EeQXFbsK1dCL0ZqHml@dpg-d4tjga3uibrs73aohlpg-a.oregon-postgres.render.com:5432/eduplay_db_rsyj\" node:*)",
-      "Bash(DATABASE_URL=\"postgresql://eduplay_user:e6WRYc525CE1Q5EeQXFbsK1dCL0ZqHml@dpg-d4tjga3uibrs73aohlpg-a.oregon-postgres.render.com:5432/eduplay_db_rsyj\" node -e:*)"
+      "Bash(DATABASE_URL=\"postgresql://eduplay_user:e6WRYc525CE1Q5EeQXFbsK1dCL0ZqHml@dpg-d4tjga3uibrs73aohlpg-a.oregon-postgres.render.com:5432/eduplay_db_rsyj\" node -e:*)",
+      "Bash(cmd.exe /c \"taskkill /F /PID 13844\")",
+      "Bash(cmd.exe /c \"taskkill /F /PID 13844 && timeout /t 1 /nobreak && cd c:\\projetos\\backend && start /B npm run dev\")",
+      "Bash(cmd.exe /c \"for /f \"\"tokens=5\"\" %a in (''netstat -aon ^| find \"\":5175\"\" ^| find \"\"LISTENING\"\"'') do taskkill /F /PID %a\")"
     ],
     "deny": [],
     "ask": []
