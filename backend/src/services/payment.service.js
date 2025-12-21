@@ -44,13 +44,9 @@ const createPaymentPreference = async (order) => {
         failure: `${config.frontend.url}/order/${order.id}/failure`,
         pending: `${config.frontend.url}/order/${order.id}/pending`,
       },
-      auto_return: 'approved',
       notification_url: `${config.backend.url}/api/v1/payments/webhook`,
       external_reference: order.id,
       statement_descriptor: config.platform.name,
-      expires: true,
-      expiration_date_from: new Date().toISOString(),
-      expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
     };
 
     const preference = await mercadopago.createPreference(preferenceData);
@@ -124,7 +120,8 @@ const processPaymentWebhook = async (notification) => {
 
     switch (payment.status) {
       case 'approved':
-        orderStatus = ORDER_STATUS.APPROVED;
+        // ✅ CORREÇÃO: Marcar como COMPLETED para criar comissão automaticamente
+        orderStatus = ORDER_STATUS.COMPLETED;
         updateData.paidAt = new Date(payment.date_approved);
         break;
 

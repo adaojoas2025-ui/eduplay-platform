@@ -163,6 +163,22 @@ const getUserStats = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 200, stats, 'User statistics retrieved successfully');
 });
 
+/**
+ * Upgrade user to producer/seller
+ * @route POST /api/v1/users/upgrade-to-producer
+ * @access Private (authenticated users only)
+ */
+const upgradeToProducer = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const upgradeData = req.body;
+
+  const user = await userService.upgradeToProducer(userId, upgradeData);
+
+  logger.info('User upgraded to producer', { userId, role: user.role });
+
+  return ApiResponse.success(res, 200, user, 'Upgrade to producer successful');
+});
+
 module.exports = {
   getUserById,
   updateProfile,
@@ -176,4 +192,5 @@ module.exports = {
   unbanUser,
   getProducerStats,
   getUserStats,
+  upgradeToProducer,
 };

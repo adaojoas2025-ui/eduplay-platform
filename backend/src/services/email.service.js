@@ -299,12 +299,230 @@ const sendContactFormEmail = async (data) => {
   }
 };
 
+/**
+ * Send product access email with download links
+ * @param {Object} buyer - Buyer user object
+ * @param {Object} product - Product object
+ * @param {Object} order - Order object
+ * @returns {Promise<void>}
+ */
+const sendProductAccessEmail = async (buyer, product, order) => {
+  try {
+    const filesLinks = product.filesUrl && product.filesUrl.length > 0
+      ? product.filesUrl.map((url, index) => `
+          <li style="margin: 10px 0;">
+            <a href="${url}" style="color: #2196F3; text-decoration: none;">
+              📎 Arquivo ${index + 1} - Download
+            </a>
+          </li>
+        `).join('')
+      : '<p>Este produto não possui arquivos para download.</p>';
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #4CAF50;">✅ Pagamento Aprovado!</h1>
+        <p>Olá ${buyer.name},</p>
+        <p>Seu pagamento foi aprovado com sucesso! Você já pode acessar o produto:</p>
+
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+          <h2 style="margin-top: 0; color: #333;">${product.title}</h2>
+          <p><strong>Pedido:</strong> #${order.id}</p>
+          <p><strong>Valor:</strong> R$ ${order.amount.toFixed(2)}</p>
+        </div>
+
+        <h3 style="color: #333;">📥 Arquivos para Download:</h3>
+        <ul style="list-style: none; padding: 0;">
+          ${filesLinks}
+        </ul>
+
+        ${product.videoUrl ? `
+          <h3 style="color: #333;">🎥 Vídeo do Produto:</h3>
+          <p>
+            <a href="${product.videoUrl}" style="background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Assistir Vídeo
+            </a>
+          </p>
+        ` : ''}
+
+        <p style="margin-top: 30px;">
+          <a href="${config.frontend.url}/my-courses" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+            Ver Meus Produtos
+          </a>
+        </p>
+
+        <p style="color: #666; font-size: 14px; margin-top: 30px;">
+          Você pode acessar este produto a qualquer momento na seção "Meus Produtos" do site.
+        </p>
+
+        <p>Atenciosamente,<br>Equipe ${config.platform.name}</p>
+      </div>
+    `;
+
+    await emailConfig.sendEmail({
+      to: buyer.email,
+      subject: `✅ Seu produto está disponível: ${product.title}`,
+      html,
+    });
+
+    logger.info('Product access email sent', {
+      orderId: order.id,
+      buyerEmail: buyer.email,
+      productId: product.id,
+    });
+  } catch (error) {
+    logger.error('Error sending product access email:', error);
+    throw error;
+  }
+};
+
+/**
+ * Send product submitted email to admin
+ * @param {Object} product - Product object
+ * @param {Object} producer - Producer object
+ * @returns {Promise<void>}
+ */
+const sendProductSubmittedEmail = async (product, producer) => {
+  try {
+    const adminEmail = 'ja.eduplay@gmail.com';
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #333;">Novo Produto Aguardando Aprovação</h1>
+        <p>Um novo produto foi enviado para aprovação na plataforma.</p>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+          <h2 style="margin-top: 0;">Detalhes do Produto</h2>
+          <p><strong>Título:</strong> ${product.title}</p>
+          <p><strong>Vendedor:</strong> ${producer.name} (${producer.email})</p>
+          <p><strong>Preço:</strong> R$ ${product.price.toFixed(2)}</p>
+          <p><strong>Data de Envio:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+        </div>
+        <p>
+          <a href="${config.frontend.url}/admin/products" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            Ver Produtos Pendentes
+          </a>
+        </p>
+        <p>Atenciosamente,<br>Sistema ${config.platform.name}</p>
+      </div>
+    `;
+
+    await emailConfig.sendEmail({
+      to: adminEmail,
+      subject: `Novo Produto para Aprovação: ${product.title}`,
+      html,
+    });
+
+    logger.info('Product submitted email sent to admin', {
+      productId: product.id,
+      producerId: producer.id,
+      adminEmail,
+    });
+  } catch (error) {
+    logger.error('Error sending product submitted email:', error);
+    // Don't throw - email errors shouldn't block product submission
+  }
+};
+
+/**
+ * Send product approved email to producer
+ * @param {Object} product - Product object
+ * @param {Object} producer - Producer object
+ * @returns {Promise<void>}
+ */
+const sendProductApprovedEmail = async (product, producer) => {
+  try {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #4CAF50;">Produto Aprovado!</h1>
+        <p>Olá ${producer.name},</p>
+        <p>Temos uma ótima notícia! Seu produto foi aprovado e já está publicado na plataforma.</p>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+          <h2 style="margin-top: 0;">Detalhes do Produto</h2>
+          <p><strong>Título:</strong> ${product.title}</p>
+          <p><strong>Preço:</strong> R$ ${product.price.toFixed(2)}</p>
+          <p><strong>Status:</strong> <span style="color: #4CAF50; font-weight: bold;">PUBLICADO</span></p>
+        </div>
+        <p>Seu produto agora está disponível para venda no marketplace!</p>
+        <p>
+          <a href="${config.frontend.url}/product/${product.id}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            Ver Produto
+          </a>
+        </p>
+        <p>Atenciosamente,<br>Equipe ${config.platform.name}</p>
+      </div>
+    `;
+
+    await emailConfig.sendEmail({
+      to: producer.email,
+      subject: `Produto Aprovado: ${product.title}`,
+      html,
+    });
+
+    logger.info('Product approved email sent', {
+      productId: product.id,
+      producerEmail: producer.email,
+    });
+  } catch (error) {
+    logger.error('Error sending product approved email:', error);
+    // Don't throw - email errors shouldn't block product approval
+  }
+};
+
+/**
+ * Send product rejected email to producer
+ * @param {Object} product - Product object
+ * @param {Object} producer - Producer object
+ * @param {string} reason - Rejection reason
+ * @returns {Promise<void>}
+ */
+const sendProductRejectedEmail = async (product, producer, reason) => {
+  try {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #f44336;">Produto Não Aprovado</h1>
+        <p>Olá ${producer.name},</p>
+        <p>Infelizmente seu produto não foi aprovado para publicação na plataforma.</p>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+          <h2 style="margin-top: 0;">Detalhes do Produto</h2>
+          <p><strong>Título:</strong> ${product.title}</p>
+          <p><strong>Motivo da Rejeição:</strong></p>
+          <p style="background-color: #fff; padding: 10px; border-left: 4px solid #f44336;">${reason}</p>
+        </div>
+        <p>Você pode editar seu produto e enviá-lo novamente para aprovação após fazer as correções necessárias.</p>
+        <p>
+          <a href="${config.frontend.url}/seller/products/${product.id}/edit" style="background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            Editar Produto
+          </a>
+        </p>
+        <p>Atenciosamente,<br>Equipe ${config.platform.name}</p>
+      </div>
+    `;
+
+    await emailConfig.sendEmail({
+      to: producer.email,
+      subject: `Produto Não Aprovado: ${product.title}`,
+      html,
+    });
+
+    logger.info('Product rejected email sent', {
+      productId: product.id,
+      producerEmail: producer.email,
+    });
+  } catch (error) {
+    logger.error('Error sending product rejected email:', error);
+    // Don't throw - email errors shouldn't block product rejection
+  }
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendOrderConfirmationEmail,
+  sendProductAccessEmail,
   sendNewSaleNotification,
   sendCommissionPaidNotification,
   sendContactFormEmail,
+  sendProductSubmittedEmail,
+  sendProductApprovedEmail,
+  sendProductRejectedEmail,
 };

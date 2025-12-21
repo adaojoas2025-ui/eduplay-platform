@@ -119,9 +119,28 @@ const findOrderByPaymentId = async (paymentId) => {
  */
 const updateOrder = async (orderId, updateData) => {
   try {
+    logger.info('💾 [REPOSITORY] Atualizando pedido no banco', {
+      orderId,
+      updateData: JSON.stringify(updateData),
+      updateDataKeys: Object.keys(updateData),
+      statusValue: updateData.status,
+      statusType: typeof updateData.status
+    });
+
+    // Converter OrderStatus enum para string se necessário
+    const prismaUpdateData = {
+      ...updateData,
+      status: updateData.status ? String(updateData.status) : updateData.status
+    };
+
+    logger.info('🔄 [REPOSITORY] Dados para Prisma', {
+      statusValue: prismaUpdateData.status,
+      statusType: typeof prismaUpdateData.status
+    });
+
     const order = await prisma.order.update({
       where: { id: orderId },
-      data: updateData,
+      data: prismaUpdateData,
       include: {
         product: true,
         buyer: {
@@ -133,10 +152,17 @@ const updateOrder = async (orderId, updateData) => {
         },
       },
     });
-    logger.info('Order updated', { orderId: order.id, status: order.status });
+
+    logger.info('✅ [REPOSITORY] Pedido atualizado no banco', {
+      orderId: order.id,
+      status: order.status,
+      paidAt: order.paidAt ? order.paidAt.toISOString() : null,
+      paymentStatus: order.paymentStatus
+    });
+
     return order;
   } catch (error) {
-    logger.error('Error updating order:', error);
+    logger.error('❌ [REPOSITORY] Erro ao atualizar pedido:', error);
     throw error;
   }
 };
@@ -337,7 +363,9 @@ const getUserPurchases = async (userId) => {
     const orders = await prisma.order.findMany({
       where: {
         buyerId: userId,
-        status: 'COMPLETED',
+        status: {
+          in: ['APPROVED', 'COMPLETED']
+        },
       },
       include: {
         product: true,
@@ -347,7 +375,7 @@ const getUserPurchases = async (userId) => {
       },
     });
 
-    return orders.map((order) => order.product);
+    return orders;
   } catch (error) {
     logger.error('Error getting user purchases:', error);
     throw error;

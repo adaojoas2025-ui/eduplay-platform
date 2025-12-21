@@ -57,7 +57,10 @@ const listCommissions = asyncHandler(async (req, res) => {
   const { page, limit, producerId, status, startDate, endDate, sortBy, order } = req.query;
 
   const filters = { producerId, status, startDate, endDate };
-  const pagination = { page: parseInt(page), limit: parseInt(limit) };
+  const pagination = {
+    page: parseInt(page) || 1,
+    limit: parseInt(limit) || 50
+  };
   const sorting = { sortBy, order };
 
   const result = await commissionService.listCommissions(req.user.id, filters, pagination, sorting);
@@ -190,6 +193,76 @@ const updateUserRole = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 200, user, 'User role updated successfully');
 });
 
+/**
+ * List products pending approval
+ * @route GET /api/v1/admin/products/pending
+ * @access Private (Admin)
+ */
+const listProductsPendingApproval = asyncHandler(async (req, res) => {
+  const { page, limit, sortBy, order } = req.query;
+
+  const filters = { status: 'PENDING_APPROVAL' };
+  const pagination = {
+    page: parseInt(page) || 1,
+    limit: parseInt(limit) || 50
+  };
+  const sorting = { sortBy: sortBy || 'createdAt', order: order || 'desc' };
+
+  const result = await productService.listProducts(filters, pagination, sorting);
+
+  return ApiResponse.paginated(
+    res,
+    result.products,
+    result.pagination.page,
+    result.pagination.limit,
+    result.pagination.total,
+    'Products pending approval retrieved successfully'
+  );
+});
+
+/**
+ * Approve product
+ * @route POST /api/v1/admin/products/:id/approve
+ * @access Private (Admin)
+ */
+const approveProduct = asyncHandler(async (req, res) => {
+  const productId = req.params.id;
+  const adminId = req.user.id;
+
+  const product = await productService.approveProduct(productId, adminId);
+
+  return ApiResponse.success(res, 200, product, 'Product approved successfully');
+});
+
+/**
+ * Reject product
+ * @route POST /api/v1/admin/products/:id/reject
+ * @access Private (Admin)
+ */
+const rejectProduct = asyncHandler(async (req, res) => {
+  const productId = req.params.id;
+  const adminId = req.user.id;
+  const { reason } = req.body;
+
+  const product = await productService.rejectProduct(productId, adminId, reason);
+
+  return ApiResponse.success(res, 200, product, 'Product rejected successfully');
+});
+
+/**
+ * Delete product (Admin only)
+ * @route DELETE /api/v1/admin/products/:id
+ * @access Private (Admin)
+ */
+const deleteProduct = asyncHandler(async (req, res) => {
+  const productId = req.params.id;
+  const adminId = req.user.id;
+
+  await productService.deleteProduct(productId, adminId);
+
+  return ApiResponse.success(res, 200, null, 'Product deleted successfully');
+});
+
 module.exports = {
   getDashboardStats,
   getCommissionStats,
@@ -201,4 +274,8 @@ module.exports = {
   updateOrderStatus,
   getPlatformStats,
   updateUserRole,
+  listProductsPendingApproval,
+  approveProduct,
+  rejectProduct,
+  deleteProduct,
 };

@@ -123,6 +123,70 @@ const banUserSchema = Joi.object({
   }),
 });
 
+/**
+ * Upgrade to producer validation schema
+ */
+const upgradeToProducerSchema = Joi.object({
+  body: Joi.object({
+    // Business information - VALIDAÇÃO MUITO FLEXÍVEL
+    businessName: Joi.string().required().min(2).max(200).trim()
+      .messages({
+        'string.empty': 'Nome do negócio é obrigatório',
+        'string.min': 'Nome do negócio deve ter pelo menos 2 caracteres',
+        'any.required': 'Nome do negócio é obrigatório',
+      }),
+    businessDocument: Joi.string().required().min(3).max(50).trim()
+      .messages({
+        'string.empty': 'CPF ou CNPJ é obrigatório',
+        'any.required': 'CPF ou CNPJ é obrigatório',
+      }),
+    businessPhone: Joi.string().required().min(8).max(20).trim()
+      .messages({
+        'string.empty': 'Telefone comercial é obrigatório',
+        'string.min': 'Telefone deve ter pelo menos 8 dígitos',
+        'any.required': 'Telefone comercial é obrigatório',
+      }),
+    businessAddress: Joi.string().required().min(5).max(500).trim()
+      .messages({
+        'string.empty': 'Endereço completo é obrigatório',
+        'string.min': 'Endereço deve ter pelo menos 5 caracteres',
+        'any.required': 'Endereço completo é obrigatório',
+      }),
+
+    // Bank information - VALIDAÇÃO MUITO FLEXÍVEL
+    bankName: Joi.string().required().min(2).max(100).trim()
+      .messages({
+        'string.empty': 'Nome do banco é obrigatório',
+        'any.required': 'Nome do banco é obrigatório',
+      }),
+    bankAgency: Joi.string().required().min(1).max(20).trim()
+      .messages({
+        'string.empty': 'Agência é obrigatória',
+        'any.required': 'Agência é obrigatória',
+      }),
+    bankAccount: Joi.string().required().min(1).max(30).trim()
+      .messages({
+        'string.empty': 'Número da conta é obrigatório',
+        'any.required': 'Número da conta é obrigatório',
+      }),
+    bankAccountType: Joi.string().required()
+      .valid('corrente', 'poupança', 'CORRENTE', 'POUPANCA', 'poupanca', 'Corrente', 'Poupança', 'Conta Corrente')
+      .insensitive()
+      .messages({
+        'string.empty': 'Tipo de conta é obrigatório',
+        'any.only': 'Tipo de conta deve ser "corrente" ou "poupança"',
+        'any.required': 'Tipo de conta é obrigatório',
+      }),
+
+    // PIX key - VALIDAÇÃO MUITO FLEXÍVEL
+    pixKey: Joi.string().required().min(3).max(150).trim()
+      .messages({
+        'string.empty': 'Chave PIX é obrigatória',
+        'any.required': 'Chave PIX é obrigatória',
+      }),
+  }),
+});
+
 module.exports = {
   updateProfileSchema,
   updateUserSchema,
@@ -133,4 +197,5 @@ module.exports = {
   updatePixKeySchema,
   suspendUserSchema,
   banUserSchema,
+  upgradeToProducerSchema,
 };

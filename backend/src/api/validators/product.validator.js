@@ -54,7 +54,7 @@ const updateProductSchema = Joi.object({
     certificateIncluded: Joi.boolean().optional(),
     hasSupport: Joi.boolean().optional(),
     supportDuration: Joi.number().integer().min(0).max(365).optional(),
-    status: Joi.string().valid('DRAFT', 'PUBLISHED', 'ARCHIVED').optional(),
+    status: Joi.string().valid('DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REJECTED', 'ARCHIVED').optional(),
   }),
 });
 
@@ -95,7 +95,7 @@ const listProductsSchema = Joi.object({
     search: Joi.string().trim().optional(),
     category: Joi.string().trim().optional(),
     producerId: Joi.string().uuid().optional(),
-    status: Joi.string().valid('DRAFT', 'PUBLISHED', 'ARCHIVED').optional(),
+    status: Joi.string().valid('DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REJECTED', 'ARCHIVED').optional(),
     minPrice: Joi.number().min(0).optional(),
     maxPrice: Joi.number().min(0).optional(),
     level: Joi.string().valid('BEGINNER', 'INTERMEDIATE', 'ADVANCED').optional(),

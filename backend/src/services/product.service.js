@@ -6,6 +6,7 @@
 
 const productRepository = require('../repositories/product.repository');
 const userRepository = require('../repositories/user.repository');
+const emailService = require('./email.service');
 const ApiError = require('../utils/ApiError');
 const logger = require('../utils/logger');
 const { USER_ROLES, PRODUCT_STATUS } = require('../utils/constants');
@@ -118,6 +119,24 @@ const updateProduct = async (productId, userId, updateData) => {
       throw ApiError.forbidden('You do not have permission to update this product');
     }
 
+    // VALIDAÇÃO PROFISSIONAL: Se está publicando o produto, verificar se tem arquivos
+    if (updateData.status === PRODUCT_STATUS.PUBLISHED) {
+      const filesUrl = updateData.filesUrl !== undefined ? updateData.filesUrl : product.filesUrl;
+
+      if (!filesUrl || filesUrl.length === 0) {
+        throw ApiError.badRequest('Para publicar o produto, você precisa adicionar pelo menos 1 arquivo para os compradores baixarem. Produtos digitais precisam ter conteúdo disponível para download.');
+      }
+
+      // Validar campos obrigatórios para publicação
+      const title = updateData.title !== undefined ? updateData.title : product.title;
+      const description = updateData.description !== undefined ? updateData.description : product.description;
+      const price = updateData.price !== undefined ? updateData.price : product.price;
+
+      if (!title || !description || !price) {
+        throw ApiError.badRequest('Product must have title, description, and price to be published');
+      }
+    }
+
     // Remove fields that shouldn't be updated directly
     delete updateData.producerId;
     delete updateData.views;
@@ -184,7 +203,7 @@ const listProducts = async (filters, pagination, sorting) => {
 };
 
 /**
- * Publish product
+ * Publish product (submits for approval)
  * @param {string} productId - Product ID
  * @param {string} userId - User ID (must be owner)
  * @returns {Promise<Object>} Updated product
@@ -201,22 +220,119 @@ const publishProduct = async (productId, userId) => {
       throw ApiError.forbidden('You do not have permission to publish this product');
     }
 
+    // VALIDAÇÃO PROFISSIONAL: Produto precisa ter pelo menos 1 arquivo
+    if (!product.filesUrl || product.filesUrl.length === 0) {
+      throw ApiError.badRequest('Para publicar o produto, você precisa adicionar pelo menos 1 arquivo para os compradores baixarem. Produtos digitais precisam ter conteúdo disponível para download.');
+    }
+
     // Validate required fields before publishing
     if (!product.title || !product.description || !product.price) {
       throw ApiError.badRequest('Product must have title, description, and price to be published');
     }
 
-    if (!product.thumbnailUrl) {
-      throw ApiError.badRequest('Product must have a thumbnail to be published');
-    }
+    // Change status to PENDING_APPROVAL instead of PUBLISHED
+    const updatedProduct = await productRepository.updateStatus(productId, PRODUCT_STATUS.PENDING_APPROVAL);
 
-    const updatedProduct = await productRepository.updateStatus(productId, PRODUCT_STATUS.PUBLISHED);
+    // Get producer data
+    const producer = await userRepository.findUserById(userId);
 
-    logger.info('Product published', { productId, userId });
+    // Send email to admin
+    await emailService.sendProductSubmittedEmail(updatedProduct, producer);
+
+    logger.info('Product submitted for approval', { productId, userId });
 
     return updatedProduct;
   } catch (error) {
     logger.error('Error publishing product:', error);
+    throw error;
+  }
+};
+
+/**
+ * Approve product
+ * @param {string} productId - Product ID
+ * @param {string} adminId - Admin ID
+ * @returns {Promise<Object>} Updated product
+ */
+const approveProduct = async (productId, adminId) => {
+  try {
+    const product = await productRepository.findProductById(productId);
+    if (!product) {
+      throw ApiError.notFound('Product not found');
+    }
+
+    // Check admin permission
+    const admin = await userRepository.findUserById(adminId);
+    if (admin.role !== USER_ROLES.ADMIN) {
+      throw ApiError.forbidden('Only admins can approve products');
+    }
+
+    // Check if product is pending approval
+    if (product.status !== PRODUCT_STATUS.PENDING_APPROVAL) {
+      throw ApiError.badRequest('Product is not pending approval');
+    }
+
+    // Update status to PUBLISHED
+    const updatedProduct = await productRepository.updateStatus(productId, PRODUCT_STATUS.PUBLISHED);
+
+    // Get producer data
+    const producer = await userRepository.findUserById(product.producerId);
+
+    // Send approval email to producer
+    await emailService.sendProductApprovedEmail(updatedProduct, producer);
+
+    logger.info('Product approved', { productId, adminId });
+
+    return updatedProduct;
+  } catch (error) {
+    logger.error('Error approving product:', error);
+    throw error;
+  }
+};
+
+/**
+ * Reject product
+ * @param {string} productId - Product ID
+ * @param {string} adminId - Admin ID
+ * @param {string} reason - Rejection reason
+ * @returns {Promise<Object>} Updated product
+ */
+const rejectProduct = async (productId, adminId, reason) => {
+  try {
+    const product = await productRepository.findProductById(productId);
+    if (!product) {
+      throw ApiError.notFound('Product not found');
+    }
+
+    // Check admin permission
+    const admin = await userRepository.findUserById(adminId);
+    if (admin.role !== USER_ROLES.ADMIN) {
+      throw ApiError.forbidden('Only admins can reject products');
+    }
+
+    // Check if product can be rejected (PENDING_APPROVAL or PUBLISHED)
+    if (product.status !== PRODUCT_STATUS.PENDING_APPROVAL && product.status !== PRODUCT_STATUS.PUBLISHED) {
+      throw ApiError.badRequest('Only pending approval or published products can be rejected');
+    }
+
+    if (!reason) {
+      throw ApiError.badRequest('Rejection reason is required');
+    }
+
+    // Update status to REJECTED
+    const updatedProduct = await productRepository.updateStatus(productId, PRODUCT_STATUS.REJECTED);
+
+    // Get producer data
+    const producer = await userRepository.findUserById(product.producerId);
+
+    // Send rejection email to producer
+    await emailService.sendProductRejectedEmail(updatedProduct, producer, reason);
+
+    logger.info('Product rejected', { productId, adminId, reason });
+
+    return updatedProduct;
+  } catch (error) {
+    logger.error('Error rejecting product:', error);
     throw error;
   }
 };
@@ -358,6 +474,8 @@ module.exports = {
   deleteProduct,
   listProducts,
   publishProduct,
+  approveProduct,
+  rejectProduct,
   archiveProduct,
   getProductStats,
   getPopularProducts,

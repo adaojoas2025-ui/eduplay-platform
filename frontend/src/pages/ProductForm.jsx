@@ -72,7 +72,9 @@ export default function ProductForm() {
         language: product.language || 'Português',
         certificateIncluded: product.certificateIncluded ?? true,
         hasSupport: product.hasSupport ?? true,
-        status: product.status || 'DRAFT'
+        status: product.status || 'DRAFT',
+        filesUrl: product.filesUrl || [],
+        videoUrl: product.videoUrl || ''
       });
     } catch (err) {
       console.error('Error fetching product:', err);
@@ -116,13 +118,24 @@ export default function ProductForm() {
         'Todos os níveis': 'BEGINNER'
       };
 
+      // Filter out empty strings from filesUrl
+      const validFilesUrl = formData.filesUrl.filter(url => url.trim() !== '');
+
+      // VALIDAÇÃO: Se o produto está sendo PUBLICADO, precisa ter pelo menos 1 arquivo
+      if (formData.status === 'PUBLISHED' && validFilesUrl.length === 0) {
+        setError('⚠️ Para publicar o produto, você precisa adicionar pelo menos 1 arquivo para os compradores baixarem! Use o botão "+ Adicionar Link de Arquivo" abaixo.');
+        setSaving(false);
+        // Scroll to the files section
+        document.querySelector('[name="filesUrl"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
       const productData = {
         ...formData,
         price: parseFloat(formData.price),
         level: levelMap[formData.level] || 'BEGINNER',
         category: formData.category === 'Outra' ? formData.customCategory : formData.category,
-        // Filter out empty strings from filesUrl
-        filesUrl: formData.filesUrl.filter(url => url.trim() !== ''),
+        filesUrl: validFilesUrl,
         // Remove videoUrl if empty
         videoUrl: formData.videoUrl.trim() || undefined
       };
@@ -146,6 +159,11 @@ export default function ProductForm() {
             headers: { Authorization: `Bearer ${token}` }
           }
         );
+      }
+
+      // Show message if product was submitted for approval
+      if (formData.status === 'PUBLISHED') {
+        alert('✅ Produto enviado para aprovação do administrador. Você receberá um email quando for aprovado.');
       }
 
       navigate('/seller/products');
@@ -426,10 +444,10 @@ export default function ProductForm() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
             >
               <option value="DRAFT">Rascunho</option>
-              <option value="PUBLISHED">Publicado</option>
+              <option value="PUBLISHED">Enviar para Aprovação</option>
             </select>
             <p className="text-sm text-gray-500 mt-2">
-              Produtos em rascunho não aparecem no marketplace
+              Ao publicar, o produto será enviado para aprovação do administrador
             </p>
           </div>
 

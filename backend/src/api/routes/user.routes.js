@@ -47,6 +47,18 @@ router.post(
 );
 
 /**
+ * @route   POST /api/v1/users/upgrade-to-producer
+ * @desc    Upgrade user to producer/seller
+ * @access  Private (authenticated users)
+ */
+router.post(
+  '/upgrade-to-producer',
+  authenticate,
+  validate(userValidator.upgradeToProducerSchema),
+  userController.upgradeToProducer
+);
+
+/**
  * @route   PATCH /api/v1/users/pix-key
  * @desc    Update PIX key
  * @access  Private (Producer only)

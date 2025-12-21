@@ -85,4 +85,32 @@ router.patch('/orders/:id/status', adminController.updateOrderStatus);
  */
 router.patch('/users/:id/role', adminController.updateUserRole);
 
+/**
+ * @route   GET /api/v1/admin/products/pending
+ * @desc    List products pending approval
+ * @access  Private (Admin)
+ */
+router.get('/products/pending', adminController.listProductsPendingApproval);
+
+/**
+ * @route   POST /api/v1/admin/products/:id/approve
+ * @desc    Approve product
+ * @access  Private (Admin)
+ */
+router.post('/products/:id/approve', adminController.approveProduct);
+
+/**
+ * @route   POST /api/v1/admin/products/:id/reject
+ * @desc    Reject product
+ * @access  Private (Admin)
+ */
+router.post('/products/:id/reject', adminController.rejectProduct);
+
+/**
+ * @route   DELETE /api/v1/admin/products/:id
+ * @desc    Delete product
+ * @access  Private (Admin)
+ */
+router.delete('/products/:id', adminController.deleteProduct);
+
 module.exports = router;

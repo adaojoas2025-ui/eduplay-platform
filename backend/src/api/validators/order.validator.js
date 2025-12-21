@@ -12,7 +12,7 @@ const Joi = require('joi');
 const createOrderSchema = Joi.object({
   body: Joi.object({
     productId: Joi.string().uuid().required(),
-    paymentMethod: Joi.string().valid('CREDIT_CARD', 'PIX', 'BOLETO').default('PIX'),
+    paymentMethod: Joi.string().valid('CREDIT_CARD', 'PIX', 'BOLETO', 'INSTANT_TEST', 'TEST').default('PIX'),
   }),
 });
 

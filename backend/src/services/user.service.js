@@ -397,6 +397,82 @@ const updateUserRole = async (userId, role) => {
   }
 };
 
+/**
+ * Upgrade user to producer/seller
+ * @param {string} userId - User ID
+ * @param {Object} upgradeData - Producer data
+ * @returns {Promise<Object>} Updated user
+ */
+const upgradeToProducer = async (userId, upgradeData) => {
+  try {
+    // Get current user
+    const user = await userRepository.findUserById(userId);
+
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
+
+    // Check if user is already a producer
+    if (user.role === USER_ROLES.PRODUCER) {
+      throw ApiError.badRequest('User is already a producer');
+    }
+
+    // Validate required fields for producer upgrade
+    const {
+      businessName,
+      businessDocument,
+      businessPhone,
+      businessAddress,
+      bankName,
+      bankAgency,
+      bankAccount,
+      bankAccountType,
+      pixKey
+    } = upgradeData;
+
+    if (!businessName || !businessDocument || !businessPhone || !businessAddress) {
+      throw ApiError.badRequest('Business information is required: name, document, phone, and address');
+    }
+
+    if (!bankName || !bankAgency || !bankAccount || !bankAccountType) {
+      throw ApiError.badRequest('Bank information is required: bank name, agency, account, and account type');
+    }
+
+    if (!pixKey) {
+      throw ApiError.badRequest('PIX key is required');
+    }
+
+    // Update user to producer with all required information
+    const updatedUser = await userRepository.updateUser(userId, {
+      role: USER_ROLES.PRODUCER,
+      producerApproved: true,
+      producerApprovedAt: new Date(),
+      businessName,
+      businessDocument,
+      businessPhone,
+      businessAddress,
+      bankName,
+      bankAgency,
+      bankAccount,
+      bankAccountType,
+      pixKey,
+    });
+
+    logger.info('User upgraded to producer', {
+      userId,
+      businessName,
+      producerApproved: true
+    });
+
+    // Return user without sensitive banking info
+    const { password, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
+  } catch (error) {
+    logger.error('Error upgrading user to producer:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   getUserById,
   updateProfile,
@@ -411,4 +487,5 @@ module.exports = {
   getProducerStats,
   getUserStats,
   updateUserRole,
+  upgradeToProducer,
 };

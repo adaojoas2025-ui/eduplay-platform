@@ -112,6 +112,13 @@ router.post('/logout', authenticate, authController.logout);
 router.post('/upgrade-to-producer', authenticate, authController.upgradeToProducer);
 
 /**
+ * @route   POST /api/v1/auth/validate-password
+ * @desc    Validate user password without logging in
+ * @access  Private
+ */
+router.post('/validate-password', authenticate, authController.validatePassword);
+
+/**
  * @route   GET /api/v1/auth/google
  * @desc    Redirect to Google OAuth consent screen
  * @access  Public

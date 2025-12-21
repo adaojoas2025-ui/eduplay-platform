@@ -214,22 +214,73 @@ export default function Checkout() {
               )}
 
               <button
-                onClick={handleCheckout}
+                onClick={async () => {
+                  setLoading(true);
+                  setError(null);
+                  try {
+                    const token = localStorage.getItem('token');
+                    console.log('🔄 Iniciando pagamento instantâneo...');
+
+                    const orderData = {
+                      productId: cart.items[0].productId,
+                      amount: cart.items[0].price * cart.items[0].quantity,
+                      paymentMethod: 'INSTANT_TEST'
+                    };
+
+                    console.log('📦 Criando pedido:', orderData);
+                    const orderResponse = await axios.post(
+                      `${API_URL}/orders`,
+                      orderData,
+                      { headers: { Authorization: `Bearer ${token}` } }
+                    );
+
+                    const orderId = orderResponse.data.data.order.id;
+                    console.log('✅ Pedido criado:', orderId);
+
+                    console.log('💰 Aprovando pagamento...');
+                    const paymentResponse = await axios.post(
+                      `${API_URL}/test/approve-payment/${orderId}`,
+                      {},
+                      { headers: { Authorization: `Bearer ${token}` } }
+                    );
+
+                    console.log('✅ Pagamento aprovado:', paymentResponse.data);
+
+                    clearCart();
+                    navigate(`/order/${orderId}/success`);
+                  } catch (err) {
+                    console.error('❌ Erro no pagamento:', err);
+                    setError(err.response?.data?.message || 'Erro ao processar pagamento. Tente novamente.');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
                 disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-bold text-lg hover:from-green-600 hover:to-green-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
-                    <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Processando...
+                    Processando Pagamento...
                   </span>
                 ) : (
-                  'Finalizar Pagamento'
+                  <span className="flex items-center justify-center">
+                    <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Pagar Agora - Aprovação Instantânea
+                  </span>
                 )}
               </button>
+
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-800 text-center">
+                  <span className="font-semibold">✨ Pagamento de Teste:</span> Aprovação instantânea sem necessidade de cartão. Você receberá o produto por email imediatamente.
+                </p>
+              </div>
 
               <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

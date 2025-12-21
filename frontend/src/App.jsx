@@ -16,7 +16,8 @@ import SellerDashboard from './pages/SellerDashboard';
 import SellerProducts from './pages/SellerProducts';
 import ProductForm from './pages/ProductForm';
 import AdminDashboard from './pages/AdminDashboard';
-import AdminCommissions from './pages/AdminCommissions';
+import AdminCommissions from './pages/admin/AdminCommissions';
+import AdminProducts from './pages/admin/AdminProducts';
 import Gamification from './pages/Gamification';
 import GamificationAdmin from './pages/admin/GamificationAdmin';
 import UpgradeToProducer from './pages/UpgradeToProducer';
@@ -111,19 +112,67 @@ const Navbar = () => {
                   </button>
 
                   {menuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
-                      <Link to="/my-courses" className="block px-4 py-2 hover:bg-gray-100">
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                      <Link
+                        to="/my-courses"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
                         Meus Cursos
                       </Link>
-                      <Link to="/my-products" className="block px-4 py-2 hover:bg-gray-100">
+                      <Link
+                        to="/my-products"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
                         Meus Produtos
                       </Link>
-                      <Link to="/orders" className="block px-4 py-2 hover:bg-gray-100">
+                      <Link
+                        to="/orders"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
                         Pedidos
                       </Link>
-                      <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">
+                      <Link
+                        to="/profile"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
                         Perfil
                       </Link>
+                      {user.role === 'BUYER' && (
+                        <>
+                          <div className="border-t border-gray-200 my-2"></div>
+                          <Link
+                            to="/upgrade-to-producer"
+                            className="block px-4 py-2 hover:bg-purple-50 text-purple-600 font-semibold"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            🚀 Tornar-se Vendedor
+                          </Link>
+                        </>
+                      )}
+                      {user.role === 'ADMIN' && (
+                        <>
+                          <div className="border-t border-gray-200 my-2"></div>
+                          <Link
+                            to="/admin/products"
+                            className="block px-4 py-2 hover:bg-purple-50 text-purple-600 font-semibold"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            📋 Produtos Pendentes
+                          </Link>
+                          <Link
+                            to="/admin/commissions"
+                            className="block px-4 py-2 hover:bg-green-50 text-green-600 font-semibold"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            💰 Comissões (3%)
+                          </Link>
+                        </>
+                      )}
+                      <div className="border-t border-gray-200 my-2"></div>
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
@@ -265,7 +314,7 @@ const Home = () => {
               Explorar Produtos
             </Link>
             <Link
-              to="/seller/products/new"
+              to="/upgrade-to-producer"
               className="border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-purple-600 transition"
             >
               Começar a Vender
@@ -306,11 +355,28 @@ const Home = () => {
             Junte-se a milhares de produtores que já faturam na EDUPLAY
           </p>
           <Link
-            to="/seller/products/new"
+            to="/upgrade-to-producer"
             className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-8 py-4 rounded-lg font-bold text-lg hover:shadow-xl transition inline-block"
           >
-            Começar a Vender
+            Tornar-se Vendedor Agora
           </Link>
+          <div className="mt-8 grid md:grid-cols-3 gap-6 text-left">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="text-3xl mb-3">💰</div>
+              <h3 className="font-bold mb-2">Receba 97% das Vendas</h3>
+              <p className="text-gray-600 text-sm">Taxa de apenas 3% por venda. A menor do mercado!</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="text-3xl mb-3">⚡</div>
+              <h3 className="font-bold mb-2">Venda em Minutos</h3>
+              <p className="text-gray-600 text-sm">Preencha um formulário simples e comece a vender imediatamente</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="text-3xl mb-3">📦</div>
+              <h3 className="font-bold mb-2">Produtos Digitais</h3>
+              <p className="text-gray-600 text-sm">Venda cursos, ebooks, mentorias e qualquer produto digital</p>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -1027,6 +1093,7 @@ function App() {
         <Route path="/seller/products/new" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
         <Route path="/seller/products/:id/edit" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
         <Route path="/admin/commissions" element={<ProtectedRoute><AdminCommissions /></ProtectedRoute>} />
         <Route path="/admin/gamification" element={<ProtectedRoute><GamificationAdmin /></ProtectedRoute>} />
         <Route path="/gamification" element={<ProtectedRoute><Gamification /></ProtectedRoute>} />

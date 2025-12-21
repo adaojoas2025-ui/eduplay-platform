@@ -29,7 +29,9 @@ enum UserStatus {
 
 enum ProductStatus {
   DRAFT
+  PENDING_APPROVAL
   PUBLISHED
+  REJECTED
   ARCHIVED
 }
 
@@ -65,6 +67,18 @@ model User {
   phone                   String?
   cpf                     String?     @unique
   pixKey                  String?
+
+  // Producer/Seller specific fields
+  producerApproved        Boolean     @default(false)
+  producerApprovedAt      DateTime?
+  businessName            String?     // Nome da empresa/negócio
+  businessDocument        String?     // CNPJ ou CPF para vendas
+  businessPhone           String?     // Telefone comercial
+  businessAddress         String?     @db.Text // Endereço completo
+  bankName                String?     // Nome do banco
+  bankAgency              String?     // Agência
+  bankAccount             String?     // Conta
+  bankAccountType         String?     // Tipo de conta (corrente/poupança)
 
   // OAuth
   googleId                String?     @unique
@@ -132,6 +146,13 @@ model Product {
   featured          Boolean       @default(false)
   views             Int           @default(0)
   sales             Int           @default(0)
+
+  // Admin approval
+  approvedBy        String?
+  approvedAt        DateTime?
+  rejectedBy        String?
+  rejectedAt        DateTime?
+  rejectionReason   String?       @db.Text
 
   // Timestamps
   createdAt         DateTime      @default(now())

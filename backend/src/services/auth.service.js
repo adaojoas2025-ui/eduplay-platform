@@ -409,6 +409,27 @@ const upgradeToProducer = async (userId) => {
   }
 };
 
+/**
+ * Validate user password
+ * @param {string} userId - User ID
+ * @param {string} password - Password to validate
+ * @returns {Promise<boolean>} True if password is valid
+ */
+const validatePassword = async (userId, password) => {
+  try {
+    const user = await userRepository.findUserById(userId);
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
+
+    const isValid = await bcrypt.compare(password, user.password);
+    return isValid;
+  } catch (error) {
+    logger.error('Error validating password:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -421,4 +442,5 @@ module.exports = {
   generateTokens,
   updateLastLogin,
   upgradeToProducer,
+  validatePassword,
 };

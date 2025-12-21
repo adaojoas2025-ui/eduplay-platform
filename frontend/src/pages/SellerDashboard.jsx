@@ -146,12 +146,20 @@ export default function SellerDashboard() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-800">Meus Produtos</h2>
-              <Link
-                to="/seller/products/new"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold"
-              >
-                + Novo Produto
-              </Link>
+              <div className="flex gap-2">
+                <Link
+                  to="/seller/products"
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm font-semibold"
+                >
+                  Editar Meus Produtos
+                </Link>
+                <Link
+                  to="/seller/products/new"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold"
+                >
+                  + Novo Produto
+                </Link>
+              </div>
             </div>
 
             {products.length === 0 ? (

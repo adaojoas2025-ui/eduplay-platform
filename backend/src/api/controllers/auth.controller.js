@@ -163,6 +163,20 @@ const upgradeToProducer = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Validate user password without logging in
+ * @route POST /api/v1/auth/validate-password
+ * @access Private
+ */
+const validatePassword = asyncHandler(async (req, res) => {
+  const { password } = req.body;
+  const userId = req.user.id;
+
+  const isValid = await authService.validatePassword(userId, password);
+
+  return ApiResponse.success(res, 200, { valid: isValid }, 'Password validated');
+});
+
+/**
  * Google OAuth callback
  * @route GET /api/v1/auth/google/callback
  * @access Public
@@ -197,5 +211,6 @@ module.exports = {
   verifyEmail,
   logout,
   upgradeToProducer,
+  validatePassword,
   googleCallback,
 };
