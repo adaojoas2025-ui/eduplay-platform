@@ -18,7 +18,7 @@ async function resetAdminPassword() {
 
     // Buscar admin
     let admin = await prisma.user.findUnique({
-      where: { email: 'admin@educaplaja.com.br' },
+      where: { email: 'admin@educaplayja.com.br' },
     });
 
     if (!admin) {
@@ -27,8 +27,8 @@ async function resetAdminPassword() {
 
       admin = await prisma.user.create({
         data: {
-          name: 'Administrador EducaplaJA',
-          email: 'admin@educaplaja.com.br',
+          name: 'Administrador EducaplayJA',
+          email: 'admin@educaplayja.com.br',
           password: hashedPassword,
           role: 'ADMIN',
           emailVerified: true,
@@ -39,7 +39,7 @@ async function resetAdminPassword() {
     } else {
       // Se existir, atualizar senha
       await prisma.user.update({
-        where: { email: 'admin@educaplaja.com.br' },
+        where: { email: 'admin@educaplayja.com.br' },
         data: { password: hashedPassword },
       });
 
@@ -49,7 +49,7 @@ async function resetAdminPassword() {
     console.log('\n' + '='.repeat(60));
     console.log('📋 CREDENCIAIS DO ADMINISTRADOR');
     console.log('='.repeat(60));
-    console.log(`Email: admin@educaplaja.com.br`);
+    console.log(`Email: admin@educaplayja.com.br`);
     console.log(`Senha: ${newPassword}`);
     console.log('='.repeat(60));
     console.log('\n💡 IMPORTANTE: Guarde essas credenciais em local seguro!');

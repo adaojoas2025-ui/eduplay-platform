@@ -16,11 +16,11 @@ async function main() {
 
   // Create admin user
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@educaplaja.com.br' },
+    where: { email: 'admin@educaplayja.com.br' },
     update: {},
     create: {
-      name: 'Administrador EducaplaJA',
-      email: 'admin@educaplaja.com.br',
+      name: 'Administrador EducaplayJA',
+      email: 'admin@educaplayja.com.br',
       password: hashedPassword,
       role: 'ADMIN',
       status: 'ACTIVE',

@@ -1,8 +1,8 @@
--- Script para criar o banco de dados EducaplaJA
+-- Script para criar o banco de dados EducaplayJA
 -- Execute este script no pgAdmin ou SQL Shell (psql)
 
 -- Criar o banco de dados (se não existir)
-CREATE DATABASE educaplaja
+CREATE DATABASE educaplayja
     WITH
     OWNER = postgres
     ENCODING = 'UTF8'
@@ -11,5 +11,5 @@ CREATE DATABASE educaplaja
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
 
-COMMENT ON DATABASE educaplaja
-    IS 'EducaplaJA - Marketplace de Cursos Digitais';
+COMMENT ON DATABASE educaplayja
+    IS 'EducaplayJA - Marketplace de Cursos Digitais';

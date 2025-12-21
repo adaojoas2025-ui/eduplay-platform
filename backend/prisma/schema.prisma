@@ -1,4 +1,4 @@
-// Prisma Schema for EducaplaJA Platform
+// Prisma Schema for EducaplayJA Platform
 // Professional marketplace for digital courses
 
 generator client {

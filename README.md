@@ -1,4 +1,4 @@
-# 🎓 EducaplaJA - Plataforma Marketplace Profissional
+# 🎓 EducaplayJA - Plataforma Marketplace Profissional
 
 Uma plataforma completa de marketplace de produtos digitais estilo Eduzz/Hotmart.
 

@@ -1,7 +1,7 @@
 {
-  "name": "educaplaja-backend",
+  "name": "educaplayja-backend",
   "version": "1.0.0",
-  "description": "EducaplaJA - Professional marketplace platform for digital courses",
+  "description": "EducaplayJA - Professional marketplace platform for digital courses",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {

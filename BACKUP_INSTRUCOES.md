@@ -1,4 +1,4 @@
-# 🛡️ INSTRUÇÕES DE BACKUP E RESTAURAÇÃO - EducaplaJA
+# 🛡️ INSTRUÇÕES DE BACKUP E RESTAURAÇÃO - EducaplayJA
 
 ## ✅ Backup Criado em: 21/12/2025 às 13:55
 
