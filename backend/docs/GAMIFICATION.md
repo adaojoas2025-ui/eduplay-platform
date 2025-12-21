@@ -1,8 +1,8 @@
-# Sistema de Gamificação - EDUPLAY
+# Sistema de Gamificação - EducaplaJA
 
 ## Visão Geral
 
-O sistema de gamificação da plataforma EDUPLAY foi desenvolvido para aumentar o engajamento dos usuários através de pontos, níveis, badges, missões e rankings.
+O sistema de gamificação da plataforma EducaplaJA foi desenvolvido para aumentar o engajamento dos usuários através de pontos, níveis, badges, missões e rankings.
 
 ## Funcionalidades
 

@@ -1,4 +1,4 @@
-// 🎓 EDUPLAY - PLATAFORMA MARKETPLACE PROFISSIONAL
+// 🎓 EducaplaJA - PLATAFORMA MARKETPLACE PROFISSIONAL
 // Versão completa tipo Eduzz/Hotmart
 
 import { useState, useEffect } from 'react';
@@ -54,7 +54,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center space-x-2">
             <span className="text-3xl">🎓</span>
             <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
-              EDUPLAY
+              EducaplaJA
             </span>
           </Link>
 
@@ -209,7 +209,7 @@ const Footer = () => (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="grid md:grid-cols-4 gap-8">
         <div>
-          <h3 className="text-xl font-bold mb-4">🎓 EDUPLAY</h3>
+          <h3 className="text-xl font-bold mb-4">🎓 EducaplaJA</h3>
           <p className="text-gray-400">A maior plataforma de produtos digitais do Brasil</p>
         </div>
         <div>
@@ -235,7 +235,7 @@ const Footer = () => (
         </div>
       </div>
       <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-        <p>© 2025 EDUPLAY. Todos os direitos reservados.</p>
+        <p>© 2025 EducaplaJA. Todos os direitos reservados.</p>
       </div>
     </div>
   </footer>
@@ -352,7 +352,7 @@ const Home = () => {
             Comece a Vender Seus Produtos Hoje
           </h2>
           <p className="text-xl text-gray-600 mb-8">
-            Junte-se a milhares de produtores que já faturam na EDUPLAY
+            Junte-se a milhares de produtores que já faturam na EducaplaJA
           </p>
           <Link
             to="/upgrade-to-producer"

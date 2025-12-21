@@ -93,7 +93,9 @@
       "Bash(test:*)",
       "Bash(DATABASE_URL=\"postgresql://eduplay_user:e6WRYc525CE1Q5EeQXFbsK1dCL0ZqHml@dpg-d4tjga3uibrs73aohlpg-a.oregon-postgres.render.com:5432/eduplay_db_rsyj\" npx prisma db push --schema=c:projetosbackendprismaschema.prisma)",
       "Bash(npm start)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(ls:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

@@ -10,7 +10,7 @@ async function updateAdminCredentials() {
   console.log('\n🔐 ATUALIZANDO CREDENCIAIS DO ADMINISTRADOR\n');
 
   try {
-    const newEmail = 'ja.eduplay@gmail.com';
+    const newEmail = 'ja.educaplaja@gmail.com';
     const newPassword = 'Asa122448@';
 
     // Hash da senha
@@ -18,7 +18,7 @@ async function updateAdminCredentials() {
 
     // Buscar admin atual
     let admin = await prisma.user.findUnique({
-      where: { email: 'admin@eduplay.com.br' },
+      where: { email: 'admin@educaplaja.com.br' },
     });
 
     if (admin) {
@@ -28,7 +28,7 @@ async function updateAdminCredentials() {
         data: {
           email: newEmail,
           password: hashedPassword,
-          name: 'Administrador EDUPLAY',
+          name: 'Administrador EducaplaJA',
           emailVerified: true,
         },
       });
@@ -54,7 +54,7 @@ async function updateAdminCredentials() {
         // Criar novo admin
         await prisma.user.create({
           data: {
-            name: 'Administrador EDUPLAY',
+            name: 'Administrador EducaplaJA',
             email: newEmail,
             password: hashedPassword,
             role: 'ADMIN',
