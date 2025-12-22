@@ -97,17 +97,18 @@ async function processPaymentWebhook(paymentId) {
       }
 
       const platformFee = product.price * 0.10; // 10% platform fee
+      const producerAmount = product.price * 0.90; // 90% to producer
 
       order = await prisma.order.create({
         data: {
           productId: product.id,
           buyerId: buyer.id,
-          sellerId: product.producerId,
           amount: product.price,
           platformFee,
+          producerAmount,
           paymentId: String(paymentId),
           paymentStatus: status.toUpperCase(),
-          status: status === 'approved' ? 'COMPLETED' : 'PENDING',
+          status: status === 'approved' ? 'APPROVED' : 'PENDING',
         },
         include: {
           product: {
@@ -125,7 +126,7 @@ async function processPaymentWebhook(paymentId) {
         where: { id: order.id },
         data: {
           paymentStatus: status.toUpperCase(),
-          status: status === 'approved' ? 'COMPLETED' : order.status,
+          status: status === 'approved' ? 'APPROVED' : order.status,
         },
         include: {
           product: {
@@ -140,36 +141,63 @@ async function processPaymentWebhook(paymentId) {
     }
 
     // If payment approved, process commission and send emails
-    if (status === 'approved' && !order.delivered) {
-      const producerCommission = order.amount * 0.90; // 90% to producer
+    if (status === 'approved' && order) {
+      // Check if commission already exists
+      const existingCommission = await prisma.commission.findUnique({
+        where: { orderId: order.id },
+      });
 
-      // Create commission record
-      await prisma.commission.create({
-        data: {
-          orderId: order.id,
-          producerId: order.sellerId,
-          amount: producerCommission,
-          status: 'PENDING',
+      if (!existingCommission) {
+        const platformFeeAmount = order.amount * 0.03; // 3% platform fee
+        const producerCommission = order.amount - platformFeeAmount; // 97% to producer
+
+        // Get producer ID from product
+        const product = await prisma.product.findUnique({
+          where: { id: order.productId },
+          select: { producerId: true },
+        });
+
+        if (product) {
+          // Create commission record
+          await prisma.commission.create({
+            data: {
+              orderId: order.id,
+              producerId: product.producerId,
+              amount: platformFeeAmount,
+              status: 'PENDING',
+            },
+          });
+
+          console.log(`✅ Commission created: R$ ${platformFeeAmount.toFixed(2)} (3%) for order ${order.id}`);
+        }
+      }
+
+      // Reload order with includes for emails
+      const orderWithDetails = await prisma.order.findUnique({
+        where: { id: order.id },
+        include: {
+          product: {
+            include: {
+              producer: true,
+            },
+          },
+          buyer: true,
         },
       });
 
-      // Mark as delivered
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { delivered: true },
-      });
-
       // Send emails
-      try {
-        await sendPurchaseEmail(order.buyer, order.product, order.product.files);
-        await sendSaleNotification(
-          order.product.producer,
-          order.product,
-          order.buyer,
-          order.amount
-        );
-      } catch (emailError) {
-        console.error('Error sending emails:', emailError);
+      if (orderWithDetails) {
+        try {
+          await sendPurchaseEmail(orderWithDetails.buyer, orderWithDetails.product, []);
+          await sendSaleNotification(
+            orderWithDetails.product.producer,
+            orderWithDetails.product,
+            orderWithDetails.buyer,
+            orderWithDetails.amount
+          );
+        } catch (emailError) {
+          console.error('Error sending emails:', emailError);
+        }
       }
 
       console.log('✅ Payment processed successfully:', paymentId);
