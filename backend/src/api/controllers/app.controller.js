@@ -218,6 +218,39 @@ const addReview = asyncHandler(async (req, res) => {
   });
 });
 
+// User: Purchase paid app version
+const purchaseApp = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { version, price } = req.body;
+  const user = req.user;
+
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      message: 'You must be logged in to purchase an app',
+    });
+  }
+
+  if (version !== 'PAID_NO_ADS') {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid version for purchase',
+    });
+  }
+
+  const result = await appService.purchaseApp(id, user.id, version, price);
+
+  res.status(201).json({
+    success: true,
+    message: 'Purchase order created successfully',
+    data: {
+      orderId: result.order.id,
+      initPoint: result.initPoint,
+      status: result.order.status,
+    },
+  });
+});
+
 module.exports = {
   listApps,
   listAllApps,
@@ -229,4 +262,5 @@ module.exports = {
   archiveApp,
   downloadApp,
   addReview,
+  purchaseApp,
 };

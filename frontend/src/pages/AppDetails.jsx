@@ -45,8 +45,9 @@ export default function AppDetails() {
         navigate('/login');
         return;
       }
-      // TODO: Integrar com sistema de pagamento
-      alert('Funcionalidade de pagamento será implementada em breve!');
+
+      // Iniciar processo de compra
+      await handlePurchaseApp();
       return;
     }
 
@@ -59,6 +60,36 @@ export default function AppDetails() {
       }, 5000);
     } else {
       initiateDownload();
+    }
+  };
+
+  const handlePurchaseApp = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      // Criar pedido de compra do app
+      const response = await axios.post(
+        `${API_URL}/apps/${app.id}/purchase`,
+        {
+          version: selectedVersion,
+          price: app.paidNoAdsPrice
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      const { initPoint, orderId } = response.data.data;
+
+      // Salvar orderId no localStorage para verificar depois
+      localStorage.setItem('appPurchaseOrderId', orderId);
+      localStorage.setItem('appPurchaseAppId', app.id);
+
+      // Redirecionar para Mercado Pago
+      window.location.href = initPoint;
+    } catch (error) {
+      console.error('Error purchasing app:', error);
+      alert(error.response?.data?.message || 'Erro ao processar compra. Tente novamente.');
     }
   };
 

@@ -199,6 +199,102 @@ const addReview = async (appId, userId, userName, rating, comment, userAvatar = 
   }
 };
 
+const purchaseApp = async (appId, userId, version, price) => {
+  try {
+    const MercadoPago = require('mercadopago');
+    const orderRepository = require('../repositories/order.repository');
+    const userRepository = require('../repositories/user.repository');
+
+    // Get app details
+    const app = await appRepository.findAppById(appId);
+    if (!app) {
+      throw new Error('App not found');
+    }
+
+    // Validate if paid version is active
+    if (!app.paidNoAdsActive) {
+      throw new Error('Paid version not available for this app');
+    }
+
+    // Validate price
+    if (price !== app.paidNoAdsPrice) {
+      throw new Error('Invalid price');
+    }
+
+    // Get user details
+    const user = await userRepository.findUserById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Create order using existing order repository
+    const order = await orderRepository.createOrder({
+      userId,
+      productId: null, // App purchases don't use productId
+      amount: price,
+      status: 'PENDING',
+      paymentMethod: 'MERCADOPAGO',
+      metadata: {
+        appId: app.id,
+        appTitle: app.title,
+        version: version,
+        type: 'APP_PURCHASE',
+      },
+    });
+
+    // Configure Mercado Pago
+    const client = new MercadoPago.MercadoPagoConfig({
+      accessToken: process.env.MP_ACCESS_TOKEN,
+    });
+
+    const preference = new MercadoPago.Preference(client);
+
+    // Create preference
+    const preferenceData = {
+      items: [
+        {
+          id: app.id,
+          title: `${app.title} - Versão sem propaganda`,
+          description: `Compra da versão sem propaganda do app ${app.title}`,
+          quantity: 1,
+          unit_price: price,
+          currency_id: 'BRL',
+        },
+      ],
+      payer: {
+        name: user.name,
+        email: user.email,
+      },
+      back_urls: {
+        success: `${process.env.FRONTEND_URL}/apps/${app.slug}?payment=success`,
+        failure: `${process.env.FRONTEND_URL}/apps/${app.slug}?payment=failure`,
+        pending: `${process.env.FRONTEND_URL}/apps/${app.slug}?payment=pending`,
+      },
+      auto_return: 'approved',
+      external_reference: order.id,
+      notification_url: `${process.env.BACKEND_URL}/api/v1/webhooks/mercadopago`,
+    };
+
+    const result = await preference.create({ body: preferenceData });
+
+    logger.info('App purchase preference created', {
+      appId: app.id,
+      orderId: order.id,
+      userId: user.id,
+      price,
+    });
+
+    return {
+      order,
+      initPoint: result.init_point,
+      preferenceId: result.id,
+    };
+  } catch (error) {
+    logger.error('Error in purchaseApp service:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   createApp,
   getAppById,
@@ -210,4 +306,5 @@ module.exports = {
   archiveApp,
   downloadApp,
   addReview,
+  purchaseApp,
 };

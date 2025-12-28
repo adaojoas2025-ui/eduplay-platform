@@ -12,6 +12,7 @@ router.get('/:id/download', appController.downloadApp);
 
 // Authenticated routes
 router.post('/:id/review', authenticate, appController.addReview);
+router.post('/:id/purchase', authenticate, appController.purchaseApp);
 
 // Admin routes
 router.get('/admin/all', authenticate, authorize(USER_ROLES.ADMIN), appController.listAllApps);
