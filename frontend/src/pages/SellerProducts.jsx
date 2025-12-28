@@ -54,22 +54,40 @@ export default function SellerProducts() {
     }
   };
 
-  const handleToggleStatus = async (productId, currentStatus) => {
+  const handlePublish = async (productId) => {
     try {
       const token = localStorage.getItem('token');
-      const newStatus = currentStatus === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
 
-      await axios.patch(
-        `${API_URL}/products/${productId}`,
-        { status: newStatus },
+      await axios.post(
+        `${API_URL}/products/${productId}/publish`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      alert('Produto enviado para aprovação do administrador!');
+      fetchProducts();
+    } catch (err) {
+      console.error('Error publishing product:', err);
+      alert(err.response?.data?.message || 'Erro ao publicar produto');
+    }
+  };
+
+  const handleArchive = async (productId) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      await axios.post(
+        `${API_URL}/products/${productId}/archive`,
+        {},
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
       fetchProducts();
     } catch (err) {
-      console.error('Error updating status:', err);
-      alert(err.response?.data?.message || 'Erro ao atualizar status');
+      console.error('Error archiving product:', err);
+      alert(err.response?.data?.message || 'Erro ao arquivar produto');
     }
   };
 
@@ -192,10 +210,24 @@ export default function SellerProducts() {
                         className={`ml-4 px-3 py-1 rounded-full text-sm font-semibold ${
                           product.status === 'PUBLISHED'
                             ? 'bg-green-100 text-green-800'
+                            : product.status === 'PENDING_APPROVAL'
+                            ? 'bg-blue-100 text-blue-800'
+                            : product.status === 'REJECTED'
+                            ? 'bg-red-100 text-red-800'
+                            : product.status === 'ARCHIVED'
+                            ? 'bg-gray-100 text-gray-800'
                             : 'bg-yellow-100 text-yellow-800'
                         }`}
                       >
-                        {product.status === 'PUBLISHED' ? 'Publicado' : 'Rascunho'}
+                        {product.status === 'PUBLISHED'
+                          ? 'Publicado'
+                          : product.status === 'PENDING_APPROVAL'
+                          ? 'Aguardando Aprovação'
+                          : product.status === 'REJECTED'
+                          ? 'Rejeitado'
+                          : product.status === 'ARCHIVED'
+                          ? 'Arquivado'
+                          : 'Rascunho'}
                       </span>
                     </div>
 
@@ -234,23 +266,48 @@ export default function SellerProducts() {
                       >
                         Editar
                       </Link>
-                      <button
-                        onClick={() => handleToggleStatus(product.id, product.status)}
-                        className={`px-4 py-2 rounded-lg transition text-sm font-semibold ${
-                          product.status === 'PUBLISHED'
-                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                            : 'bg-green-100 text-green-800 hover:bg-green-200'
-                        }`}
-                      >
-                        {product.status === 'PUBLISHED' ? 'Despublicar' : 'Publicar'}
-                      </button>
-                      <Link
-                        to={`/product/${product.id}`}
-                        target="_blank"
-                        className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition text-sm font-semibold"
-                      >
-                        Ver Página
-                      </Link>
+
+                      {/* Botão Publicar - apenas para DRAFT */}
+                      {product.status === 'DRAFT' && (
+                        <button
+                          onClick={() => handlePublish(product.id)}
+                          className="bg-green-100 text-green-800 px-4 py-2 rounded-lg hover:bg-green-200 transition text-sm font-semibold"
+                        >
+                          Publicar
+                        </button>
+                      )}
+
+                      {/* Botão Arquivar - apenas para PUBLISHED */}
+                      {product.status === 'PUBLISHED' && (
+                        <button
+                          onClick={() => handleArchive(product.id)}
+                          className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg hover:bg-yellow-200 transition text-sm font-semibold"
+                        >
+                          Arquivar
+                        </button>
+                      )}
+
+                      {/* Mensagem de status para PENDING_APPROVAL */}
+                      {product.status === 'PENDING_APPROVAL' && (
+                        <div className="bg-blue-50 text-blue-800 px-4 py-2 rounded-lg text-sm font-semibold flex items-center">
+                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                          </svg>
+                          Aguardando aprovação do administrador
+                        </div>
+                      )}
+
+                      {/* Link Ver Página - apenas para PUBLISHED */}
+                      {product.status === 'PUBLISHED' && (
+                        <Link
+                          to={`/product/${product.id}`}
+                          target="_blank"
+                          className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition text-sm font-semibold"
+                        >
+                          Ver Página
+                        </Link>
+                      )}
+
                       <button
                         onClick={() => handleDelete(product.id)}
                         className="bg-red-100 text-red-800 px-4 py-2 rounded-lg hover:bg-red-200 transition text-sm font-semibold"

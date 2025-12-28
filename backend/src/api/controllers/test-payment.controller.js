@@ -31,14 +31,14 @@ const approveTestPayment = asyncHandler(async (req, res) => {
     return ApiResponse.error(res, 404, 'Pedido não encontrado');
   }
 
-  // Verificar se já foi aprovado
-  if (order.status === ORDER_STATUS.APPROVED) {
-    logger.warn('Tentativa de aprovar pedido já aprovado', { orderId });
+  // Verificar se já foi concluído
+  if (order.status === ORDER_STATUS.COMPLETED) {
+    logger.warn('Tentativa de aprovar pedido já concluído', { orderId });
     return ApiResponse.success(
       res,
       200,
       { order },
-      'Pedido já foi aprovado anteriormente'
+      'Pedido já foi concluído anteriormente'
     );
   }
 
@@ -56,14 +56,14 @@ const approveTestPayment = asyncHandler(async (req, res) => {
     paidAt: new Date(),
   };
 
-  // Atualizar pedido para APROVADO
-  logger.info('Atualizando status do pedido para APPROVED', {
+  // Atualizar pedido para COMPLETO (aprova e finaliza)
+  logger.info('Atualizando status do pedido para COMPLETED', {
     orderId,
     statusAntes: order.status,
-    novoStatus: ORDER_STATUS.APPROVED
+    novoStatus: ORDER_STATUS.COMPLETED
   });
 
-  const updatedOrderAfterPayment = await orderService.updateOrderStatus(orderId, ORDER_STATUS.APPROVED, paymentData);
+  const updatedOrderAfterPayment = await orderService.updateOrderStatus(orderId, ORDER_STATUS.COMPLETED, paymentData);
 
   logger.info('Pedido atualizado com sucesso', {
     orderId,

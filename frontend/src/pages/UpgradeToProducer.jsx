@@ -8,24 +8,39 @@ export default function UpgradeToProducer() {
   const navigate = useNavigate();
   const user = getUser();
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1); // 1 = dados iniciais, 2 = termo fiscal + banco
   const [formData, setFormData] = useState({
     businessName: '',
     businessDocument: '',
     businessPhone: '',
-    businessAddress: '',
+    street: '',
+    number: '',
+    complement: '',
+    neighborhood: '',
+    city: '',
+    state: 'SP',
+    zipCode: '',
     bankName: '',
     bankAgency: '',
     bankAccount: '',
     bankAccountType: 'corrente',
     pixKey: '',
+    acceptFiscalResponsibility: false,
+    acceptTerms: false,
   });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleNextStep = (e) => {
+    e.preventDefault();
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async (e) => {
@@ -33,7 +48,22 @@ export default function UpgradeToProducer() {
     setLoading(true);
 
     try {
-      const response = await api.post('/users/upgrade-to-producer', formData);
+      // Montar endereço completo a partir dos campos individuais
+      const businessAddress = `${formData.street}, ${formData.number}${formData.complement ? ', ' + formData.complement : ''}, ${formData.neighborhood}, ${formData.city} - ${formData.state}, CEP: ${formData.zipCode}`;
+
+      const submitData = {
+        businessName: formData.businessName,
+        businessDocument: formData.businessDocument,
+        businessPhone: formData.businessPhone,
+        businessAddress: businessAddress,
+        bankName: formData.bankName,
+        bankAgency: formData.bankAgency,
+        bankAccount: formData.bankAccount,
+        bankAccountType: formData.bankAccountType,
+        pixKey: formData.pixKey,
+      };
+
+      const response = await api.post('/users/upgrade-to-producer', submitData);
       console.log('Response:', response.data);
 
       // Backend retorna response.data.data (não response.data.data.user)
@@ -115,8 +145,9 @@ export default function UpgradeToProducer() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Business Information Section */}
+          <form onSubmit={step === 1 ? handleNextStep : handleSubmit} className="space-y-8">
+            {/* Step 1: Business Information */}
+            {step === 1 && (
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,35 +155,37 @@ export default function UpgradeToProducer() {
                 </svg>
                 Informações do Negócio
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nome do Negócio *
-                  </label>
-                  <input
-                    type="text"
-                    name="businessName"
-                    value={formData.businessName}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                    placeholder="Nome da sua empresa ou nome profissional"
-                  />
-                </div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nome do Negócio *
+                    </label>
+                    <input
+                      type="text"
+                      name="businessName"
+                      value={formData.businessName}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                      placeholder="Nome da sua empresa ou nome profissional"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    CPF ou CNPJ *
-                  </label>
-                  <input
-                    type="text"
-                    name="businessDocument"
-                    value={formData.businessDocument}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CPF ou CNPJ *
+                    </label>
+                    <input
+                      type="text"
+                      name="businessDocument"
+                      value={formData.businessDocument}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                      placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -164,7 +197,7 @@ export default function UpgradeToProducer() {
                     name="businessPhone"
                     value={formData.businessPhone}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     required
                     placeholder="11987654321"
                     pattern="[0-9]{10,11}"
@@ -172,24 +205,218 @@ export default function UpgradeToProducer() {
                   <p className="mt-1 text-xs text-gray-500">Apenas números, 10 ou 11 dígitos</p>
                 </div>
 
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Endereço Completo *
+                    Endereço *
                   </label>
-                  <textarea
-                    name="businessAddress"
-                    value={formData.businessAddress}
+                  <input
+                    type="text"
+                    name="street"
+                    value={formData.street}
                     onChange={handleChange}
-                    rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     required
-                    placeholder="Rua, número, complemento, bairro, cidade, estado, CEP"
+                    placeholder="Rua, Avenida, etc."
                   />
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Número *
+                    </label>
+                    <input
+                      type="text"
+                      name="number"
+                      value={formData.number}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                      placeholder="123"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Complemento
+                    </label>
+                    <input
+                      type="text"
+                      name="complement"
+                      value={formData.complement}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Apto, Sala, etc."
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bairro *
+                    </label>
+                    <input
+                      type="text"
+                      name="neighborhood"
+                      value={formData.neighborhood}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                      placeholder="Centro, Jardim, etc."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cidade *
+                    </label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                      placeholder="São Paulo"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Estado *
+                    </label>
+                    <select
+                      name="state"
+                      value={formData.state}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="AC">Acre</option>
+                      <option value="AL">Alagoas</option>
+                      <option value="AP">Amapá</option>
+                      <option value="AM">Amazonas</option>
+                      <option value="BA">Bahia</option>
+                      <option value="CE">Ceará</option>
+                      <option value="DF">Distrito Federal</option>
+                      <option value="ES">Espírito Santo</option>
+                      <option value="GO">Goiás</option>
+                      <option value="MA">Maranhão</option>
+                      <option value="MT">Mato Grosso</option>
+                      <option value="MS">Mato Grosso do Sul</option>
+                      <option value="MG">Minas Gerais</option>
+                      <option value="PA">Pará</option>
+                      <option value="PB">Paraíba</option>
+                      <option value="PR">Paraná</option>
+                      <option value="PE">Pernambuco</option>
+                      <option value="PI">Piauí</option>
+                      <option value="RJ">Rio de Janeiro</option>
+                      <option value="RN">Rio Grande do Norte</option>
+                      <option value="RS">Rio Grande do Sul</option>
+                      <option value="RO">Rondônia</option>
+                      <option value="RR">Roraima</option>
+                      <option value="SC">Santa Catarina</option>
+                      <option value="SP">São Paulo</option>
+                      <option value="SE">Sergipe</option>
+                      <option value="TO">Tocantins</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CEP *
+                    </label>
+                    <input
+                      type="text"
+                      name="zipCode"
+                      value={formData.zipCode}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                      placeholder="12345-678"
+                      pattern="[0-9]{5}-?[0-9]{3}"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Botão Continuar Step 1 */}
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="submit"
+                  className="px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg font-medium hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg hover:shadow-xl"
+                >
+                  Continuar
+                </button>
               </div>
             </div>
+            )}
 
-            {/* Banking Information Section */}
+            {/* Step 2: Fiscal Responsibility + Banking Information */}
+            {step === 2 && (
+            <>
+              {/* Fiscal Responsibility Section */}
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Complete seu perfil
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex items-start">
+                    <input
+                      type="checkbox"
+                      name="acceptFiscalResponsibility"
+                      checked={formData.acceptFiscalResponsibility}
+                      onChange={handleChange}
+                      className="mt-1 h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      required
+                    />
+                    <div className="ml-3">
+                      <label className="text-sm font-medium text-gray-900">
+                        Aceito o termo de responsabilidade fiscal
+                      </label>
+                      <div className="mt-2 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          Declaro ser o único responsável por manter em dia os pagamentos de meus tributos
+                          referentes a valores recebidos da Atividade de Divulgação de Produtos Digitais,
+                          não cabendo, portanto, qualquer responsabilidade à EducaplayJA ou aos produtores
+                          dos Conteúdos que estou divulgando.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start">
+                    <input
+                      type="checkbox"
+                      name="acceptTerms"
+                      checked={formData.acceptTerms}
+                      onChange={handleChange}
+                      className="mt-1 h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      required
+                    />
+                    <div className="ml-3">
+                      <label className="text-sm font-medium text-gray-900">
+                        Aceito os{' '}
+                        <a href="#" className="text-blue-600 hover:underline">
+                          termos de uso
+                        </a>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-900">
+                      Essa etapa é importante para garantir segurança jurídica, transparência nas transações
+                      e conformidade com nossos parceiros financeiros.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Banking Information Section */}
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -282,23 +509,16 @@ export default function UpgradeToProducer() {
               </div>
             </div>
 
-            {/* Terms and Submit */}
+            {/* Submit Buttons Step 2 */}
             <div className="border-t pt-6">
-              <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                <p className="text-sm text-gray-700">
-                  Ao continuar, você concorda com os termos de uso da plataforma e confirma que
-                  todas as informações fornecidas são verdadeiras e corretas.
-                </p>
-              </div>
-
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   type="button"
-                  onClick={() => navigate(-1)}
+                  onClick={() => setStep(1)}
                   className="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
                   disabled={loading}
                 >
-                  Cancelar
+                  Voltar
                 </button>
                 <button
                   type="submit"
@@ -319,6 +539,8 @@ export default function UpgradeToProducer() {
                 </button>
               </div>
             </div>
+            </>
+            )}
           </form>
         </div>
       </div>

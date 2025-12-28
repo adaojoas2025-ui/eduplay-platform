@@ -376,7 +376,15 @@ const getCommissionStats = async (filters = {}) => {
       }
     }
 
-    const [statusCounts, totalAmount] = await Promise.all([
+    // Get monthly stats (current month)
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const monthEnd = new Date(monthStart);
+    monthEnd.setMonth(monthEnd.getMonth() + 1);
+
+    const [statusCounts, totalAmount, monthlyStats, totalSales] = await Promise.all([
       prisma.commission.groupBy({
         by: ['status'],
         where,
@@ -392,6 +400,35 @@ const getCommissionStats = async (filters = {}) => {
         _sum: {
           amount: true,
         },
+        _count: {
+          id: true,
+        },
+      }),
+      prisma.commission.aggregate({
+        where: {
+          ...where,
+          createdAt: {
+            gte: monthStart,
+            lt: monthEnd,
+          },
+        },
+        _sum: {
+          amount: true,
+        },
+        _count: {
+          id: true,
+        },
+      }),
+      // Get total sales amount from orders
+      prisma.commission.findMany({
+        where,
+        include: {
+          order: {
+            select: {
+              amount: true,
+            },
+          },
+        },
       }),
     ]);
 
@@ -403,8 +440,30 @@ const getCommissionStats = async (filters = {}) => {
         };
         return acc;
       },
-      { byStatus: {}, totalAmount: totalAmount._sum.amount || 0 }
+      { byStatus: {} }
     );
+
+    // Calculate total sales revenue (sum of all order amounts)
+    const totalSalesRevenue = totalSales.reduce((sum, commission) => {
+      return sum + (commission.order?.amount || 0);
+    }, 0);
+
+    // Platform revenue is 3% of total sales
+    const platformRevenue = totalSalesRevenue * 0.03;
+
+    // Add aggregated totals
+    stats.totalAmount = totalAmount._sum.amount || 0; // Total commission paid to producers (97%)
+    stats.totalCount = totalAmount._count.id || 0;
+    stats.pendingAmount = stats.byStatus.PENDING?.amount || 0;
+    stats.pendingCount = stats.byStatus.PENDING?.count || 0;
+    stats.paidAmount = stats.byStatus.PAID?.amount || 0;
+    stats.paidCount = stats.byStatus.PAID?.count || 0;
+    stats.monthlyAmount = monthlyStats._sum.amount || 0;
+    stats.monthlyCount = monthlyStats._count.id || 0;
+
+    // Platform statistics
+    stats.totalSalesRevenue = totalSalesRevenue; // Total revenue from all sales
+    stats.platformRevenue = platformRevenue; // 3% platform commission
 
     return stats;
   } catch (error) {

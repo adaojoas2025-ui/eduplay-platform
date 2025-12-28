@@ -35,6 +35,17 @@ enum ProductStatus {
   ARCHIVED
 }
 
+enum AppStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AppVersion {
+  FREE_WITH_ADS
+  PAID_NO_ADS
+}
+
 enum OrderStatus {
   PENDING
   APPROVED
@@ -479,4 +490,113 @@ model Leaderboard {
   @@unique([period, category, userId, periodStart])
   @@index([period, category, rank])
   @@map("leaderboards")
+}
+
+// ========================================
+// APPS/GAMES MODELS
+// ========================================
+
+model App {
+  id                String      @id @default(uuid())
+  title             String
+  slug              String      @unique
+  developer         String      // Nome do desenvolvedor (Supersonic Studios LTD)
+  description       String      @db.Text
+  shortDescription  String?     // Descrição curta para listagem
+
+  // Imagens e mídia (estilo Play Store)
+  iconUrl           String      // Ícone do app (quadrado)
+  coverImages       String[]    @default([]) // Screenshots/imagens de capa
+  videoUrl          String?     // Vídeo de demonstração
+
+  // Classificação e métricas
+  rating            Float       @default(0) // 0-5 estrelas
+  totalRatings      Int         @default(0) // Total de avaliações
+  downloads         Int         @default(0)
+  fileSize          String      // Ex: "121 MB"
+  version           String      @default("1.0.0")
+  lastUpdate        DateTime    @default(now())
+
+  // Classificação etária
+  ageRating         String      @default("Livre") // Livre, 10+, 12+, 14+, 16+, 18+
+
+  // Categoria
+  category          String      // Games, Education, Tools, etc.
+  tags              String[]    @default([]) // casual, puzzle, action, etc.
+
+  // Versões do app
+  freeWithAdsUrl    String?     // URL do APK com propaganda
+  freeWithAdsActive Boolean     @default(true)
+
+  paidNoAdsUrl      String?     // URL do APK sem propaganda
+  paidNoAdsPrice    Float       @default(0)
+  paidNoAdsActive   Boolean     @default(false)
+
+  // AdSense
+  adsenseEnabled    Boolean     @default(false)
+  adsenseSlot       String?     // Slot ID do AdSense
+
+  // Informações adicionais
+  whatsNew          String?     @db.Text // O que há de novo nesta versão
+  permissions       String[]    @default([]) // Permissões necessárias
+  requiresInternet  Boolean     @default(false)
+  inAppPurchases    Boolean     @default(false)
+
+  // Status
+  status            AppStatus   @default(DRAFT)
+  featured          Boolean     @default(false)
+
+  // Timestamps
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relations
+  reviews           AppReview[]
+  downloads_history AppDownload[]
+
+  @@index([status])
+  @@index([category])
+  @@index([featured])
+  @@map("apps")
+}
+
+model AppReview {
+  id          String    @id @default(uuid())
+
+  appId       String
+  app         App       @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  userId      String
+  userName    String
+  userAvatar  String?
+
+  rating      Int       // 1-5
+  comment     String    @db.Text
+  helpful     Int       @default(0) // Quantas pessoas acharam útil
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([appId])
+  @@map("app_reviews")
+}
+
+model AppDownload {
+  id          String    @id @default(uuid())
+
+  appId       String
+  app         App       @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  userId      String?   // Null se for download sem login
+  version     AppVersion // FREE_WITH_ADS ou PAID_NO_ADS
+
+  // Informações de pagamento (se for versão paga)
+  orderId     String?
+  amount      Float     @default(0)
+
+  downloadedAt DateTime  @default(now())
+
+  @@index([appId])
+  @@index([userId])
+  @@map("app_downloads")
 }

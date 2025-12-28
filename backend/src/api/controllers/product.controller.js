@@ -79,7 +79,6 @@ const listProducts = asyncHandler(async (req, res) => {
     search,
     category,
     producerId,
-    status,
     minPrice,
     maxPrice,
     level,
@@ -91,7 +90,7 @@ const listProducts = asyncHandler(async (req, res) => {
     search,
     category,
     producerId,
-    status,
+    status: 'PUBLISHED', // Apenas produtos publicados no marketplace público
     minPrice: minPrice ? parseFloat(minPrice) : undefined,
     maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
     level,

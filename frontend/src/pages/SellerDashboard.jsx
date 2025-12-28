@@ -87,20 +87,49 @@ export default function SellerDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-gray-600">Receita Total</h3>
+              <h3 className="text-sm font-semibold text-gray-600">Vendas Totais</h3>
               <span className="text-2xl">💰</span>
             </div>
             <p className="text-3xl font-bold text-gray-800">
-              R$ {stats?.totalRevenue?.toFixed(2) || '0.00'}
+              R$ {stats?.totalAmount?.toFixed(2) || '0.00'}
             </p>
             <p className="text-sm text-gray-500 mt-2">
               {stats?.totalSales || 0} vendas realizadas
             </p>
           </div>
 
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-gray-600">Comissões Pendentes</h3>
+              <span className="text-2xl">⏳</span>
+            </div>
+            <p className="text-3xl font-bold text-orange-600">
+              R$ {stats?.pendingCommissions?.toFixed(2) || '0.00'}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              A pagar para plataforma (3%)
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-gray-600">Você Recebe</h3>
+              <span className="text-2xl">✅</span>
+            </div>
+            <p className="text-3xl font-bold text-green-600">
+              R$ {stats?.totalRevenue?.toFixed(2) || '0.00'}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Valor líquido após comissão
+            </p>
+          </div>
+        </div>
+
+        {/* Additional Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold text-gray-600">Produtos Ativos</h3>
@@ -110,7 +139,7 @@ export default function SellerDashboard() {
               {stats?.totalProducts || 0}
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              {stats?.publishedProducts || 0} publicados
+              Total de produtos
             </p>
           </div>
 
@@ -137,6 +166,19 @@ export default function SellerDashboard() {
             </p>
             <p className="text-sm text-gray-500 mt-2">
               Por venda
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-gray-600">Comissões Pagas</h3>
+              <span className="text-2xl">💸</span>
+            </div>
+            <p className="text-3xl font-bold text-gray-800">
+              R$ {stats?.paidCommissions?.toFixed(2) || '0.00'}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Já pagas à plataforma
             </p>
           </div>
         </div>

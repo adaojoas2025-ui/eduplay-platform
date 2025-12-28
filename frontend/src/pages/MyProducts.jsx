@@ -105,22 +105,22 @@ export default function MyProducts() {
                     </span>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        purchase.status === 'APPROVED'
+                        purchase.status === 'APPROVED' || purchase.status === 'COMPLETED'
                           ? 'bg-green-100 text-green-800'
                           : purchase.status === 'PENDING'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      {purchase.status === 'APPROVED'
-                        ? 'Aprovado'
+                      {purchase.status === 'APPROVED' || purchase.status === 'COMPLETED'
+                        ? 'Concluído'
                         : purchase.status === 'PENDING'
                         ? 'Pendente'
                         : purchase.status}
                     </span>
                   </div>
 
-                  {purchase.status === 'APPROVED' && (
+                  {(purchase.status === 'APPROVED' || purchase.status === 'COMPLETED') && (
                     <div className="space-y-2">
                       {purchase.product?.filesUrl && purchase.product.filesUrl.length > 0 ? (
                         purchase.product.filesUrl.map((fileUrl, index) => (

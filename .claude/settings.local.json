@@ -96,7 +96,13 @@
       "Bash(tasklist:*)",
       "Bash(ls:*)",
       "Bash(dir:*)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(npm --prefix c:projetosbackend run dev)",
+      "Bash(npm --prefix c:projetosfrontend run dev)",
+      "Bash(npm --prefix c:/projetos/backend run dev)",
+      "Bash(taskkill //F //PID 13664)",
+      "Bash(npm --prefix c:/projetos/frontend run dev)",
+      "Bash(taskkill //F //PID 15912)"
     ],
     "deny": [],
     "ask": []

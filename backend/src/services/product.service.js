@@ -29,16 +29,36 @@ const createProduct = async (producerId, productData) => {
       throw ApiError.forbidden('Only producers can create products');
     }
 
-    // Add producer ID and initial status
+    // Add producer ID and initial status - sempre PENDING_APPROVAL
     const product = await productRepository.createProduct({
       ...productData,
       producerId,
-      status: PRODUCT_STATUS.DRAFT,
+      status: PRODUCT_STATUS.PENDING_APPROVAL,
       views: 0,
       sales: 0,
     });
 
     logger.info('Product created', { productId: product.id, producerId });
+
+    // Buscar todos os administradores para enviar email
+    const admins = await userRepository.findUsersByRole(USER_ROLES.ADMIN);
+
+    // Enviar email para cada administrador
+    for (const admin of admins) {
+      try {
+        await emailService.sendProductPendingApprovalEmail(admin.email, {
+          adminName: admin.name,
+          productTitle: product.title,
+          producerName: producer.name,
+          productId: product.id,
+          productDescription: product.description,
+        });
+      } catch (emailError) {
+        logger.error('Error sending email to admin:', { adminId: admin.id, error: emailError });
+      }
+    }
+
+    logger.info('Product created and pending approval', { productId: product.id, producerId });
 
     return product;
   } catch (error) {
@@ -139,6 +159,11 @@ const updateProduct = async (productId, userId, updateData) => {
 
     // Remove fields that shouldn't be updated directly
     delete updateData.producerId;
+
+    // Apenas administrador pode mudar o status
+    if (updateData.status && user.role !== USER_ROLES.ADMIN) {
+      delete updateData.status;
+    }
     delete updateData.views;
     delete updateData.sales;
     delete updateData.slug;

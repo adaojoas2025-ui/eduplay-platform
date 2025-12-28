@@ -332,6 +332,17 @@ export default function AdminDashboard() {
                 <div className="text-sm text-gray-600">Gerenciar comissões</div>
               </div>
             </Link>
+
+            <Link
+              to="/admin/apps"
+              className="flex items-center gap-3 p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition"
+            >
+              <div className="text-3xl">📱</div>
+              <div>
+                <div className="font-semibold text-gray-800">Apps & Jogos</div>
+                <div className="text-sm text-gray-600">Publicar apps</div>
+              </div>
+            </Link>
           </div>
         </div>
 

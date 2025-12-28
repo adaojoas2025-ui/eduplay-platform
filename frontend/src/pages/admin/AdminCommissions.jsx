@@ -87,12 +87,24 @@ export default function AdminCommissions() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md p-6 text-white">
+            <div className="text-sm font-semibold mb-2 opacity-90">
+              💰 Receita da Plataforma
+            </div>
+            <div className="text-3xl font-bold">
+              R$ {(stats?.platformRevenue || 0).toFixed(2)}
+            </div>
+            <div className="text-xs mt-1 opacity-75">
+              3% sobre R$ {(stats?.totalSalesRevenue || 0).toFixed(2)} em vendas
+            </div>
+          </div>
+
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="text-sm font-semibold text-gray-600 mb-2">
-              Total Arrecadado
+              Total Vendedores
             </div>
-            <div className="text-3xl font-bold text-green-600">
+            <div className="text-3xl font-bold text-gray-800">
               R$ {stats?.totalAmount?.toFixed(2) || '0.00'}
             </div>
             <div className="text-xs text-gray-500 mt-1">

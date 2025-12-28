@@ -15,12 +15,17 @@ import MyProducts from './pages/MyProducts';
 import SellerDashboard from './pages/SellerDashboard';
 import SellerProducts from './pages/SellerProducts';
 import ProductForm from './pages/ProductForm';
+import CompleteProfile from './pages/CompleteProfile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCommissions from './pages/admin/AdminCommissions';
 import AdminProducts from './pages/admin/AdminProducts';
 import Gamification from './pages/Gamification';
 import GamificationAdmin from './pages/admin/GamificationAdmin';
 import UpgradeToProducer from './pages/UpgradeToProducer';
+import AppsStore from './pages/AppsStore';
+import AppDetails from './pages/AppDetails';
+import ManageApps from './pages/admin/ManageApps';
+import AppForm from './pages/admin/AppForm';
 import { AchievementQueueManager } from './components/AchievementNotification';
 import { API_URL } from './config/api.config';
 
@@ -62,6 +67,11 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/marketplace" className="text-gray-700 hover:text-purple-600 font-semibold transition">
               Marketplace
+            </Link>
+
+            <Link to="/apps" className="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center space-x-1">
+              <span className="text-xl">📱</span>
+              <span>Apps</span>
             </Link>
 
             {user && (
@@ -133,6 +143,13 @@ const Navbar = () => {
                         onClick={() => setMenuOpen(false)}
                       >
                         Pedidos
+                      </Link>
+                      <Link
+                        to="/seller/dashboard"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        💰 Financeiro
                       </Link>
                       <Link
                         to="/profile"
@@ -1088,6 +1105,7 @@ function App() {
         <Route path="/order/:id/failure" element={<OrderFailure />} />
         <Route path="/order/:id/pending" element={<OrderPending />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfile /></ProtectedRoute>} />
         <Route path="/seller/dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
         <Route path="/seller/products" element={<ProtectedRoute><SellerProducts /></ProtectedRoute>} />
         <Route path="/seller/products/new" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
@@ -1096,6 +1114,11 @@ function App() {
         <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
         <Route path="/admin/commissions" element={<ProtectedRoute><AdminCommissions /></ProtectedRoute>} />
         <Route path="/admin/gamification" element={<ProtectedRoute><GamificationAdmin /></ProtectedRoute>} />
+        <Route path="/admin/apps" element={<ProtectedRoute><ManageApps /></ProtectedRoute>} />
+        <Route path="/admin/apps/new" element={<ProtectedRoute><AppForm /></ProtectedRoute>} />
+        <Route path="/admin/apps/:id/edit" element={<ProtectedRoute><AppForm /></ProtectedRoute>} />
+        <Route path="/apps" element={<AppsStore />} />
+        <Route path="/apps/:slug" element={<AppDetails />} />
         <Route path="/gamification" element={<ProtectedRoute><Gamification /></ProtectedRoute>} />
         <Route path="/upgrade-to-producer" element={<ProtectedRoute><UpgradeToProducer /></ProtectedRoute>} />
       </Routes>

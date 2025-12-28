@@ -17,6 +17,7 @@ const paymentRoutes = require('./payment.routes');
 const adminRoutes = require('./admin.routes');
 const sellerRoutes = require('./seller.routes');
 const gamificationRoutes = require('./gamification.routes');
+const appRoutes = require('./app.routes');
 const tempUpgradeRoutes = require('./temp-upgrade.routes'); // TEMPORARY - Remove after use
 const testRoutes = require('./test.routes');
 
@@ -45,6 +46,7 @@ router.use('/payments', paymentRoutes);
 router.use('/admin', adminRoutes);
 router.use('/seller', sellerRoutes);
 router.use('/gamification', gamificationRoutes);
+router.use('/apps', appRoutes);
 router.use('/temp-upgrade', tempUpgradeRoutes); // TEMPORARY - Remove after use
 router.use('/test', testRoutes);
 

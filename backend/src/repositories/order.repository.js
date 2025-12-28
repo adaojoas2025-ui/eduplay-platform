@@ -375,7 +375,21 @@ const getUserPurchases = async (userId) => {
       },
     });
 
-    return orders;
+    // Transform filesUrl array into files objects for frontend compatibility
+    const transformedOrders = orders.map(order => ({
+      ...order,
+      product: {
+        ...order.product,
+        files: order.product.filesUrl.map((url, index) => ({
+          id: `${order.product.id}-file-${index}`,
+          name: url.split('/').pop() || `Arquivo ${index + 1}`,
+          url: url,
+          size: 0 // Size not available, frontend can handle this
+        }))
+      }
+    }));
+
+    return transformedOrders;
   } catch (error) {
     logger.error('Error getting user purchases:', error);
     throw error;

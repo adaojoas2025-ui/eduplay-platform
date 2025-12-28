@@ -291,7 +291,7 @@ const updatePixKey = async (userId, pixKey) => {
  */
 const getProducerStats = async (producerId) => {
   try {
-    const [totalProducts, totalSales, totalRevenue] = await Promise.all([
+    const [totalProducts, totalSales, totalRevenue, totalAmount, pendingCommissions, paidCommissions] = await Promise.all([
       prisma.product.count({
         where: { producerId },
       }),
@@ -310,15 +310,67 @@ const getProducerStats = async (producerId) => {
           producerAmount: true,
         },
       }),
+      prisma.order.aggregate({
+        where: {
+          product: { producerId },
+          status: 'COMPLETED',
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+      prisma.commission.aggregate({
+        where: {
+          producerId,
+          status: 'PENDING',
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+      prisma.commission.aggregate({
+        where: {
+          producerId,
+          status: 'PAID',
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
     ]);
 
     return {
       totalProducts,
       totalSales,
       totalRevenue: totalRevenue._sum.producerAmount || 0,
+      totalAmount: totalAmount._sum.amount || 0,
+      pendingCommissions: pendingCommissions._sum.amount || 0,
+      paidCommissions: paidCommissions._sum.amount || 0,
     };
   } catch (error) {
     logger.error('Error getting producer stats:', error);
+    throw error;
+  }
+};
+
+/**
+ * Find users by role
+ * @param {string} role - User role
+ * @returns {Promise<Array>} List of users
+ */
+const findUsersByRole = async (role) => {
+  try {
+    return await prisma.user.findMany({
+      where: { role },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+  } catch (error) {
+    logger.error('Error finding users by role:', error);
     throw error;
   }
 };
@@ -328,6 +380,7 @@ module.exports = {
   findUserById,
   findUserByEmail,
   findUserByCpf,
+  findUsersByRole,
   updateUser,
   deleteUser,
   listUsers,

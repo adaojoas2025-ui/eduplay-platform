@@ -513,6 +513,86 @@ const sendProductRejectedEmail = async (product, producer, reason) => {
   }
 };
 
+/**
+ * Send email to admin when a product is pending approval
+ * @param {string} adminEmail - Admin email
+ * @param {Object} data - Email data
+ */
+const sendProductPendingApprovalEmail = async (adminEmail, data) => {
+  try {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+          .product-info { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #7c3aed; }
+          .product-title { font-size: 20px; font-weight: bold; color: #7c3aed; margin-bottom: 10px; }
+          .producer-name { color: #6b7280; font-size: 14px; margin-bottom: 15px; }
+          .description { color: #374151; line-height: 1.6; margin-top: 10px; }
+          .button { display: inline-block; padding: 12px 30px; background: #7c3aed; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+          .button:hover { background: #6d28d9; }
+          .footer { text-align: center; color: #9ca3af; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🔔 Novo Produto Aguardando Aprovação</h1>
+          </div>
+          <div class="content">
+            <p>Olá ${data.adminName},</p>
+
+            <p>Um novo produto foi criado e está aguardando sua aprovação no EducaplayJA.</p>
+
+            <div class="product-info">
+              <div class="product-title">${data.productTitle}</div>
+              <div class="producer-name">👤 Criado por: ${data.producerName}</div>
+              ${data.productDescription ? `<div class="description">${data.productDescription.substring(0, 200)}${data.productDescription.length > 200 ? '...' : ''}</div>` : ''}
+            </div>
+
+            <p>Por favor, revise o produto e tome uma ação:</p>
+
+            <div style="text-align: center;">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin/products" class="button">
+                Revisar Produto
+              </a>
+            </div>
+
+            <p style="margin-top: 30px; color: #6b7280; font-size: 14px;">
+              💡 <strong>Dica:</strong> Verifique se o produto atende aos padrões de qualidade da plataforma antes de aprovar.
+            </p>
+          </div>
+          <div class="footer">
+            <p>© 2025 EducaplayJA. Todos os direitos reservados.</p>
+            <p>Este é um email automático, por favor não responda.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    await emailConfig.sendEmail({
+      to: adminEmail,
+      subject: `🔔 Novo Produto Aguardando Aprovação: ${data.productTitle}`,
+      html,
+    });
+
+    logger.info('Product pending approval email sent', {
+      productId: data.productId,
+      adminEmail: adminEmail,
+    });
+  } catch (error) {
+    logger.error('Error sending product pending approval email:', error);
+    // Don't throw - email errors shouldn't block product creation
+  }
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendVerificationEmail,
@@ -525,4 +605,5 @@ module.exports = {
   sendProductSubmittedEmail,
   sendProductApprovedEmail,
   sendProductRejectedEmail,
+  sendProductPendingApprovalEmail,
 };

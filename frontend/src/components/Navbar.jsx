@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
+import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiDollarSign } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import useStore from '../store/useStore';
 import { toast } from 'react-toastify';
@@ -61,11 +61,10 @@ export default function Navbar() {
 
             {authenticated ? (
               <>
-                {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
-                  <Link to="/seller/dashboard" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
-                    Área do Vendedor
-                  </Link>
-                )}
+                <Link to="/seller/dashboard" className="flex items-center space-x-1 text-gray-700 hover:text-primary-500 font-medium transition-colors">
+                  <FiDollarSign className="text-lg" />
+                  <span>Financeiro</span>
+                </Link>
 
                 {user?.role === 'BUYER' && (
                   <Link to="/upgrade-to-producer" className="bg-gradient-to-r from-primary-600 to-primary-800 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
@@ -74,9 +73,15 @@ export default function Navbar() {
                 )}
 
                 {user?.role === 'ADMIN' && (
-                  <Link to="/admin/dashboard" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
-                    Admin
-                  </Link>
+                  <>
+                    <Link to="/admin/dashboard" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
+                      Admin
+                    </Link>
+                    <Link to="/admin/apps" className="flex items-center space-x-1 text-gray-700 hover:text-primary-500 font-medium transition-colors">
+                      <span>📱</span>
+                      <span>Apps</span>
+                    </Link>
+                  </>
                 )}
 
                 <Link to="/my-courses" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
@@ -96,32 +101,48 @@ export default function Navbar() {
                   )}
                 </Link>
 
-                <div className="relative">
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                <div className="flex items-center space-x-3">
+                  <Link
+                    to="/seller/dashboard"
                     className="flex items-center space-x-2 text-gray-700 hover:text-primary-500 transition-colors"
                   >
                     <FiUser className="text-xl" />
                     <span className="font-medium">{user?.name?.split(' ')[0]}</span>
-                  </button>
+                  </Link>
 
-                  {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
-                      <Link to="/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
-                        Meu Perfil
-                      </Link>
-                      <Link to="/orders" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
-                        Meus Pedidos
-                      </Link>
-                      <Link to="/my-products" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
-                        Meus Produtos
-                      </Link>
-                      <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 flex items-center space-x-2">
-                        <FiLogOut />
-                        <span>Sair</span>
-                      </button>
-                    </div>
-                  )}
+                  <div className="relative">
+                    <button
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      className="text-gray-700 hover:text-primary-500 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {userMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
+                        <Link to="/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
+                          Meu Perfil
+                        </Link>
+                        <Link to="/my-products" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
+                          Meus Produtos
+                        </Link>
+                        <Link to="/orders" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
+                          Pedidos
+                        </Link>
+                        <Link to="/seller/dashboard" className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
+                          <FiDollarSign />
+                          <span>Financeiro</span>
+                        </Link>
+                        <hr className="my-2" />
+                        <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 flex items-center space-x-2">
+                          <FiLogOut />
+                          <span>Sair</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </>
             ) : (
@@ -146,11 +167,25 @@ export default function Navbar() {
             </Link>
             {authenticated ? (
               <>
+                {user?.role === 'ADMIN' && (
+                  <>
+                    <Link to="/admin/dashboard" className="block text-gray-700 hover:text-primary-500 font-medium" onClick={() => setMenuOpen(false)}>
+                      🛡️ Admin Dashboard
+                    </Link>
+                    <Link to="/admin/apps" className="block text-gray-700 hover:text-primary-500 font-medium" onClick={() => setMenuOpen(false)}>
+                      📱 Publicar Apps
+                    </Link>
+                  </>
+                )}
                 <Link to="/my-courses" className="block text-gray-700 hover:text-primary-500 font-medium" onClick={() => setMenuOpen(false)}>
                   Meus Cursos
                 </Link>
                 <Link to="/my-products" className="block text-gray-700 hover:text-primary-500 font-medium" onClick={() => setMenuOpen(false)}>
                   Meus Produtos
+                </Link>
+                <Link to="/seller/dashboard" className="flex items-center space-x-2 text-gray-700 hover:text-primary-500 font-medium" onClick={() => setMenuOpen(false)}>
+                  <FiDollarSign />
+                  <span>Financeiro</span>
                 </Link>
                 <Link to="/profile" className="block text-gray-700 hover:text-primary-500 font-medium" onClick={() => setMenuOpen(false)}>
                   Meu Perfil

@@ -603,8 +603,40 @@ class GamificationService {
       const pointsNeededForNextLevel = nextLevelThreshold - currentLevelThreshold;
       const progressPercentage = Math.min(100, (progressToNextLevel / pointsNeededForNextLevel) * 100);
 
+      // Get user statistics
+      const [totalPurchases, totalSales, reviewsMade, coursesCompleted] = await Promise.all([
+        // Total de compras (pedidos completados como comprador)
+        prisma.order.count({
+          where: {
+            buyerId: userId,
+            status: 'COMPLETED'
+          }
+        }),
+        // Total de vendas (pedidos completados de produtos do usuário)
+        prisma.order.count({
+          where: {
+            product: {
+              producerId: userId
+            },
+            status: 'COMPLETED'
+          }
+        }),
+        // Total de avaliações feitas
+        prisma.review.count({
+          where: {
+            userId: userId
+          }
+        }),
+        // Cursos concluídos (placeholder - pode ser implementado depois)
+        Promise.resolve(0)
+      ]);
+
       return {
         ...gamification,
+        totalPurchases,
+        totalSales,
+        reviewsMade,
+        coursesCompleted,
         levelInfo: {
           currentLevel: gamification.currentLevel,
           totalPoints: gamification.totalPoints,
