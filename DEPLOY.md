@@ -1,6 +1,46 @@
-# 🚀 Guia de Deploy - EDUPLAY Platform
+# 🚀 Guia de Deploy - EducaplayJA Platform
 
-Este guia explica como fazer deploy do sistema EDUPLAY em produção usando **Render** (backend) e **Vercel** (frontend).
+Este guia explica como fazer deploy do sistema **EducaplayJA** em produção usando **Render** (backend) e **Vercel** (frontend).
+
+**IMPORTANTE:** Vamos usar o banco de dados PostgreSQL que VOCÊ JÁ TEM em produção no Render, então não vamos criar um novo banco!
+
+---
+
+## ⚡ Resumo Ultra Rápido (TL;DR)
+
+**Se você já tem contas no Render e Vercel, siga isso:**
+
+1. **Push para GitHub:**
+   ```bash
+   git add .
+   git commit -m "Deploy EducaplayJA v1.5.0"
+   git push origin main
+   ```
+
+2. **Render (Backend):**
+   - New → Web Service → Conecte o repo
+   - Name: `educaplayja-api`
+   - Root: `backend`
+   - Build: `npm install && npx prisma generate`
+   - Start: `npm start`
+   - Copie TODAS as variáveis do `.env` local (Seção 2.3 deste guia)
+   - Deploy!
+
+3. **Vercel (Frontend):**
+   - New Project → Conecte o repo
+   - Root: `frontend`
+   - Framework: Vite
+   - Adicione variável: `VITE_API_URL=https://educaplayja-api.onrender.com/api/v1`
+   - Deploy!
+
+4. **Configurações Finais:**
+   - Atualize `FRONTEND_URL` e `BACKEND_URL` no Render
+   - Atualize Google OAuth com as URLs de produção
+   - Teste tudo!
+
+**Leia o guia completo abaixo se tiver dúvidas!**
+
+---
 
 ## 📋 Pré-requisitos
 
@@ -57,77 +97,81 @@ git status
 2. Clique em **"New +"** → **"Web Service"**
 3. Conecte seu repositório GitHub
 4. Configure:
-   - **Name**: `eduplay-api`
+   - **Name**: `educaplayja-api`
    - **Region**: `Oregon (US West)`
    - **Branch**: `main`
    - **Root Directory**: `backend`
    - **Environment**: `Node`
-   - **Build Command**: `npm install && npx prisma generate && npx prisma migrate deploy`
+   - **Build Command**: `npm install && npx prisma generate`
    - **Start Command**: `npm start`
    - **Plan**: `Free`
 
-### 2.2 Criar Database PostgreSQL no Render
+### 2.2 ⚠️ IMPORTANTE: Usar seu Banco de Dados Existente
 
-1. No Render Dashboard → **"New +"** → **"PostgreSQL"**
-2. Configure:
-   - **Name**: `eduplay-db`
-   - **Database**: `eduplay`
-   - **Plan**: `Free`
-   - **Region**: `Oregon (US West)`
-3. Clique em **"Create Database"**
-4. Copie a **Internal Database URL** (formato: `postgresql://...`)
+**NÃO CRIE UM NOVO BANCO!** Você já tem um banco PostgreSQL rodando no Render com todos os dados.
+
+1. No Render Dashboard, encontre seu banco existente (deve ser algo como `eduplay_db_rsyj`)
+2. Clique nele e copie a **External Database URL** (formato: `postgresql://eduplay_user:senha@dpg-...`)
+3. Essa é a URL que você vai usar na variável `DATABASE_URL` do Web Service
 
 ### 2.3 Configurar Variáveis de Ambiente
 
-No Web Service `eduplay-api`, vá em **"Environment"** e adicione:
+No Web Service `educaplayja-api`, vá em **"Environment"** e adicione TODAS as variáveis abaixo:
+
+**ATENÇÃO:** As variáveis marcadas com ⚠️ você JÁ TEM configuradas. Copie do seu arquivo `.env` local!
 
 ```bash
 # Application
 NODE_ENV=production
 PORT=3000
 
-# Database (Cole a URL do banco criado acima)
-DATABASE_URL=postgresql://eduplay_user:senha@dpg-xxxxx.oregon-postgres.render.com/eduplay
+# Database - ⚠️ COPIE a URL do seu banco existente no Render
+DATABASE_URL=postgresql://eduplay_user:e6WRYc525CE1Q5EeQXFbsK1dCL0ZqHml@dpg-d4tjga3uibrs73aohlpg-a.oregon-postgres.render.com:5432/eduplay_db_rsyj
 
-# JWT Secrets (IMPORTANTE: Gere valores seguros!)
-JWT_SECRET=gere-um-valor-aleatorio-muito-seguro-minimo-32-caracteres
-JWT_REFRESH_SECRET=outro-valor-aleatorio-diferente-minimo-32-caracteres
+# JWT Secrets - ⚠️ MANTENHA os mesmos valores do seu .env local OU gere novos
+JWT_SECRET=eduplay-super-secret-jwt-key-2024-change-in-production
+JWT_REFRESH_SECRET=eduplay-refresh-secret-2024-change-in-production
 JWT_EXPIRES_IN=7d
 JWT_REFRESH_EXPIRES_IN=30d
 
-# Mercado Pago (Credenciais de PRODUÇÃO)
-MP_ACCESS_TOKEN=seu-token-de-producao-mercadopago
-MP_PUBLIC_KEY=sua-chave-publica-de-producao
+# Mercado Pago - ⚠️ INICIALMENTE USE TEST, depois troque para PRODUÇÃO
+MP_ACCESS_TOKEN=TEST-4893843815915945-120117-dc45f68f6805eb7bf92f3d0dbe637ee5-145851665
+MP_PUBLIC_KEY=TEST-d1674a6b-17bd-46d4-acc4-c95ad9fe02d9
 
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=seu-cloud-name
-CLOUDINARY_API_KEY=sua-api-key
-CLOUDINARY_API_SECRET=seu-api-secret
+# Cloudinary - ⚠️ COPIE do seu .env local
+CLOUDINARY_CLOUD_NAME=dexlzykqm
+CLOUDINARY_API_KEY=761719984596219
+CLOUDINARY_API_SECRET=QkAyuumJD-_EsIezBPd2UQVYKew
 
-# Email
+# Email - ⚠️ COPIE do seu .env local
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_SECURE=false
-EMAIL_USER=seu-email@gmail.com
-EMAIL_PASS=sua-senha-de-app
-EMAIL_FROM="EDUPLAY <seu-email@gmail.com>"
+EMAIL_USER=adao.joas2025@gmail.com
+EMAIL_PASS=kiiu xadt rbmk whns
+EMAIL_FROM="EducaplayJA <adao.joas2025@gmail.com>"
 
-# URLs (Atualize depois do deploy)
+# URLs - ⚠️ VOCÊ VAI ATUALIZAR ISSO DEPOIS DO DEPLOY
 FRONTEND_URL=https://seu-app.vercel.app
-BACKEND_URL=https://eduplay-api.onrender.com
+BACKEND_URL=https://educaplayja-api.onrender.com
+
+# Google OAuth - ⚠️ COPIE do seu .env local
+GOOGLE_CLIENT_ID=763826185307-f8utvlugc36q9hvd4enokig6ic6l9ddh.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+GOOGLE_CALLBACK_URL=https://educaplayja-api.onrender.com/api/v1/auth/google/callback
 
 # Rate Limiting
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
 
-# Platform
-PLATFORM_FEE_PERCENT=10
-PLATFORM_NAME=EDUPLAY
-PLATFORM_EMAIL=contato@eduplay.com.br
-PLATFORM_SUPPORT_EMAIL=suporte@eduplay.com.br
+# Platform Configuration
+PLATFORM_FEE_PERCENT=3
+PLATFORM_NAME=EducaplayJA
+PLATFORM_EMAIL=contato@educaplayja.com.br
+PLATFORM_SUPPORT_EMAIL=suporte@educaplayja.com.br
 
 # Security
-BCRYPT_ROUNDS=12
+BCRYPT_ROUNDS=10
 PASSWORD_MIN_LENGTH=8
 
 # File Upload
@@ -137,12 +181,12 @@ ALLOWED_FILE_TYPES=pdf,mp4,jpg,jpeg,png,gif,zip
 # Logging
 LOG_LEVEL=info
 LOG_DIR=logs
-
-# Google OAuth (Credenciais de PRODUÇÃO)
-GOOGLE_CLIENT_ID=seu-client-id-producao.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=seu-client-secret-producao
-GOOGLE_CALLBACK_URL=https://eduplay-api.onrender.com/api/v1/auth/google/callback
 ```
+
+**IMPORTANTE:**
+- A senha do email está com espaços propositalmente (`kiiu xadt rbmk whns`)
+- Use TESTE do Mercado Pago primeiro, depois ativamos produção
+- O `DATABASE_URL` já aponta para seu banco existente com todos os dados
 
 ### 2.4 Gerar JWT Secrets Seguros
 
@@ -155,12 +199,18 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 Execute 2 vezes para gerar `JWT_SECRET` e `JWT_REFRESH_SECRET` diferentes.
 
-### 2.5 Deploy
+### 2.4 Deploy do Backend
 
 1. Clique em **"Create Web Service"**
-2. Aguarde o build e deploy (pode levar 5-10 minutos)
-3. Após completar, acesse: `https://eduplay-api.onrender.com/api/v1/health`
-4. Deve retornar: `{"status":"ok","timestamp":"..."}`
+2. Aguarde o build e deploy (pode levar 5-10 minutos na primeira vez)
+3. ⚠️ **MUITO IMPORTANTE:** O Render vai tentar rodar migrations automaticamente. Se der erro, é normal! Seu banco já tem as tabelas.
+4. Após completar o deploy, acesse: `https://educaplayja-api.onrender.com/api/v1/health`
+5. Deve retornar: `{"status":"ok"}`
+
+**Se o deploy falhar por causa de migrations:**
+1. No Render Dashboard, vá em **"Environment"** do Web Service
+2. Mude o **Build Command** para apenas: `npm install && npx prisma generate`
+3. Clique em **"Manual Deploy"** → **"Clear build cache & deploy"**
 
 ---
 
@@ -168,19 +218,18 @@ Execute 2 vezes para gerar `JWT_SECRET` e `JWT_REFRESH_SECRET` diferentes.
 
 ### 3.1 Preparar o Frontend
 
-1. Atualize o arquivo `.env.production` com a URL do backend:
+**IMPORTANTE:** Primeiro você precisa saber a URL do seu backend no Render!
+
+1. No Render Dashboard, copie a URL do seu Web Service (algo como: `https://educaplayja-api.onrender.com`)
+
+2. No VSCode, verifique se existe o arquivo `frontend/.env.production`. Se NÃO existir, crie ele:
 
 ```bash
-VITE_API_URL=https://eduplay-api.onrender.com/api/v1
+# frontend/.env.production
+VITE_API_URL=https://educaplayja-api.onrender.com/api/v1
 ```
 
-2. Commit e push:
-
-```bash
-git add .
-git commit -m "Configure production environment"
-git push
-```
+3. **NÃO PRECISA** fazer commit agora, vamos configurar via Vercel Dashboard
 
 ### 3.2 Deploy na Vercel
 
@@ -196,72 +245,106 @@ git push
 
 ### 3.3 Configurar Variáveis de Ambiente
 
-Na aba **"Environment Variables"**, adicione:
+**CRÍTICO:** Na aba **"Environment Variables"**, adicione:
 
-```bash
-VITE_API_URL=https://eduplay-api.onrender.com/api/v1
 ```
+Name: VITE_API_URL
+Value: https://educaplayja-api.onrender.com/api/v1
+```
+
+⚠️ **ATENÇÃO:**
+- Marque as 3 checkboxes (Production, Preview, Development)
+- Cole a URL EXATA do seu backend no Render
+- Não esqueça o `/api/v1` no final!
 
 ### 3.4 Deploy
 
 1. Clique em **"Deploy"**
 2. Aguarde o build (2-5 minutos)
-3. Acesse a URL fornecida: `https://seu-app.vercel.app`
+3. Quando terminar, clique em **"Visit"** ou copie a URL (algo como: `https://educaplayja.vercel.app`)
+4. Acesse a URL e teste se o site abre
+
+**Se der erro de conexão:**
+- Verifique se `VITE_API_URL` está correto
+- Teste o backend diretamente: `https://educaplayja-api.onrender.com/api/v1/health`
 
 ---
 
-## 🔧 Parte 4: Configurações Finais
+## 🔧 Parte 4: Configurações Finais (DEPOIS de ambos estarem no ar)
 
-### 4.1 Atualizar Google OAuth
+### 4.1 Atualizar URLs no Backend
+
+Agora que você tem as URLs finais, volte no Render:
+
+1. No Web Service `educaplayja-api`, vá em **"Environment"**
+2. Atualize essas 2 variáveis com as URLs REAIS:
+   ```
+   FRONTEND_URL=https://educaplayja.vercel.app
+   BACKEND_URL=https://educaplayja-api.onrender.com
+   ```
+3. Clique em **"Save Changes"**
+4. O Render vai fazer redeploy automático (aguarde 2-3 minutos)
+
+### 4.2 Atualizar Google OAuth (se você usar login com Google)
 
 1. Acesse [Google Cloud Console](https://console.cloud.google.com)
 2. Vá em **"APIs & Services"** → **"Credentials"**
-3. Edite o OAuth 2.0 Client
+3. Edite o OAuth 2.0 Client ID que você está usando
 4. Adicione nas **"Authorized redirect URIs"**:
    ```
-   https://eduplay-api.onrender.com/api/v1/auth/google/callback
+   https://educaplayja-api.onrender.com/api/v1/auth/google/callback
    ```
 5. Adicione nas **"Authorized JavaScript origins"**:
    ```
-   https://seu-app.vercel.app
+   https://educaplayja.vercel.app
    ```
+6. Clique em **"Save"**
 
-### 4.2 Atualizar CORS no Backend
+### 4.3 Verificar CORS (NÃO precisa mexer se já está certo)
 
-Verifique se o arquivo `backend/src/config/cors.js` permite a URL do Vercel:
+O arquivo `backend/src/config/cors.config.js` já deve estar permitindo múltiplas origens. Se tiver problema, verifique se tem isso:
 
 ```javascript
-origin: [
-  'https://seu-app.vercel.app',
-  'http://localhost:5173'
-]
+const allowedOrigins = process.env.FRONTEND_URL
+  ? [process.env.FRONTEND_URL, 'http://localhost:5173']
+  : ['http://localhost:5173'];
 ```
 
-### 4.3 Seed do Banco de Dados
+### 4.4 NÃO precisa fazer Seed!
 
-Para popular o banco com dados iniciais:
-
-1. No Render, vá em **"Shell"** do Web Service
-2. Execute:
-   ```bash
-   npm run db:seed
-   ```
+**IMPORTANTE:** Seu banco JÁ TEM todos os dados (usuários, produtos, etc). Não rode o seed em produção!
 
 ---
 
-## ✅ Parte 5: Verificação
+## ✅ Parte 5: Verificação e Testes
 
-### 5.1 Checklist de Funcionamento
+### 5.1 Checklist de Funcionamento Básico
 
-- [ ] Backend API responde: `https://eduplay-api.onrender.com/api/v1/health`
-- [ ] Frontend carrega: `https://seu-app.vercel.app`
-- [ ] Login com email funciona
-- [ ] Login com Google funciona
-- [ ] Cadastro de usuário funciona
-- [ ] Upload de imagens funciona (Cloudinary)
-- [ ] Criação de produtos funciona
-- [ ] Sistema de gamificação funciona
-- [ ] Compra com Mercado Pago funciona
+Teste NESTA ORDEM:
+
+- [ ] **Backend responde:** Abra `https://educaplayja-api.onrender.com/api/v1/health` → deve retornar `{"status":"ok"}`
+- [ ] **Frontend carrega:** Abra `https://educaplayja.vercel.app` → deve mostrar a home
+- [ ] **Login funciona:** Tente fazer login com um usuário que EXISTE no banco
+- [ ] **Dados aparecem:** Veja se seus produtos/cursos aparecem (já estão no banco!)
+- [ ] **Upload de imagens:** Tente publicar um novo app/produto
+- [ ] **Compra com Mercado Pago:** Teste uma compra (modo TEST ainda)
+
+### 5.2 Problemas Comuns
+
+**❌ Backend não responde (502/504):**
+- O Render demora ~30 segundos na primeira requisição (sleep mode)
+- Aguarde e tente novamente
+- Se continuar, veja os logs no Render Dashboard
+
+**❌ Frontend carrega mas não conecta ao backend:**
+- Verifique `VITE_API_URL` no Vercel
+- Abra o Console do navegador (F12) e veja se tem erro de CORS
+- Verifique se `FRONTEND_URL` está correta no Render
+
+**❌ Login não funciona:**
+- Verifique se `JWT_SECRET` está configurado no Render
+- Veja os logs do backend no Render Dashboard
+- Confirme que o banco de dados está conectado corretamente
 
 ### 5.2 Monitoramento
 
@@ -385,12 +468,44 @@ render logs -s eduplay-api
 
 ## 🎉 Pronto!
 
-Seu sistema EDUPLAY está no ar! 🚀
+Seu sistema **EducaplayJA** está no ar! 🚀
 
 URLs de acesso:
-- **Frontend**: https://seu-app.vercel.app
-- **Backend API**: https://eduplay-api.onrender.com/api/v1
-- **API Docs**: https://eduplay-api.onrender.com/api/v1/health
+- **Frontend**: https://educaplayja.vercel.app (sua URL real pode ser diferente)
+- **Backend API**: https://educaplayja-api.onrender.com/api/v1
+- **Health Check**: https://educaplayja-api.onrender.com/api/v1/health
+
+---
+
+## 📱 Próximos Passos (DEPOIS que tudo estiver funcionando)
+
+### Ativar Mercado Pago em PRODUÇÃO
+
+**ATENÇÃO:** Só faça isso DEPOIS de testar tudo em modo TEST!
+
+1. Acesse [Mercado Pago Developers](https://www.mercadopago.com.br/developers)
+2. Vá em **"Suas integrações"** → Sua aplicação → **"Credenciais de produção"**
+3. Copie:
+   - Access Token de Produção
+   - Public Key de Produção
+4. No Render, atualize as variáveis:
+   ```
+   MP_ACCESS_TOKEN=APP_USR-seu-token-de-producao
+   MP_PUBLIC_KEY=APP_USR-sua-chave-publica-producao
+   ```
+5. No Mercado Pago, configure o **Webhook URL**:
+   ```
+   https://educaplayja-api.onrender.com/api/v1/webhooks/mercadopago
+   ```
+
+### Configurar Domínio Próprio (Opcional)
+
+Se quiser usar `www.educaplayja.com.br`:
+
+1. Compre o domínio (Registro.br, GoDaddy, etc)
+2. No Vercel: **"Settings"** → **"Domains"** → Adicione seu domínio
+3. No Render: **"Settings"** → **"Custom Domain"** → Adicione `api.educaplayja.com.br`
+4. Configure DNS conforme instruções do Vercel e Render
 
 ---
 
