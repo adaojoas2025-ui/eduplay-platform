@@ -230,7 +230,7 @@ const purchaseApp = async (appId, userId, version, price) => {
     // Create order for app purchase
     // NOTE: App purchases don't have commissions - 100% revenue goes to administrator
     const order = await orderRepository.createOrder({
-      userId,
+      buyerId: userId, // FIXED: use buyerId instead of userId
       productId: null, // App purchases don't use productId
       amount: price,
       platformFee: 0, // No fee - full amount goes to platform/admin
