@@ -269,13 +269,13 @@ const purchaseApp = async (appId, userId, version, price) => {
         email: user.email,
       },
       back_urls: {
-        success: `${process.env.FRONTEND_URL}/apps/${app.slug}?payment=success`,
-        failure: `${process.env.FRONTEND_URL}/apps/${app.slug}?payment=failure`,
-        pending: `${process.env.FRONTEND_URL}/apps/${app.slug}?payment=pending`,
+        success: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/apps/${app.slug}?payment=success`,
+        failure: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/apps/${app.slug}?payment=failure`,
+        pending: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/apps/${app.slug}?payment=pending`,
       },
       auto_return: 'approved',
       external_reference: order.id,
-      notification_url: `${process.env.BACKEND_URL}/api/v1/webhooks/mercadopago`,
+      notification_url: `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/v1/webhooks/mercadopago`,
     };
 
     const result = await preference.create({ body: preferenceData });
