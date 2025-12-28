@@ -183,9 +183,9 @@ model Product {
 model Order {
   id              String        @id @default(uuid())
 
-  // Product and buyer
-  productId       String
-  product         Product       @relation(fields: [productId], references: [id])
+  // Product and buyer (productId is optional for app purchases)
+  productId       String?
+  product         Product?      @relation(fields: [productId], references: [id])
   buyerId         String
   buyer           User          @relation("BuyerOrders", fields: [buyerId], references: [id])
 
@@ -203,6 +203,9 @@ model Order {
 
   // Order status
   status          OrderStatus   @default(PENDING)
+
+  // Metadata for additional info (e.g., app purchases)
+  metadata        Json?
 
   // Cancellation/Refund
   cancelReason    String?
