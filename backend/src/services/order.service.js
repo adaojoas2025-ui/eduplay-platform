@@ -161,25 +161,42 @@ const updateOrderStatus = async (orderId, status, additionalData = {}) => {
 
     // Handle order completion
     if (status === ORDER_STATUS.COMPLETED) {
-      // Increment product sales
-      await productRepository.incrementSales(order.productId);
+      // Check if this is an app purchase (no commissions for apps)
+      const isAppPurchase = order.metadata && order.metadata.type === 'APP_PURCHASE';
 
-      // Create commission for producer
-      await commissionRepository.createCommission({
-        orderId: order.id,
-        producerId: order.product.producerId,
-        amount: order.producerAmount,
-        status: COMMISSION_STATUS.PENDING,
-      });
+      if (isAppPurchase) {
+        // App purchases: no commissions, 100% revenue to platform/admin
+        logger.info('App purchase completed - no commission created', {
+          orderId: order.id,
+          appId: order.metadata.appId,
+          amount: order.amount,
+        });
 
-      // Award gamification points (don't await - fire and forget)
-      gamificationService.handlePurchase(order.buyerId, order.id, order.amount).catch((err) => {
-        logger.error('Failed to handle purchase gamification:', err);
-      });
+        // Award gamification points only for buyer
+        gamificationService.handlePurchase(order.buyerId, order.id, order.amount).catch((err) => {
+          logger.error('Failed to handle purchase gamification:', err);
+        });
+      } else {
+        // Product purchases: create commissions and increment sales
+        await productRepository.incrementSales(order.productId);
 
-      gamificationService.handleSale(order.product.producerId, order.id, order.producerAmount).catch((err) => {
-        logger.error('Failed to handle sale gamification:', err);
-      });
+        // Create commission for producer
+        await commissionRepository.createCommission({
+          orderId: order.id,
+          producerId: order.product.producerId,
+          amount: order.producerAmount,
+          status: COMMISSION_STATUS.PENDING,
+        });
+
+        // Award gamification points (don't await - fire and forget)
+        gamificationService.handlePurchase(order.buyerId, order.id, order.amount).catch((err) => {
+          logger.error('Failed to handle purchase gamification:', err);
+        });
+
+        gamificationService.handleSale(order.product.producerId, order.id, order.producerAmount).catch((err) => {
+          logger.error('Failed to handle sale gamification:', err);
+        });
+      }
     }
 
     logger.info('Order status updated', { orderId, status });

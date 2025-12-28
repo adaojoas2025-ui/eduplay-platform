@@ -227,18 +227,21 @@ const purchaseApp = async (appId, userId, version, price) => {
       throw new Error('User not found');
     }
 
-    // Create order using existing order repository
+    // Create order for app purchase
+    // NOTE: App purchases don't have commissions - 100% revenue goes to administrator
     const order = await orderRepository.createOrder({
       userId,
       productId: null, // App purchases don't use productId
       amount: price,
+      platformFee: 0, // No fee - full amount goes to platform/admin
+      producerAmount: 0, // No producer for app sales
       status: 'PENDING',
       paymentMethod: 'MERCADOPAGO',
       metadata: {
         appId: app.id,
         appTitle: app.title,
         version: version,
-        type: 'APP_PURCHASE',
+        type: 'APP_PURCHASE', // Critical: identifies this as app purchase (no commissions)
       },
     });
 
