@@ -138,9 +138,9 @@ ALLOWED_FILE_TYPES=pdf,mp4,jpg,jpeg,png,gif,zip
 LOG_LEVEL=info
 LOG_DIR=logs
 
-# Google OAuth (ATUALIZAR URLs)
-GOOGLE_CLIENT_ID=763826185307-f8utvlugc36q9hvd4enokig6ic6l9ddh.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+# Google OAuth (ATUALIZAR URLs E CREDENCIAIS)
+GOOGLE_CLIENT_ID=SEU_GOOGLE_CLIENT_ID_AQUI
+GOOGLE_CLIENT_SECRET=SEU_GOOGLE_CLIENT_SECRET_AQUI
 GOOGLE_CALLBACK_URL=https://eduplay-backend.onrender.com/api/v1/auth/google/callback
 ```
 
