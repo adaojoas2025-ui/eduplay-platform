@@ -108,7 +108,9 @@
       "Bash(copy:*)",
       "Bash(npm --prefix c:/projetos/frontend run dev -- --port 5173 --force)",
       "Bash(npm --prefix c:/projetos/frontend run dev -- --port 5173 --force --clearScreen false)",
-      "Bash(more:*)"
+      "Bash(more:*)",
+      "Bash(git rm:*)",
+      "Bash(if exist node_modules.prisma rd /s /q node_modules.prisma)"
     ],
     "deny": [],
     "ask": []
