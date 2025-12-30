@@ -20,6 +20,8 @@ const gamificationRoutes = require('./gamification.routes');
 const appRoutes = require('./app.routes');
 const tempUpgradeRoutes = require('./temp-upgrade.routes'); // TEMPORARY - Remove after use
 const testRoutes = require('./test.routes');
+const uploadRoutes = require('./upload.routes');
+const comboRoutes = require('./combo.routes');
 
 /**
  * Health check route
@@ -49,6 +51,8 @@ router.use('/gamification', gamificationRoutes);
 router.use('/apps', appRoutes);
 router.use('/temp-upgrade', tempUpgradeRoutes); // TEMPORARY - Remove after use
 router.use('/test', testRoutes);
+router.use('/upload', uploadRoutes);
+router.use('/combos', comboRoutes);
 
 /**
  * 404 handler for API routes

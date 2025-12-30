@@ -14,6 +14,7 @@ import Checkout from './pages/Checkout';
 import MyProducts from './pages/MyProducts';
 import SellerDashboard from './pages/SellerDashboard';
 import SellerProducts from './pages/SellerProducts';
+import SellerCombos from './pages/SellerCombos';
 import ProductForm from './pages/ProductForm';
 import CompleteProfile from './pages/CompleteProfile';
 import AdminDashboard from './pages/AdminDashboard';
@@ -26,8 +27,15 @@ import AppsStore from './pages/AppsStore';
 import AppDetails from './pages/AppDetails';
 import ManageApps from './pages/admin/ManageApps';
 import AppForm from './pages/admin/AppForm';
+import ManageCombos from './pages/admin/ManageCombos';
 import { AchievementQueueManager } from './components/AchievementNotification';
 import { API_URL } from './config/api.config';
+import Home from './pages/Home';
+import Marketplace from './pages/Marketplace';
+import HelpCenter from './pages/HelpCenter';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Contact from './pages/Contact';
 
 
 // ============================================
@@ -151,6 +159,15 @@ const Navbar = () => {
                       >
                         💰 Financeiro
                       </Link>
+                      {(user.role === 'PRODUCER' || user.role === 'ADMIN') && (
+                        <Link
+                          to="/seller/combos"
+                          className="block px-4 py-2 hover:bg-gray-100"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          📦 Meus Combos
+                        </Link>
+                      )}
                       <Link
                         to="/profile"
                         className="block px-4 py-2 hover:bg-gray-100"
@@ -179,6 +196,13 @@ const Navbar = () => {
                             onClick={() => setMenuOpen(false)}
                           >
                             📋 Produtos Pendentes
+                          </Link>
+                          <Link
+                            to="/admin/combos"
+                            className="block px-4 py-2 hover:bg-purple-50 text-purple-600 font-semibold"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            📦 Gerenciar Combos
                           </Link>
                           <Link
                             to="/admin/commissions"
@@ -239,15 +263,15 @@ const Footer = () => (
         <div>
           <h4 className="font-bold mb-4">Suporte</h4>
           <ul className="space-y-2 text-gray-400">
-            <li><a href="#" className="hover:text-white">Central de Ajuda</a></li>
-            <li><a href="#" className="hover:text-white">Contato</a></li>
+            <li><Link to="/help" className="hover:text-white">Central de Ajuda</Link></li>
+            <li><Link to="/contact" className="hover:text-white">Contato</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="font-bold mb-4">Legal</h4>
           <ul className="space-y-2 text-gray-400">
-            <li><a href="#" className="hover:text-white">Termos de Uso</a></li>
-            <li><a href="#" className="hover:text-white">Privacidade</a></li>
+            <li><Link to="/terms" className="hover:text-white">Termos de Uso</Link></li>
+            <li><Link to="/privacy" className="hover:text-white">Privacidade</Link></li>
           </ul>
         </div>
       </div>
@@ -258,219 +282,32 @@ const Footer = () => (
   </footer>
 );
 
-// Product Card
-const ProductCard = ({ product }) => {
-  const navigate = useNavigate();
-
-  return (
-    <div
-      onClick={() => navigate(`/product/${product.id}`)}
-      className="bg-white rounded-xl shadow-md hover:shadow-xl transition cursor-pointer overflow-hidden"
-    >
-      <div className="h-48 bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-6xl">
-        📚
-      </div>
-      <div className="p-4">
-        <h3 className="font-bold text-lg mb-2 line-clamp-2">{product.title}</h3>
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold text-purple-600">
-            R$ {product.price.toFixed(2)}
-          </span>
-          <span className="text-yellow-500">★ 4.8</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ============================================
 // PÁGINAS
 // ============================================
 
-// HOME com Hero
-const Home = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/products?limit=6`);
-      console.log('API Response:', response.data);
-      const productsData = response.data.data?.items || response.data.items || [];
-      console.log('Products:', productsData);
-      setProducts(Array.isArray(productsData) ? productsData : []);
-    } catch (error) {
-      console.error('Error:', error);
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            A Maior Plataforma de<br />Produtos Digitais do Brasil
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 opacity-90">
-            Compre e venda cursos, ebooks, mentorias e muito mais
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/marketplace"
-              className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:shadow-xl transition"
-            >
-              Explorar Produtos
-            </Link>
-            <Link
-              to="/upgrade-to-producer"
-              className="border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-purple-600 transition"
-            >
-              Começar a Vender
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Produtos em Destaque */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="flex justify-between items-center mb-12">
-          <h2 className="text-4xl font-bold">Produtos em Destaque</h2>
-          <Link to="/marketplace" className="text-purple-600 font-semibold hover:underline">
-            Ver todos →
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6">
-            Comece a Vender Seus Produtos Hoje
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Junte-se a milhares de produtores que já faturam na EducaplayJA
-          </p>
-          <Link
-            to="/upgrade-to-producer"
-            className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-8 py-4 rounded-lg font-bold text-lg hover:shadow-xl transition inline-block"
-          >
-            Tornar-se Vendedor Agora
-          </Link>
-          <div className="mt-8 grid md:grid-cols-3 gap-6 text-left">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="text-3xl mb-3">💰</div>
-              <h3 className="font-bold mb-2">Receba 97% das Vendas</h3>
-              <p className="text-gray-600 text-sm">Taxa de apenas 3% por venda. A menor do mercado!</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="text-3xl mb-3">⚡</div>
-              <h3 className="font-bold mb-2">Venda em Minutos</h3>
-              <p className="text-gray-600 text-sm">Preencha um formulário simples e comece a vender imediatamente</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="text-3xl mb-3">📦</div>
-              <h3 className="font-bold mb-2">Produtos Digitais</h3>
-              <p className="text-gray-600 text-sm">Venda cursos, ebooks, mentorias e qualquer produto digital</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-};
-
-// MARKETPLACE
-const Marketplace = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/products?search=${search}`);
-      const productsData = response.data.data?.items || response.data.items || [];
-      setProducts(Array.isArray(productsData) ? productsData : []);
-    } catch (error) {
-      console.error('Error:', error);
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchProducts();
-  };
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-4xl font-bold mb-8">Marketplace</h1>
-
-      {/* Search */}
-      <form onSubmit={handleSearch} className="mb-8">
-        <div className="flex gap-4">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar produtos..."
-            className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-600 focus:outline-none"
-          />
-          <button type="submit" className="bg-purple-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-purple-700">
-            Buscar
-          </button>
-        </div>
-      </form>
-
-      {/* Products Grid */}
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-        </div>
-      ) : products.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">Nenhum produto encontrado</p>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// PRODUCT DETAILS
-const ProductDetails = () => {
+// PRODUCT DETAILS (This component is deprecated - using ProductDetails.jsx instead)
+// Keeping for backward compatibility but redirecting to slug-based route
+const ProductDetailsLegacy = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect to marketplace if id is undefined or invalid
+    if (!id) {
+      navigate('/marketplace');
+    }
+  }, [id, navigate]);
+
+  return (
+    <div className="text-center py-20">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+    </div>
+  );
+};
+
+const ProductDetails = () => {
+  const { slug } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState(false);
@@ -478,23 +315,29 @@ const ProductDetails = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
+    if (!slug) {
+      navigate('/marketplace');
+      return;
+    }
     fetchProduct();
-  }, [id]);
+  }, [slug]);
 
   const fetchProduct = async () => {
     try {
-      const response = await axios.get(`${API_URL}/products/${id}`);
+      const response = await axios.get(`${API_URL}/products/slug/${slug}`);
       setProduct(response.data.data);
     } catch (error) {
       console.error('Error:', error);
+      navigate('/marketplace');
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddToCart = async () => {
+    if (!product) return;
     setAddingToCart(true);
-    const success = await addToCart(id);
+    const success = await addToCart(product.id);
     setAddingToCart(false);
     if (success) {
       alert('✅ Produto adicionado ao carrinho!');
@@ -502,8 +345,9 @@ const ProductDetails = () => {
   };
 
   const handleBuyNow = async () => {
+    if (!product) return;
     setAddingToCart(true);
-    const success = await addToCart(id);
+    const success = await addToCart(product.id);
     setAddingToCart(false);
     if (success) {
       navigate('/cart');
@@ -943,6 +787,45 @@ const Register = () => {
 const Cart = () => {
   const { cart, loading, updateQuantity, removeFromCart, clearCart } = useCart();
   const navigate = useNavigate();
+  const [availableCombos, setAvailableCombos] = useState([]);
+  const [showComboModal, setShowComboModal] = useState(false);
+  const [selectedCombo, setSelectedCombo] = useState(null);
+
+  // Check for available combos when cart changes
+  useEffect(() => {
+    if (cart.items.length >= 2) {
+      checkForCombos();
+    } else {
+      setAvailableCombos([]);
+    }
+  }, [cart.items]);
+
+  const checkForCombos = async () => {
+    try {
+      const productIds = cart.items.map(item => item.productId);
+      const response = await axios.post(`${API_URL}/combos/check-cart`, { productIds });
+
+      if (response.data.data.hasCombo) {
+        setAvailableCombos(response.data.data.combos);
+        // Auto-open modal if combo is found and not already shown
+        if (response.data.data.combos.length > 0 && !showComboModal) {
+          setShowComboModal(true);
+        }
+      } else {
+        setAvailableCombos([]);
+      }
+    } catch (error) {
+      console.error('Error checking combos:', error);
+    }
+  };
+
+  const handleApplyCombo = (combo) => {
+    setSelectedCombo(combo);
+    // Here we would update the cart with the combo discount
+    // For now, just show it's selected
+    alert(`Combo "${combo.title}" aplicado! Economize R$ ${combo.savings.toFixed(2)}!`);
+    setShowComboModal(false);
+  };
 
   if (loading) {
     return (
@@ -1034,6 +917,25 @@ const Cart = () => {
 
           {/* Resumo do pedido */}
           <div className="lg:col-span-1">
+            {/* Combo Alert Banner */}
+            {availableCombos.length > 0 && (
+              <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow-lg p-4 mb-4 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">🎉</span>
+                  <div>
+                    <p className="font-bold text-lg">Combo Disponível!</p>
+                    <p className="text-sm">Economize até R$ {availableCombos[0]?.savings?.toFixed(2)}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowComboModal(true)}
+                  className="w-full mt-3 bg-white text-green-600 font-bold py-2 rounded-lg hover:bg-gray-100 transition"
+                >
+                  Ver Combo
+                </button>
+              </div>
+            )}
+
             <div className="bg-white rounded-lg shadow p-6 sticky top-20">
               <h2 className="text-2xl font-bold mb-6">Resumo do Pedido</h2>
 
@@ -1042,12 +944,28 @@ const Cart = () => {
                   <span className="text-gray-600">Subtotal ({cart.count} {cart.count === 1 ? 'item' : 'itens'})</span>
                   <span className="font-semibold">R$ {cart.total.toFixed(2)}</span>
                 </div>
-                <div className="border-t pt-3">
-                  <div className="flex justify-between text-xl font-bold">
-                    <span>Total</span>
-                    <span className="text-purple-600">R$ {cart.total.toFixed(2)}</span>
+                {selectedCombo && (
+                  <>
+                    <div className="flex justify-between text-green-600">
+                      <span>Desconto Combo:</span>
+                      <span className="font-semibold">- R$ {selectedCombo.savings.toFixed(2)}</span>
+                    </div>
+                    <div className="border-t pt-3">
+                      <div className="flex justify-between text-xl font-bold">
+                        <span>Total com Combo</span>
+                        <span className="text-purple-600">R$ {selectedCombo.discountPrice.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+                {!selectedCombo && (
+                  <div className="border-t pt-3">
+                    <div className="flex justify-between text-xl font-bold">
+                      <span>Total</span>
+                      <span className="text-purple-600">R$ {cart.total.toFixed(2)}</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <button
@@ -1070,6 +988,79 @@ const Cart = () => {
             </div>
           </div>
         </div>
+
+        {/* Combo Modal */}
+        {showComboModal && availableCombos.length > 0 && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900">🎉 Combo Especial Disponível!</h2>
+                    <p className="text-gray-600 mt-2">Aproveite esta oferta exclusiva</p>
+                  </div>
+                  <button
+                    onClick={() => setShowComboModal(false)}
+                    className="text-gray-400 hover:text-gray-600 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {availableCombos.map((combo) => (
+                  <div key={combo.id} className="border-2 border-purple-200 rounded-lg p-6 mb-4 hover:border-purple-400 transition">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">{combo.title}</h3>
+                    <p className="text-gray-600 mb-4">{combo.description}</p>
+
+                    {/* Products in combo */}
+                    <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                      <p className="font-semibold text-gray-700 mb-2">Produtos inclusos:</p>
+                      <div className="space-y-2">
+                        {combo.productDetails?.map((product) => (
+                          <div key={product.id} className="flex justify-between items-center">
+                            <span className="text-gray-700">{product.title}</span>
+                            <span className="text-gray-500 line-through">R$ {product.price.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Pricing */}
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 mb-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Preço Individual Total:</span>
+                        <span className="text-gray-700 line-through text-lg">R$ {combo.totalRegularPrice?.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xl font-bold text-gray-900">Preço do Combo:</span>
+                        <span className="text-3xl font-bold text-purple-600">R$ {combo.discountPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-center mt-3">
+                        <div className="bg-green-500 text-white px-4 py-2 rounded-full font-bold">
+                          Economize R$ {combo.savings?.toFixed(2)} ({combo.discountPercentage}% OFF)
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleApplyCombo(combo)}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-lg font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition"
+                    >
+                      Aplicar Este Combo
+                    </button>
+                  </div>
+                ))}
+
+                <button
+                  onClick={() => setShowComboModal(false)}
+                  className="w-full border-2 border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition"
+                >
+                  Continuar sem Combo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1095,9 +1086,15 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/auth/google/callback" element={<CallbackGoogle />} />
         <Route path="/marketplace" element={<Marketplace />} />
-        <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/product/:slug" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
+
+        {/* Help & Legal Pages */}
+        <Route path="/help" element={<HelpCenter />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
         <Route path="/my-courses" element={<MyCourses />} />
         <Route path="/orders" element={<Orders />} />
@@ -1110,10 +1107,12 @@ function App() {
         <Route path="/seller/products" element={<ProtectedRoute><SellerProducts /></ProtectedRoute>} />
         <Route path="/seller/products/new" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
         <Route path="/seller/products/:id/edit" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
+        <Route path="/seller/combos" element={<ProtectedRoute><SellerCombos /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
         <Route path="/admin/commissions" element={<ProtectedRoute><AdminCommissions /></ProtectedRoute>} />
         <Route path="/admin/gamification" element={<ProtectedRoute><GamificationAdmin /></ProtectedRoute>} />
+        <Route path="/admin/combos" element={<ProtectedRoute><ManageCombos /></ProtectedRoute>} />
         <Route path="/admin/apps" element={<ProtectedRoute><ManageApps /></ProtectedRoute>} />
         <Route path="/admin/apps/new" element={<ProtectedRoute><AppForm /></ProtectedRoute>} />
         <Route path="/admin/apps/:id/edit" element={<ProtectedRoute><AppForm /></ProtectedRoute>} />

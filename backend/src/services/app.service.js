@@ -201,7 +201,6 @@ const addReview = async (appId, userId, userName, rating, comment, userAvatar = 
 
 const purchaseApp = async (appId, userId, version, price) => {
   try {
-    const MercadoPago = require('mercadopago');
     const orderRepository = require('../repositories/order.repository');
     const userRepository = require('../repositories/user.repository');
 
@@ -227,60 +226,26 @@ const purchaseApp = async (appId, userId, version, price) => {
       throw new Error('User not found');
     }
 
-    // Create order for app purchase
+    // Create order for app purchase (same as products - payment will be done via test payment)
     // NOTE: App purchases don't have commissions - 100% revenue goes to administrator
     const order = await orderRepository.createOrder({
-      buyerId: userId, // FIXED: use buyerId instead of userId
+      buyerId: userId,
       productId: null, // App purchases don't use productId
       amount: price,
       platformFee: 0, // No fee - full amount goes to platform/admin
       producerAmount: 0, // No producer for app sales
       status: 'PENDING',
-      paymentMethod: 'MERCADOPAGO',
+      paymentMethod: 'INSTANT_TEST', // Use test payment like products
       metadata: {
         appId: app.id,
         appTitle: app.title,
+        appSlug: app.slug,
         version: version,
         type: 'APP_PURCHASE', // Critical: identifies this as app purchase (no commissions)
       },
     });
 
-    // Configure Mercado Pago
-    const client = new MercadoPago.MercadoPagoConfig({
-      accessToken: process.env.MP_ACCESS_TOKEN,
-    });
-
-    const preference = new MercadoPago.Preference(client);
-
-    // Create preference
-    const preferenceData = {
-      items: [
-        {
-          id: app.id,
-          title: `${app.title} - Versão sem propaganda`,
-          description: `Compra da versão sem propaganda do app ${app.title}`,
-          quantity: 1,
-          unit_price: price,
-          currency_id: 'BRL',
-        },
-      ],
-      payer: {
-        name: user.name,
-        email: user.email,
-      },
-      back_urls: {
-        success: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/apps/${app.slug}?payment=success`,
-        failure: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/apps/${app.slug}?payment=failure`,
-        pending: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/apps/${app.slug}?payment=pending`,
-      },
-      auto_return: 'approved',
-      external_reference: order.id,
-      notification_url: `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/v1/webhooks/mercadopago`,
-    };
-
-    const result = await preference.create({ body: preferenceData });
-
-    logger.info('App purchase preference created', {
+    logger.info('App purchase order created (test payment mode)', {
       appId: app.id,
       orderId: order.id,
       userId: user.id,
@@ -289,8 +254,7 @@ const purchaseApp = async (appId, userId, version, price) => {
 
     return {
       order,
-      initPoint: result.init_point,
-      preferenceId: result.id,
+      // No initPoint - will use test payment approval like products
     };
   } catch (error) {
     logger.error('Error in purchaseApp service:', error);
@@ -311,3 +275,6 @@ module.exports = {
   addReview,
   purchaseApp,
 };
+
+
+

@@ -15,14 +15,29 @@ const CATEGORIES = [
 
 export default function AppsStore() {
   const [apps, setApps] = useState([]);
+  const [popularApps, setPopularApps] = useState([]);
+  const [newApps, setNewApps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
+  const [featuredIndex, setFeaturedIndex] = useState(0);
   const user = getUser();
 
   useEffect(() => {
     fetchApps();
+    fetchPopularAndNew();
   }, [category]);
+
+  // Auto-rotate featured apps
+  useEffect(() => {
+    const featuredApps = apps.filter(app => app.featured);
+    if (featuredApps.length > 1) {
+      const interval = setInterval(() => {
+        setFeaturedIndex((prev) => (prev + 1) % featuredApps.length);
+      }, 5000); // Change every 5 seconds
+      return () => clearInterval(interval);
+    }
+  }, [apps]);
 
   const fetchApps = async () => {
     try {
@@ -42,6 +57,32 @@ export default function AppsStore() {
       console.error('Error fetching apps:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPopularAndNew = async () => {
+    try {
+      // Fetch popular apps (most downloads)
+      const popularResponse = await axios.get(`${API_URL}/apps`, {
+        params: {
+          limit: 6,
+          sortBy: 'downloads',
+          order: 'desc',
+        },
+      });
+      setPopularApps(popularResponse.data.data.items || []);
+
+      // Fetch new apps (most recent)
+      const newResponse = await axios.get(`${API_URL}/apps`, {
+        params: {
+          limit: 6,
+          sortBy: 'createdAt',
+          order: 'desc',
+        },
+      });
+      setNewApps(newResponse.data.data.items || []);
+    } catch (error) {
+      console.error('Error fetching popular and new apps:', error);
     }
   };
 
@@ -128,19 +169,22 @@ export default function AppsStore() {
           </div>
         ) : (
           <>
-            {/* Featured Apps */}
+            {/* Featured Apps Carousel */}
             {apps.some(app => app.featured) && (
               <div className="mb-12">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Em Destaque</h2>
+                <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                  <span className="text-3xl">🌟</span>
+                  Em Destaque
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {apps.filter(app => app.featured).slice(0, 3).map((app) => (
                     <Link
                       key={app.id}
                       to={`/apps/${app.slug}`}
-                      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition group"
+                      className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group"
                     >
                       {/* Cover Image */}
-                      <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600 overflow-hidden">
+                      <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600 overflow-hidden relative">
                         {app.coverImages && app.coverImages[0] ? (
                           <img
                             src={app.coverImages[0]}
@@ -152,21 +196,37 @@ export default function AppsStore() {
                             <span className="text-6xl">📱</span>
                           </div>
                         )}
+
+                        {/* Badges */}
+                        <div className="absolute top-2 right-2 flex flex-col gap-2">
+                          {app.freeWithAdsUrl && (
+                            <span className="px-3 py-1 bg-green-500 text-white rounded-full text-xs font-bold shadow-lg">
+                              GRÁTIS
+                            </span>
+                          )}
+                          {app.paidWithoutAdsUrl && (
+                            <span className="px-3 py-1 bg-purple-500 text-white rounded-full text-xs font-bold shadow-lg">
+                              SEM ADS
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="p-4">
+                      <div className="p-5">
                         <div className="flex gap-4 mb-3">
                           {/* Icon */}
                           {app.iconUrl ? (
-                            <img src={app.iconUrl} alt={app.title} className="w-16 h-16 rounded-xl" />
+                            <img src={app.iconUrl} alt={app.title} className="w-16 h-16 rounded-xl shadow-md" />
                           ) : (
-                            <div className="w-16 h-16 rounded-xl bg-gray-200 flex items-center justify-center text-2xl">
+                            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-3xl shadow-md">
                               📱
                             </div>
                           )}
 
                           <div className="flex-1">
-                            <h3 className="font-bold text-lg text-gray-800 mb-1">{app.title}</h3>
+                            <h3 className="font-bold text-lg text-gray-800 mb-1 group-hover:text-blue-600 transition">
+                              {app.title}
+                            </h3>
                             <p className="text-sm text-gray-600">{app.developer}</p>
                           </div>
                         </div>
@@ -174,10 +234,99 @@ export default function AppsStore() {
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-1">
                             <span className="text-yellow-500">⭐</span>
-                            <span className="font-semibold">{app.rating.toFixed(1)}</span>
+                            <span className="font-semibold text-gray-800">{app.rating.toFixed(1)}</span>
                           </div>
                           <span className="text-gray-600">{app.downloads.toLocaleString()} downloads</span>
                         </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Popular Apps */}
+            {popularApps.length > 0 && (
+              <div className="mb-12">
+                <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                  <span className="text-3xl">🔥</span>
+                  Mais Populares
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {popularApps.map((app) => (
+                    <Link
+                      key={app.id}
+                      to={`/apps/${app.slug}`}
+                      className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
+                    >
+                      {/* Icon */}
+                      <div className="p-4 flex justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                        {app.iconUrl ? (
+                          <img src={app.iconUrl} alt={app.title} className="w-20 h-20 rounded-xl shadow-md" />
+                        ) : (
+                          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-3xl shadow-md">
+                            📱
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-3 border-t">
+                        <h3 className="font-semibold text-sm text-gray-800 mb-1 line-clamp-2 group-hover:text-blue-600 transition">
+                          {app.title}
+                        </h3>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="text-yellow-500">⭐</span>
+                          <span className="font-semibold text-gray-700">{app.rating.toFixed(1)}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{app.downloads.toLocaleString()} downloads</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* New Apps */}
+            {newApps.length > 0 && (
+              <div className="mb-12">
+                <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                  <span className="text-3xl">✨</span>
+                  Novos Aplicativos
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {newApps.map((app) => (
+                    <Link
+                      key={app.id}
+                      to={`/apps/${app.slug}`}
+                      className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group relative"
+                    >
+                      {/* NEW Badge */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <span className="px-2 py-1 bg-green-500 text-white rounded-full text-xs font-bold shadow-lg">
+                          NOVO
+                        </span>
+                      </div>
+
+                      {/* Icon */}
+                      <div className="p-4 flex justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                        {app.iconUrl ? (
+                          <img src={app.iconUrl} alt={app.title} className="w-20 h-20 rounded-xl shadow-md" />
+                        ) : (
+                          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-3xl shadow-md">
+                            📱
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-3 border-t">
+                        <h3 className="font-semibold text-sm text-gray-800 mb-1 line-clamp-2 group-hover:text-blue-600 transition">
+                          {app.title}
+                        </h3>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="text-yellow-500">⭐</span>
+                          <span className="font-semibold text-gray-700">{app.rating.toFixed(1)}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{app.downloads.toLocaleString()} downloads</p>
                       </div>
                     </Link>
                   ))}
@@ -197,39 +346,51 @@ export default function AppsStore() {
                   <Link
                     key={app.id}
                     to={`/apps/${app.slug}`}
-                    className="bg-white rounded-lg shadow-sm hover:shadow-md transition p-4 flex gap-4 items-center"
+                    className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 p-4 flex gap-4 items-center group"
                   >
                     {/* Icon */}
                     {app.iconUrl ? (
-                      <img src={app.iconUrl} alt={app.title} className="w-20 h-20 rounded-xl flex-shrink-0" />
+                      <img src={app.iconUrl} alt={app.title} className="w-20 h-20 rounded-xl flex-shrink-0 shadow-md" />
                     ) : (
-                      <div className="w-20 h-20 rounded-xl bg-gray-200 flex items-center justify-center text-3xl flex-shrink-0">
+                      <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-3xl flex-shrink-0 shadow-md">
                         📱
                       </div>
                     )}
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-lg text-gray-800 mb-1">{app.title}</h3>
+                      <h3 className="font-bold text-lg text-gray-800 mb-1 group-hover:text-blue-600 transition">{app.title}</h3>
                       <p className="text-sm text-gray-600 mb-2">{app.developer}</p>
                       <p className="text-sm text-gray-500 line-clamp-1">{app.shortDescription || app.description}</p>
 
-                      <div className="flex items-center gap-4 mt-2 text-sm">
+                      <div className="flex items-center gap-3 mt-2 text-sm flex-wrap">
                         <div className="flex items-center gap-1">
                           <span className="text-yellow-500">⭐</span>
-                          <span className="font-semibold">{app.rating.toFixed(1)}</span>
+                          <span className="font-semibold text-gray-800">{app.rating.toFixed(1)}</span>
                         </div>
                         <span className="text-gray-500">{app.downloads.toLocaleString()} downloads</span>
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">{app.fileSize}</span>
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
+                        {app.fileSize && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">{app.fileSize}</span>
+                        )}
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs font-semibold">
                           {app.ageRating}
                         </span>
+                        {app.freeWithAdsUrl && (
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-bold">
+                            GRÁTIS
+                          </span>
+                        )}
+                        {app.paidWithoutAdsUrl && (
+                          <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs font-bold">
+                            SEM ADS
+                          </span>
+                        )}
                       </div>
                     </div>
 
                     {/* Download Button */}
                     <div className="flex-shrink-0">
-                      <button className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
+                      <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg">
                         Baixar
                       </button>
                     </div>

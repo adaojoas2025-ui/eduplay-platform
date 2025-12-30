@@ -1,36 +1,34 @@
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const uploadToCloudinary = async (file, type = 'image') => {
-  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-
-  if (!cloudName || !uploadPreset) {
-    throw new Error('Cloudinary configuration is missing');
-  }
-
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', uploadPreset);
-  formData.append('folder', `eduplay/${type}s`);
+  formData.append('type', type);
 
   try {
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/${type}/upload`,
-      {
-        method: 'POST',
-        body: formData,
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Upload failed');
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication required');
     }
 
-    const data = await response.json();
-    return {
-      url: data.secure_url,
-      publicId: data.public_id,
-    };
+    const response = await fetch(`${API_URL}/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Upload error response:', errorData);
+      throw new Error(errorData.message || 'Upload failed');
+    }
+
+    const result = await response.json();
+    return result.data;
   } catch (error) {
-    console.error('Cloudinary upload error:', error);
+    console.error('Upload error:', error);
     throw error;
   }
 };

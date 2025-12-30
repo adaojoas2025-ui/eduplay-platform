@@ -103,7 +103,7 @@ const getOrderById = async (orderId, userId) => {
     // Check permissions
     const user = await userRepository.findUserById(userId);
     const isOwner = order.buyerId === userId;
-    const isProducer = order.product.producerId === userId;
+    const isProducer = order.product ? order.product.producerId === userId : false;
     const isAdmin = user.role === USER_ROLES.ADMIN;
 
     if (!isOwner && !isProducer && !isAdmin) {

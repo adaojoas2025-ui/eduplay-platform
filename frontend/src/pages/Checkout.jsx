@@ -220,34 +220,71 @@ export default function Checkout() {
                   try {
                     const token = localStorage.getItem('token');
                     console.log('🔄 Iniciando pagamento instantâneo...');
+                    console.log('🛒 Total de itens no carrinho:', cart.items.length);
 
-                    const orderData = {
-                      productId: cart.items[0].productId,
-                      amount: cart.items[0].price * cart.items[0].quantity,
-                      paymentMethod: 'INSTANT_TEST'
-                    };
+                    let successfulOrders = [];
+                    let skippedItems = [];
 
-                    console.log('📦 Criando pedido:', orderData);
-                    const orderResponse = await axios.post(
-                      `${API_URL}/orders`,
-                      orderData,
-                      { headers: { Authorization: `Bearer ${token}` } }
-                    );
+                    // Process each item in cart
+                    for (const item of cart.items) {
+                      try {
+                        const orderData = {
+                          productId: item.productId,
+                          amount: item.price * item.quantity,
+                          paymentMethod: 'INSTANT_TEST'
+                        };
 
-                    const orderId = orderResponse.data.data.order.id;
-                    console.log('✅ Pedido criado:', orderId);
+                        console.log('📦 Criando pedido para:', item.product?.title, orderData);
+                        const orderResponse = await axios.post(
+                          `${API_URL}/orders`,
+                          orderData,
+                          { headers: { Authorization: `Bearer ${token}` } }
+                        );
 
-                    console.log('💰 Aprovando pagamento...');
-                    const paymentResponse = await axios.post(
-                      `${API_URL}/test/approve-payment/${orderId}`,
-                      {},
-                      { headers: { Authorization: `Bearer ${token}` } }
-                    );
+                        const orderId = orderResponse.data.data.order.id;
+                        console.log('✅ Pedido criado:', orderId);
 
-                    console.log('✅ Pagamento aprovado:', paymentResponse.data);
+                        console.log('💰 Aprovando pagamento...');
+                        const paymentResponse = await axios.post(
+                          `${API_URL}/test/approve-payment/${orderId}`,
+                          {},
+                          { headers: { Authorization: `Bearer ${token}` } }
+                        );
 
-                    clearCart();
-                    navigate(`/order/${orderId}/success`);
+                        console.log('✅ Pagamento aprovado:', paymentResponse.data);
+                        successfulOrders.push({ orderId, product: item.product?.title });
+                      } catch (itemError) {
+                        console.warn('⚠️ Erro ao processar item:', item.product?.title, itemError.response?.data?.message);
+
+                        // If already purchased, skip and continue
+                        if (itemError.response?.data?.message?.includes('already purchased')) {
+                          skippedItems.push(item.product?.title);
+                          console.log('ℹ️ Item já comprado, continuando...');
+                          continue;
+                        }
+
+                        // For other errors, rethrow
+                        throw itemError;
+                      }
+                    }
+
+                    if (successfulOrders.length === 0 && skippedItems.length > 0) {
+                      setError(`Você já possui ${skippedItems.length === 1 ? 'este produto' : 'estes produtos'}: ${skippedItems.join(', ')}`);
+                      setLoading(false);
+                      return;
+                    }
+
+                    if (successfulOrders.length > 0) {
+                      clearCart();
+
+                      // Show success message
+                      if (skippedItems.length > 0) {
+                        alert(`✅ Compra concluída! ${successfulOrders.length} ${successfulOrders.length === 1 ? 'produto comprado' : 'produtos comprados'}.\n\nℹ️ ${skippedItems.length} ${skippedItems.length === 1 ? 'item foi ignorado pois você já o possui' : 'itens foram ignorados pois você já os possui'}: ${skippedItems.join(', ')}`);
+                      }
+
+                      // Navigate to first successful order
+                      navigate(`/order/${successfulOrders[0].orderId}/success`);
+                    }
                   } catch (err) {
                     console.error('❌ Erro no pagamento:', err);
                     setError(err.response?.data?.message || 'Erro ao processar pagamento. Tente novamente.');

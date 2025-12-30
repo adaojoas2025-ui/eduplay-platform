@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Cache buster - Updated 2025-12-21 08:51 */
+/* Cache buster - Updated 2025-12-29 20:50 - CAROUSEL VERSION */
 
 * {
   margin: 0;
@@ -79,6 +79,15 @@ body {
   }
 }
 
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
 }
@@ -89,6 +98,25 @@ body {
 
 .animate-scale-in {
   animation: scaleIn 0.2s ease-out;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scroll */
+.overflow-x-auto {
+  scroll-behavior: smooth;
 }
 
 .loading-shimmer {

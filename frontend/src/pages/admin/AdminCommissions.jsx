@@ -205,53 +205,80 @@ export default function AdminCommissions() {
                     </td>
                   </tr>
                 ) : (
-                  commissions.map((commission) => (
-                    <tr key={commission.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {new Date(commission.createdAt).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {commission.producer?.name || 'N/A'}
-                        <div className="text-xs text-gray-500">
-                          {commission.producer?.email}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {commission.order?.product?.title || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                        R$ {commission.order?.amount?.toFixed(2) || '0.00'}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-bold text-green-600">
-                        R$ {commission.amount?.toFixed(2) || '0.00'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            commission.status === 'PENDING'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : commission.status === 'PAID'
-                              ? 'bg-green-100 text-green-800'
-                              : commission.status === 'PROCESSING'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {commission.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {commission.status === 'PENDING' && (
-                          <button
-                            onClick={() => handlePayCommission(commission.id)}
-                            className="text-green-600 hover:text-green-800 font-semibold text-sm"
+                  commissions.map((commission) => {
+                    const isAppSale = commission.isAppSale || false;
+                    return (
+                      <tr key={commission.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {new Date(commission.createdAt).toLocaleDateString('pt-BR')}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {isAppSale ? (
+                            <div>
+                              <span className="font-semibold">Administrador</span>
+                              <div className="text-xs text-purple-600">
+                                🎮 Venda de App
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {commission.producer?.name || 'N/A'}
+                              <div className="text-xs text-gray-500">
+                                {commission.producer?.email}
+                              </div>
+                            </>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {commission.order?.product?.title || 'N/A'}
+                          {isAppSale && (
+                            <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded">
+                              App
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+                          R$ {commission.order?.amount?.toFixed(2) || commission.amount?.toFixed(2) || '0.00'}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-bold text-green-600">
+                          {isAppSale ? (
+                            <span className="text-purple-600">
+                              R$ {commission.amount?.toFixed(2)} (100%)
+                            </span>
+                          ) : (
+                            `R$ ${commission.amount?.toFixed(2) || '0.00'}`
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              isAppSale
+                                ? 'bg-purple-100 text-purple-800'
+                                : commission.status === 'PENDING'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : commission.status === 'PAID'
+                                ? 'bg-green-100 text-green-800'
+                                : commission.status === 'PROCESSING'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
                           >
-                            ✓ Marcar como Pago
+                            {isAppSale ? 'PLATAFORMA' : commission.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {!isAppSale && commission.status === 'PENDING' && (
+                            <button
+                              onClick={() => handlePayCommission(commission.id)}
+                              className="text-green-600 hover:text-green-800 font-semibold text-sm"
+                            >
+                              ✓ Marcar como Pago
                           </button>
                         )}
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>

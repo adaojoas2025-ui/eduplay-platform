@@ -3,10 +3,8 @@
  * Data access layer for order operations
  * @module repositories/order
  */
-
 const { prisma } = require('../config/database');
 const logger = require('../utils/logger');
-
 /**
  * Create a new order
  * @param {Object} orderData - Order data
@@ -14,8 +12,22 @@ const logger = require('../utils/logger');
  */
 const createOrder = async (orderData) => {
   try {
+    // Extract buyerId and productId to transform to Prisma relation format
+    const { buyerId, productId, ...restData } = orderData;
+    const prismaData = {
+      ...restData,
+      buyer: {
+        connect: { id: buyerId }
+      }
+    };
+    // Only connect product if productId is provided (optional for app purchases)
+    if (productId) {
+      prismaData.product = {
+        connect: { id: productId }
+      };
+    }
     const order = await prisma.order.create({
-      data: orderData,
+      data: prismaData,
       include: {
         product: {
           include: {
@@ -376,18 +388,26 @@ const getUserPurchases = async (userId) => {
     });
 
     // Transform filesUrl array into files objects for frontend compatibility
-    const transformedOrders = orders.map(order => ({
-      ...order,
-      product: {
-        ...order.product,
-        files: order.product.filesUrl.map((url, index) => ({
-          id: `${order.product.id}-file-${index}`,
-          name: url.split('/').pop() || `Arquivo ${index + 1}`,
-          url: url,
-          size: 0 // Size not available, frontend can handle this
-        }))
+    // Handle both product purchases and app purchases
+    const transformedOrders = orders.map(order => {
+      // Se é compra de produto (tem productId e product)
+      if (order.product && order.product.filesUrl) {
+        return {
+          ...order,
+          product: {
+            ...order.product,
+            files: order.product.filesUrl.map((url, index) => ({
+              id: `${order.product.id}-file-${index}`,
+              name: url.split('/').pop() || `Arquivo ${index + 1}`,
+              url: url,
+              size: 0
+            }))
+          }
+        };
       }
-    }));
+      // Se é compra de app (não tem product, tem metadata com appId)
+      return order;
+    });
 
     return transformedOrders;
   } catch (error) {
@@ -532,3 +552,5 @@ module.exports = {
   refundOrder,
   getOrdersByStatusCount,
 };
+
+

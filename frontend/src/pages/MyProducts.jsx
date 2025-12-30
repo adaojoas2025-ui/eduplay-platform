@@ -81,23 +81,39 @@ export default function MyProducts() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {purchases.map((purchase) => (
-              <div
-                key={purchase.id}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
-              >
-                <img
-                  src={purchase.product?.thumbnailUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%23ddd" width="400" height="225"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="20" dy="3.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3ESem Imagem%3C/text%3E%3C/svg%3E'}
-                  alt={purchase.product?.title}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">
-                    {purchase.product?.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {purchase.product?.description}
-                  </p>
+            {purchases.map((purchase) => {
+              // Detectar se é compra de app
+              const isApp = !purchase.product && purchase.metadata && purchase.metadata.type === 'APP_PURCHASE';
+              const title = isApp ? purchase.metadata.appTitle : purchase.product?.title;
+              const description = isApp ? `App - ${purchase.metadata.appTitle}` : purchase.product?.description;
+              const thumbnailUrl = isApp
+                ? 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%234F46E5" width="400" height="225"/%3E%3Ctext fill="white" font-family="sans-serif" font-size="60" dy="3.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E📱%3C/text%3E%3C/svg%3E'
+                : (purchase.product?.thumbnailUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%23ddd" width="400" height="225"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="20" dy="3.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3ESem Imagem%3C/text%3E%3C/svg%3E');
+
+              return (
+                <div
+                  key={purchase.id}
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
+                >
+                  <img
+                    src={thumbnailUrl}
+                    alt={title}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-bold text-gray-800">
+                        {title}
+                      </h3>
+                      {isApp && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
+                          App
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {description}
+                    </p>
 
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-sm text-gray-500">
@@ -122,7 +138,14 @@ export default function MyProducts() {
 
                   {(purchase.status === 'APPROVED' || purchase.status === 'COMPLETED') && (
                     <div className="space-y-2">
-                      {purchase.product?.filesUrl && purchase.product.filesUrl.length > 0 ? (
+                      {isApp ? (
+                        <Link
+                          to={`/apps/${purchase.metadata.appSlug || purchase.metadata.appId}`}
+                          className="block w-full bg-blue-600 text-white text-center py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
+                        >
+                          📱 Acessar Produto
+                        </Link>
+                      ) : purchase.product?.filesUrl && purchase.product.filesUrl.length > 0 ? (
                         purchase.product.filesUrl.map((fileUrl, index) => (
                           <a
                             key={index}
@@ -152,7 +175,8 @@ export default function MyProducts() {
                   )}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>

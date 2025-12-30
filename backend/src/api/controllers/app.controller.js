@@ -105,7 +105,21 @@ const updateApp = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
 
-  const app = await appService.updateApp(id, updateData);
+  // Remover campos de relação e campos gerados automaticamente que não podem ser atualizados
+  const {
+    id: appId,
+    reviews,
+    createdAt,
+    updatedAt,
+    downloads,
+    rating,
+    totalRatings,
+    lastUpdate,
+    slug,
+    ...cleanUpdateData
+  } = updateData;
+
+  const app = await appService.updateApp(id, cleanUpdateData);
 
   res.json({
     success: true,

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Teste Carrossel - EDUPLAY</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; padding: 20px; background: #f0f0f0;">
+        ⬇️ Carrossel deve aparecer ABAIXO ⬇️
+    </h1>
+    <div id="root"></div>
+    <script type="module">
+        // Força reload sem cache
+        const timestamp = new Date().getTime();
+        console.log('🔄 Carregando app sem cache:', timestamp);
+
+        // Redireciona para o app React
+        window.location.href = 'http://localhost:5174/?nocache=' + timestamp;
+    </script>
+</body>
+</html>

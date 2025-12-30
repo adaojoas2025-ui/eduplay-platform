@@ -164,7 +164,7 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
     }
 
     // Execute query with pagination
-    const [commissions, total] = await Promise.all([
+    const [commissions, total, appOrders, totalAppOrders] = await Promise.all([
       prisma.commission.findMany({
         where,
         skip,
@@ -179,6 +179,13 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
                   title: true,
                 },
               },
+              buyer: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
             },
           },
           producer: {
@@ -191,15 +198,80 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
         },
       }),
       prisma.commission.count({ where }),
+      // Buscar também orders de apps (sem comissão)
+      prisma.order.findMany({
+        where: {
+          status: 'COMPLETED',
+          productId: null, // App sales
+          ...(filters.startDate || filters.endDate ? {
+            createdAt: {
+              ...(filters.startDate ? { gte: new Date(filters.startDate) } : {}),
+              ...(filters.endDate ? { lte: new Date(filters.endDate) } : {}),
+            }
+          } : {}),
+        },
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: order },
+        include: {
+          buyer: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      }),
+      prisma.order.count({
+        where: {
+          status: 'COMPLETED',
+          productId: null,
+          ...(filters.startDate || filters.endDate ? {
+            createdAt: {
+              ...(filters.startDate ? { gte: new Date(filters.startDate) } : {}),
+              ...(filters.endDate ? { lte: new Date(filters.endDate) } : {}),
+            }
+          } : {}),
+        },
+      }),
     ]);
 
+    // Transformar app orders em formato de comissão para o frontend
+    const appCommissions = appOrders.map(order => ({
+      id: `app-${order.id}`,
+      orderId: order.id,
+      producerId: null,
+      producer: null,
+      amount: order.amount, // 100% vai para a plataforma
+      status: 'PAID', // Apps são considerados como já pagos (receita da plataforma)
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      order: {
+        ...order,
+        product: {
+          id: order.metadata?.appId || null,
+          title: order.metadata?.appTitle || 'App',
+        },
+      },
+      isAppSale: true, // Flag para identificar vendas de apps
+    }));
+
+    // Mesclar comissões e vendas de apps
+    const allItems = [...commissions, ...appCommissions].sort((a, b) => {
+      if (order === 'desc') {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+      return new Date(a.createdAt) - new Date(b.createdAt);
+    });
+
     return {
-      commissions,
+      commissions: allItems,
       pagination: {
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+        total: total + totalAppOrders,
+        totalPages: Math.ceil((total + totalAppOrders) / limit),
       },
     };
   } catch (error) {
@@ -443,13 +515,44 @@ const getCommissionStats = async (filters = {}) => {
       { byStatus: {} }
     );
 
-    // Calculate total sales revenue (sum of all order amounts)
+    // Calculate total sales revenue from products (sum of all order amounts with commissions)
     const totalSalesRevenue = totalSales.reduce((sum, commission) => {
       return sum + (commission.order?.amount || 0);
     }, 0);
 
-    // Platform revenue is 3% of total sales
-    const platformRevenue = totalSalesRevenue * 0.03;
+    // Get app sales (orders without commissions - 100% goes to platform)
+    const appSalesWhere = {
+      status: 'COMPLETED',
+      productId: null, // App purchases don't have productId
+    };
+
+    if (filters.startDate || filters.endDate) {
+      appSalesWhere.createdAt = {};
+      if (filters.startDate) {
+        appSalesWhere.createdAt.gte = new Date(filters.startDate);
+      }
+      if (filters.endDate) {
+        appSalesWhere.createdAt.lte = new Date(filters.endDate);
+      }
+    }
+
+    const appSales = await prisma.order.aggregate({
+      where: appSalesWhere,
+      _sum: {
+        amount: true,
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    const totalAppSalesRevenue = appSales._sum.amount || 0;
+    const appSalesCount = appSales._count.id || 0;
+
+    // Platform revenue is:
+    // - 3% of product sales (totalSalesRevenue)
+    // - 100% of app sales (totalAppSalesRevenue)
+    const platformRevenue = (totalSalesRevenue * 0.03) + totalAppSalesRevenue;
 
     // Add aggregated totals
     stats.totalAmount = totalAmount._sum.amount || 0; // Total commission paid to producers (97%)
@@ -462,8 +565,10 @@ const getCommissionStats = async (filters = {}) => {
     stats.monthlyCount = monthlyStats._count.id || 0;
 
     // Platform statistics
-    stats.totalSalesRevenue = totalSalesRevenue; // Total revenue from all sales
-    stats.platformRevenue = platformRevenue; // 3% platform commission
+    stats.totalSalesRevenue = totalSalesRevenue; // Total revenue from product sales
+    stats.platformRevenue = platformRevenue; // 3% from products + 100% from apps
+    stats.appSalesRevenue = totalAppSalesRevenue; // Revenue from app sales (100% platform)
+    stats.appSalesCount = appSalesCount; // Number of app sales
 
     return stats;
   } catch (error) {

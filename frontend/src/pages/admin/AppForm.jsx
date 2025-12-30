@@ -27,6 +27,8 @@ export default function AppForm() {
   const [loading, setLoading] = useState(false);
   const [uploadingIcon, setUploadingIcon] = useState(false);
   const [uploadingScreenshot, setUploadingScreenshot] = useState({});
+  const [uploadingFreeApk, setUploadingFreeApk] = useState(false);
+  const [uploadingPaidApk, setUploadingPaidApk] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     developer: '',
@@ -158,6 +160,64 @@ export default function AppForm() {
       alert('Erro ao enviar screenshot. Tente novamente.');
     } finally {
       setUploadingScreenshot({ ...uploadingScreenshot, [index]: false });
+    }
+  };
+
+  const handleFreeApkUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.endsWith('.apk')) {
+      alert('Por favor, selecione apenas arquivos APK');
+      return;
+    }
+
+    // Validate file size (max 100MB)
+    if (file.size > 100 * 1024 * 1024) {
+      alert('O arquivo APK deve ter no máximo 100MB');
+      return;
+    }
+
+    try {
+      setUploadingFreeApk(true);
+      const result = await uploadToCloudinary(file, 'apk');
+      setFormData({ ...formData, freeWithAdsUrl: result.url });
+      alert('APK gratuito enviado com sucesso!');
+    } catch (error) {
+      console.error('Error uploading free APK:', error);
+      alert('Erro ao enviar APK gratuito. Tente novamente.');
+    } finally {
+      setUploadingFreeApk(false);
+    }
+  };
+
+  const handlePaidApkUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.endsWith('.apk')) {
+      alert('Por favor, selecione apenas arquivos APK');
+      return;
+    }
+
+    // Validate file size (max 100MB)
+    if (file.size > 100 * 1024 * 1024) {
+      alert('O arquivo APK deve ter no máximo 100MB');
+      return;
+    }
+
+    try {
+      setUploadingPaidApk(true);
+      const result = await uploadToCloudinary(file, 'apk');
+      setFormData({ ...formData, paidNoAdsUrl: result.url });
+      alert('APK pago enviado com sucesso!');
+    } catch (error) {
+      console.error('Error uploading paid APK:', error);
+      alert('Erro ao enviar APK pago. Tente novamente.');
+    } finally {
+      setUploadingPaidApk(false);
     }
   };
 
@@ -544,15 +604,47 @@ export default function AppForm() {
                   />
                   <label className="font-semibold text-gray-800">Versão Gratuita com Propaganda</label>
                 </div>
-                <input
-                  type="url"
-                  name="freeWithAdsUrl"
-                  value={formData.freeWithAdsUrl}
-                  onChange={handleChange}
-                  disabled={!formData.freeWithAdsActive}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="URL do arquivo APK com propaganda"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="url"
+                    name="freeWithAdsUrl"
+                    value={formData.freeWithAdsUrl}
+                    onChange={handleChange}
+                    disabled={!formData.freeWithAdsActive}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    placeholder="URL do arquivo APK com propaganda"
+                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">ou</span>
+                    <label className="flex-1">
+                      <input
+                        type="file"
+                        accept=".apk"
+                        onChange={handleFreeApkUpload}
+                        disabled={!formData.freeWithAdsActive || uploadingFreeApk}
+                        className="hidden"
+                      />
+                      <span className={`block w-full px-4 py-2 text-center border-2 border-dashed rounded-lg cursor-pointer transition ${
+                        uploadingFreeApk
+                          ? 'bg-gray-100 border-gray-300 cursor-not-allowed'
+                          : !formData.freeWithAdsActive
+                          ? 'bg-gray-100 border-gray-300 cursor-not-allowed'
+                          : 'border-green-300 hover:border-green-500 hover:bg-green-100'
+                      }`}>
+                        {uploadingFreeApk ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                            Enviando APK...
+                          </span>
+                        ) : (
+                          <span className="text-sm font-medium text-gray-700">
+                            📤 Fazer upload do APK gratuito
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -566,7 +658,7 @@ export default function AppForm() {
                   />
                   <label className="font-semibold text-gray-800">Versão Paga sem Propaganda</label>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <input
                     type="url"
                     name="paidNoAdsUrl"
@@ -576,6 +668,34 @@ export default function AppForm() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                     placeholder="URL do arquivo APK sem propaganda"
                   />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">ou</span>
+                    <label className="flex-1">
+                      <input
+                        type="file"
+                        accept=".apk"
+                        onChange={handlePaidApkUpload}
+                        disabled={!formData.paidNoAdsActive || uploadingPaidApk}
+                        className="hidden"
+                      />
+                      <span className={`block w-full px-4 py-2 text-center border-2 border-dashed rounded-lg cursor-pointer transition ${
+                        uploadingPaidApk ? 'bg-gray-100 border-gray-300 cursor-not-allowed' :
+                        !formData.paidNoAdsActive ? 'bg-gray-100 border-gray-300 cursor-not-allowed' :
+                        'border-blue-300 hover:border-blue-500 hover:bg-blue-100'
+                      }`}>
+                        {uploadingPaidApk ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                            Enviando APK...
+                          </span>
+                        ) : (
+                          <span className="text-sm font-medium text-gray-700">
+                            📤 Fazer upload do APK pago
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-700">R$</span>
                     <input

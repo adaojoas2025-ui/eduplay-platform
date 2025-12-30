@@ -122,6 +122,7 @@ model User {
   reviews                 Review[]
   cartItems               CartItem[]
   gamification            UserGamification?
+  combos                  Combo[]     @relation("ProducerCombos")
 
   @@map("users")
 }
@@ -304,6 +305,52 @@ model CartItem {
   @@unique([userId, productId])
   @@index([userId])
   @@map("cart_items")
+}
+
+// ========================================
+// COMBO/BUNDLE MODELS
+// ========================================
+
+model Combo {
+  id              String    @id @default(uuid())
+  title           String    // Ex: "Kit Educação Infantil"
+  description     String    @db.Text
+  discountPrice   Float     // Preço com desconto (ex: 25.00)
+
+  // Producer relation (creator of combo)
+  producerId      String
+  producer        User      @relation("ProducerCombos", fields: [producerId], references: [id], onDelete: Cascade)
+
+  // Status
+  isActive        Boolean   @default(true)
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  products        ComboProduct[]
+
+  @@index([producerId])
+  @@map("combos")
+}
+
+model ComboProduct {
+  id          String    @id @default(uuid())
+
+  // Combo relation
+  comboId     String
+  combo       Combo     @relation(fields: [comboId], references: [id], onDelete: Cascade)
+
+  // Product relation
+  productId   String
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+
+  @@unique([comboId, productId])
+  @@index([comboId])
+  @@map("combo_products")
 }
 
 // ========================================

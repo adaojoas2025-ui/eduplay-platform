@@ -78,15 +78,26 @@ const approveTestPayment = asyncHandler(async (req, res) => {
     finalStatus: updatedOrderAfterPayment.status
   });
 
-  // Enviar email com acesso ao produto
+  // Enviar email com acesso ao produto (apenas se for compra de produto, não app)
   try {
-    const product = await productRepository.findProductById(order.productId);
-    await emailService.sendProductAccessEmail(order.buyer, product, order);
-    logger.info('Email de acesso enviado com sucesso', {
-      orderId,
-      buyerEmail: order.buyer.email,
-      productId: product.id
-    });
+    if (order.productId) {
+      // Compra de produto
+      const product = await productRepository.findProductById(order.productId);
+      await emailService.sendProductAccessEmail(order.buyer, product, order);
+      logger.info('Email de acesso ao produto enviado com sucesso', {
+        orderId,
+        buyerEmail: order.buyer.email,
+        productId: product.id
+      });
+    } else if (order.metadata && order.metadata.type === 'APP_PURCHASE') {
+      // Compra de app - não precisa enviar email, usuário já tem acesso
+      logger.info('App purchase approved - user now has access', {
+        orderId,
+        buyerEmail: order.buyer.email,
+        appId: order.metadata.appId,
+        appTitle: order.metadata.appTitle
+      });
+    }
   } catch (emailError) {
     logger.error('Falha ao enviar email de acesso', {
       error: emailError.message,
@@ -98,11 +109,16 @@ const approveTestPayment = asyncHandler(async (req, res) => {
   // Buscar pedido atualizado
   const updatedOrder = await orderService.getOrderById(orderId, req.user.id);
 
+  // Mensagem de resposta adequada ao tipo de compra
+  const successMessage = order.metadata && order.metadata.type === 'APP_PURCHASE'
+    ? 'Pagamento aprovado com sucesso! Agora você pode baixar a versão sem propaganda do app.'
+    : 'Pagamento simulado aprovado com sucesso! Verifique seu email para acessar o produto.';
+
   return ApiResponse.success(
     res,
     200,
     { order: updatedOrder },
-    'Pagamento simulado aprovado com sucesso! Verifique seu email para acessar o produto.'
+    successMessage
   );
 });
 
