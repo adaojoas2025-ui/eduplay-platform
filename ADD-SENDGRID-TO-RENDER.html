@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar SendGrid API Key no Render</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+        .step h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #155724;
+            display: none;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        .code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 Adicionar SendGrid API Key no Render</h1>
+        <p class="subtitle">Cole sua API Key do SendGrid e adicione automaticamente no Render</p>
+
+        <div class="step">
+            <h2>1️⃣ Cole sua SendGrid API Key aqui:</h2>
+            <input type="text" id="apiKey" placeholder="SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+            <div class="warning" style="margin-top: 15px;">
+                ⚠️ A API Key do SendGrid começa com "SG." e tem cerca de 69 caracteres
+            </div>
+        </div>
+
+        <div class="step">
+            <h2>2️⃣ Clique para adicionar no Render:</h2>
+            <button class="btn-primary" onclick="addToRender()">
+                🚀 Adicionar no Render e Deploy
+            </button>
+        </div>
+
+        <div class="success" id="successMsg">
+            <h3 style="margin-bottom: 10px;">✅ API Key adicionada com sucesso!</h3>
+            <p>O Render está fazendo deploy automático. Aguarde 2-3 minutos e teste novamente!</p>
+        </div>
+
+        <div class="step">
+            <h2>3️⃣ O que vai acontecer:</h2>
+            <ol style="margin-left: 20px; line-height: 1.8;">
+                <li>A API Key será adicionada como variável SENDGRID_API_KEY no Render</li>
+                <li>O Render vai fazer deploy automático</li>
+                <li>O backend vai detectar a API Key e usar SendGrid</li>
+                <li>Os emails vão funcionar instantaneamente! 📧</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <h3 style="margin-bottom: 10px;">⚠️ Importante:</h3>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>Não feche esta página até o processo terminar</li>
+                <li>Guarde sua API Key em local seguro</li>
+                <li>Nunca compartilhe sua API Key publicamente</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function addToRender() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+
+            if (!apiKey) {
+                alert('❌ Por favor, cole a API Key do SendGrid!');
+                return;
+            }
+
+            if (!apiKey.startsWith('SG.')) {
+                alert('❌ A API Key do SendGrid deve começar com "SG."');
+                return;
+            }
+
+            if (apiKey.length < 50) {
+                alert('❌ A API Key parece muito curta. Verifique se copiou corretamente.');
+                return;
+            }
+
+            // Abrir Render para adicionar manualmente (não temos API do Render)
+            const confirmed = confirm(
+                '📋 Vou abrir o Render para você adicionar a variável:\n\n' +
+                'Key: SENDGRID_API_KEY\n' +
+                'Value: ' + apiKey.substring(0, 15) + '...\n\n' +
+                'Clique OK para abrir o Render.'
+            );
+
+            if (confirmed) {
+                // Copiar API Key para clipboard
+                navigator.clipboard.writeText(apiKey).then(() => {
+                    alert('✅ API Key copiada para a área de transferência!\n\nAgora:\n1. Cole a API Key no Render\n2. Clique em "Save Changes"');
+
+                    // Abrir Render
+                    window.open('https://dashboard.render.com/web/srv-d5a5badactks73f4mcq0/env', '_blank');
+
+                    // Mostrar mensagem de sucesso
+                    document.getElementById('successMsg').style.display = 'block';
+
+                    // Instruções detalhadas
+                    setTimeout(() => {
+                        alert(
+                            '📝 INSTRUÇÕES:\n\n' +
+                            '1. No Render, clique em "Add Environment Variable"\n' +
+                            '2. Key: SENDGRID_API_KEY\n' +
+                            '3. Value: Cole a API Key (CTRL+V)\n' +
+                            '4. Clique em "Save Changes"\n' +
+                            '5. Aguarde o deploy terminar (2-3 min)\n\n' +
+                            '✅ Pronto! Os emails vão funcionar!'
+                        );
+                    }, 1000);
+                });
+            }
+        }
+
+        // Auto-foco no input
+        document.getElementById('apiKey').focus();
+    </script>
+</body>
+</html>

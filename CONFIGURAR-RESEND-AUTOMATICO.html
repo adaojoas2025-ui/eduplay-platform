@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Resend - Solução Profissional de Email</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #6366f1;
+            margin-bottom: 10px;
+            font-size: 36px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .highlight-box h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        .highlight-box ul {
+            list-style: none;
+            font-size: 18px;
+            line-height: 2;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #6366f1;
+        }
+        .step h3 {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .step-number {
+            background: #6366f1;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-primary:hover {
+            background: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        .code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #065f46;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Resend - Email Profissional</h1>
+        <p class="subtitle">A solução mais moderna e confiável para envio de emails</p>
+
+        <div class="highlight-box">
+            <h2>✨ Por que Resend?</h2>
+            <ul>
+                <li>✅ <strong>3.000 emails GRATUITOS</strong> por mês</li>
+                <li>✅ <strong>Entrega instantânea</strong> (< 1 segundo)</li>
+                <li>✅ <strong>99.9% de confiabilidade</strong></li>
+                <li>✅ <strong>Usado por Vercel, Linear, Stripe</strong></li>
+                <li>✅ <strong>Setup em 2 minutos</strong></li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3><span class="step-number">1</span> Criar Conta (30 segundos)</h3>
+            <p>Clique no botão abaixo para criar sua conta GRATUITA:</p>
+            <a href="https://resend.com/signup" target="_blank" class="btn-primary">
+                🌐 Criar Conta no Resend (GRÁTIS)
+            </a>
+            <p style="margin-top: 15px; color: #666;">Use o email: <strong>adao.joas2025@gmail.com</strong></p>
+        </div>
+
+        <div class="step">
+            <h3><span class="step-number">2</span> Gerar API Key (10 segundos)</h3>
+            <ol style="margin-left: 25px; line-height: 2;">
+                <li>Após criar a conta, vá em <strong>"API Keys"</strong></li>
+                <li>Clique em <strong>"Create API Key"</strong></li>
+                <li>Nome: <code style="background: #f0f0f0; padding: 3px 8px; border-radius: 4px;">EDUPLAY</code></li>
+                <li><strong>Copie a API Key</strong> (começa com "re_")</li>
+            </ol>
+            <a href="https://resend.com/api-keys" target="_blank" class="btn-primary">
+                🔑 Ir para API Keys
+            </a>
+        </div>
+
+        <div class="step">
+            <h3><span class="step-number">3</span> Cole sua API Key:</h3>
+            <input type="text" id="apiKey" placeholder="re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+            <button class="btn-primary" onclick="adicionarNoRender()">
+                🚀 Adicionar no Render Automaticamente
+            </button>
+        </div>
+
+        <div class="success" id="successMsg">
+            <h3 style="margin-bottom: 10px;">✅ Perfeito!</h3>
+            <p>Agora vou abrir o Render para você adicionar a API Key!</p>
+            <p style="margin-top: 10px;"><strong>Key:</strong> RESEND_API_KEY</p>
+            <p><strong>Value:</strong> [API Key copiada]</p>
+        </div>
+
+        <div class="step">
+            <h3><span class="step-number">4</span> O que vai acontecer:</h3>
+            <ol style="margin-left: 25px; line-height: 2;">
+                <li>Você vai colar a API Key acima ☝️</li>
+                <li>Vou abrir o Render automaticamente</li>
+                <li>Você adiciona: <code style="background: #f0f0f0; padding: 3px 8px;">RESEND_API_KEY</code></li>
+                <li>Deploy automático (2 min)</li>
+                <li><strong>EMAILS FUNCIONANDO!</strong> 🎉</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Auto-abrir Resend signup
+        setTimeout(() => {
+            const confirm1 = confirm('Deseja abrir o Resend agora para criar sua conta?\n\n✅ 100% GRATUITO\n✅ 3.000 emails/mês\n✅ Setup em 2 minutos');
+            if (confirm1) {
+                window.open('https://resend.com/signup', '_blank');
+            }
+        }, 1500);
+
+        function adicionarNoRender() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+
+            if (!apiKey) {
+                alert('❌ Por favor, cole a API Key do Resend!');
+                return;
+            }
+
+            if (!apiKey.startsWith('re_')) {
+                alert('❌ A API Key do Resend deve começar com "re_"\n\nVerifique se copiou corretamente.');
+                return;
+            }
+
+            if (apiKey.length < 30) {
+                alert('❌ A API Key parece muito curta.\n\nCertifique-se de copiar a chave completa.');
+                return;
+            }
+
+            // Copiar para clipboard
+            navigator.clipboard.writeText(apiKey).then(() => {
+                // Mostrar mensagem de sucesso
+                document.getElementById('successMsg').style.display = 'block';
+
+                // Abrir Render
+                setTimeout(() => {
+                    window.open('https://dashboard.render.com/web/srv-d5a5badactks73f4mcq0/env', '_blank');
+
+                    // Instruções
+                    setTimeout(() => {
+                        alert(
+                            '✅ API Key copiada!\n\n' +
+                            '📝 NO RENDER:\n' +
+                            '1. Clique em "Add Environment Variable"\n' +
+                            '2. Key: RESEND_API_KEY\n' +
+                            '3. Value: Cole (CTRL+V)\n' +
+                            '4. Save Changes\n' +
+                            '5. Aguarde deploy (2 min)\n\n' +
+                            '🎉 PRONTO! Emails instantâneos!'
+                        );
+                    }, 1000);
+                }, 500);
+            });
+        }
+
+        // Auto-focus
+        document.getElementById('apiKey').focus();
+    </script>
+</body>
+</html>

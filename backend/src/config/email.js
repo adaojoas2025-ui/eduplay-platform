@@ -1,6 +1,6 @@
 /**
  * Email Configuration
- * Email service using SendGrid (preferred) or Nodemailer (fallback)
+ * Email service using Resend (preferred), SendGrid, or Nodemailer (fallback)
  * @module config/email
  */
 
@@ -8,11 +8,26 @@ const nodemailer = require('nodemailer');
 const config = require('./env');
 const logger = require('../utils/logger');
 
-// Try to use SendGrid if available
+// Try to use Resend first (most reliable)
+let useResend = false;
+let resendClient = null;
+
+if (process.env.RESEND_API_KEY) {
+  try {
+    const { Resend } = require('resend');
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+    useResend = true;
+    logger.info('✅ Using Resend for email service (PROFESSIONAL)');
+  } catch (error) {
+    logger.warn('⚠️  Resend not available, trying SendGrid');
+  }
+}
+
+// Try SendGrid if Resend not available
 let useSendGrid = false;
 let sgMail = null;
 
-if (process.env.SENDGRID_API_KEY) {
+if (!useResend && process.env.SENDGRID_API_KEY) {
   try {
     sgMail = require('@sendgrid/mail');
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -21,8 +36,8 @@ if (process.env.SENDGRID_API_KEY) {
   } catch (error) {
     logger.warn('⚠️  SendGrid not available, falling back to SMTP');
   }
-} else {
-  logger.info('ℹ️  SendGrid API Key not found, using SMTP');
+} else if (!useResend) {
+  logger.info('ℹ️  No professional email service found, using SMTP');
 }
 
 /**
@@ -43,7 +58,10 @@ const transporter = nodemailer.createTransport({
  */
 const verifyConnection = async () => {
   try {
-    if (useSendGrid) {
+    if (useResend) {
+      logger.info('✅ Resend email service ready');
+      return true;
+    } else if (useSendGrid) {
       logger.info('✅ SendGrid email service ready');
       return true;
     } else {
@@ -68,7 +86,23 @@ const verifyConnection = async () => {
  */
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
-    if (useSendGrid && sgMail) {
+    if (useResend && resendClient) {
+      // Use Resend (PROFESSIONAL - Most reliable)
+      const response = await resendClient.emails.send({
+        from: config.email.from,
+        to,
+        subject,
+        html,
+      });
+
+      logger.info('✅ Email sent successfully via Resend (PROFESSIONAL)', {
+        to,
+        subject,
+        id: response.id,
+      });
+
+      return response;
+    } else if (useSendGrid && sgMail) {
       // Use SendGrid
       const msg = {
         to,
@@ -108,8 +142,9 @@ const sendEmail = async ({ to, subject, html, text }) => {
       return info;
     }
   } catch (error) {
+    const service = useResend ? 'Resend' : (useSendGrid ? 'SendGrid' : 'SMTP');
     logger.error('❌ Error sending email:', {
-      service: useSendGrid ? 'SendGrid' : 'SMTP',
+      service,
       error: error.message,
       to,
       subject
@@ -122,5 +157,6 @@ module.exports = {
   transporter,
   verifyConnection,
   sendEmail,
+  usingResend: useResend,
   usingSendGrid: useSendGrid,
 };
