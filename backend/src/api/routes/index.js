@@ -23,6 +23,7 @@ const testRoutes = require('./test.routes');
 const uploadRoutes = require('./upload.routes');
 const comboRoutes = require('./combo.routes');
 const emailTestRoutes = require('./email-test.routes'); // TEMPORARY - For email debugging
+const diagnosticRoutes = require('./diagnostic.routes'); // TEMPORARY - For diagnostics
 
 /**
  * Health check route
@@ -55,6 +56,7 @@ router.use('/test', testRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/combos', comboRoutes);
 router.use('/email-debug', emailTestRoutes); // TEMPORARY - For email debugging
+router.use('/diagnostic', diagnosticRoutes); // TEMPORARY - For diagnostics
 
 /**
  * 404 handler for API routes
