@@ -1,0 +1,109 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║                 CONFIGURAR EMAIL NO RENDER.COM                     ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+PASSO 1: Abrir o Render
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Abra este link no navegador:
+https://dashboard.render.com/web/srv-d4tjga3uibrs73aohlpg
+
+
+PASSO 2: Fazer Login
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Se não estiver logado, faça login com sua conta do Render.
+
+
+PASSO 3: Ir para Environment Variables
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+No menu lateral esquerdo, clique em:
+   Environment  (é o segundo item do menu)
+
+
+PASSO 4: Adicionar as Variáveis de Email
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Clique no botão "Add Environment Variable" e adicione UMA POR VEZ:
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Variável 1:                                                     │
+│ Key:   EMAIL_HOST                                               │
+│ Value: smtp.gmail.com                                           │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Variável 2:                                                     │
+│ Key:   EMAIL_PORT                                               │
+│ Value: 587                                                      │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Variável 3:                                                     │
+│ Key:   EMAIL_SECURE                                             │
+│ Value: false                                                    │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Variável 4:                                                     │
+│ Key:   EMAIL_USER                                               │
+│ Value: adao.joas2025@gmail.com                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Variável 5:                                                     │
+│ Key:   EMAIL_PASS                                               │
+│ Value: kiiu xadt rbmk whns                                      │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Variável 6:                                                     │
+│ Key:   EMAIL_FROM                                               │
+│ Value: EducaplayJA <adao.joas2025@gmail.com>                    │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Variável 7:                                                     │
+│ Key:   FRONTEND_URL                                             │
+│ Value: https://eduplay-platform.vercel.app                      │
+└─────────────────────────────────────────────────────────────────┘
+
+
+PASSO 5: Salvar
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Depois de adicionar TODAS as variáveis, clique em:
+   "Save Changes"  (botão azul no topo da página)
+
+
+PASSO 6: Aguardar Deploy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O Render vai AUTOMATICAMENTE fazer redeploy do backend.
+
+AGUARDE 2-3 MINUTOS até o deploy terminar.
+
+Você vai ver "Deploy live" quando estiver pronto.
+
+
+PASSO 7: Testar
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Entre como PRODUTOR: adao1980aguiar@gmail.com / Senha123@
+2. Crie um novo produto
+3. Entre como ADMIN: ja.eduplay@gmail.com / Senha123@
+4. Aprove o produto
+5. Verifique o email de adao1980aguiar@gmail.com
+
+Você deve receber um email: "Produto Aprovado: [Nome do Produto]"
+
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                      IMPORTANTE                                    ║
+║                                                                    ║
+║  Se NÃO receber o email:                                          ║
+║  1. Vá em "Logs" no painel do Render                              ║
+║  2. Procure por "email" ou "Error sending"                        ║
+║  3. Me avise do erro que aparecer                                 ║
+╚═══════════════════════════════════════════════════════════════════╝

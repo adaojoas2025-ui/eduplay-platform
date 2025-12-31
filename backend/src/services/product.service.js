@@ -43,9 +43,21 @@ const createProduct = async (producerId, productData) => {
     // Buscar todos os administradores para enviar email
     const admins = await userRepository.findUsersByRole(USER_ROLES.ADMIN);
 
+    logger.info('Sending pending approval emails to admins', {
+      productId: product.id,
+      adminCount: admins.length,
+      adminEmails: admins.map(a => a.email)
+    });
+
     // Enviar email para cada administrador
     for (const admin of admins) {
       try {
+        logger.info('Sending email to admin', {
+          productId: product.id,
+          adminEmail: admin.email,
+          productTitle: product.title
+        });
+
         await emailService.sendProductPendingApprovalEmail(admin.email, {
           adminName: admin.name,
           productTitle: product.title,
@@ -53,12 +65,27 @@ const createProduct = async (producerId, productData) => {
           productId: product.id,
           productDescription: product.description,
         });
+
+        logger.info('Email sent successfully to admin', {
+          productId: product.id,
+          adminEmail: admin.email
+        });
       } catch (emailError) {
-        logger.error('Error sending email to admin:', { adminId: admin.id, error: emailError });
+        logger.error('FAILED to send email to admin', {
+          productId: product.id,
+          adminId: admin.id,
+          adminEmail: admin.email,
+          error: emailError.message,
+          stack: emailError.stack
+        });
       }
     }
 
-    logger.info('Product created and pending approval', { productId: product.id, producerId });
+    logger.info('Product created and pending approval - all emails processed', {
+      productId: product.id,
+      producerId,
+      emailsSent: admins.length
+    });
 
     return product;
   } catch (error) {
