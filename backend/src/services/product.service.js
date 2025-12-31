@@ -297,8 +297,18 @@ const approveProduct = async (productId, adminId) => {
       throw ApiError.badRequest('Product is not pending approval');
     }
 
-    // Update status to PUBLISHED
-    const updatedProduct = await productRepository.updateStatus(productId, PRODUCT_STATUS.PUBLISHED);
+    // Update status to PUBLISHED with approval data
+    const updatedProduct = await productRepository.updateProduct(productId, {
+      status: PRODUCT_STATUS.PUBLISHED,
+      approvedBy: adminId,
+      approvedAt: new Date()
+    });
+    // Update status to PUBLISHED with approval data
+    const updatedProduct = await productRepository.updateProduct(productId, {
+      status: PRODUCT_STATUS.PUBLISHED,
+      approvedBy: adminId,
+      approvedAt: new Date()
+    });
 
     // Get producer data
     const producer = await userRepository.findUserById(product.producerId);
