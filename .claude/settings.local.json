@@ -110,7 +110,10 @@
       "Bash(npm --prefix c:/projetos/frontend run dev -- --port 5173 --force --clearScreen false)",
       "Bash(more:*)",
       "Bash(git rm:*)",
-      "Bash(if exist node_modules.prisma rd /s /q node_modules.prisma)"
+      "Bash(if exist node_modules.prisma rd /s /q node_modules.prisma)",
+      "Bash(vercel:*)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_5rjn_user:nIbDLtzPaXGnieArVz4TbRvowJcb0e7J@dpg-d5a4te1r0fns7385cop0-a.oregon-postgres.render.com/eduplay_5rjn?sslmode=require\" npx prisma migrate deploy:*)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_5rjn_user:nIbDLtzPaXGnieArVz4TbRvowJcb0e7J@dpg-d5a4te1r0fns7385cop0-a.oregon-postgres.render.com/eduplay_5rjn?sslmode=require\" npx prisma db push:*)"
     ],
     "deny": [],
     "ask": []
