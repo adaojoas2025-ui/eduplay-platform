@@ -11,7 +11,7 @@ const asyncHandler = require('../../utils/asyncHandler');
 const logger = require('../../utils/logger');
 
 /**
- * Testa envio de email para admin
+ * Testa envio de email para admin COM ERROS DETALHADOS
  */
 const testEmailToAdmin = asyncHandler(async (req, res) => {
   try {
@@ -37,7 +37,8 @@ const testEmailToAdmin = asyncHandler(async (req, res) => {
           adminName: admin.name
         });
 
-        await emailService.sendProductPendingApprovalEmail(admin.email, {
+        // IMPORTANTE: NÃO capturar o erro aqui para ver o erro real
+        const emailResult = await emailService.sendProductPendingApprovalEmail(admin.email, {
           adminName: admin.name,
           productTitle: 'PRODUTO DE TESTE - Email Debug',
           producerName: 'Sistema de Testes',
@@ -46,32 +47,50 @@ const testEmailToAdmin = asyncHandler(async (req, res) => {
         });
 
         logger.info('TEST: Email sent successfully', {
-          adminEmail: admin.email
+          adminEmail: admin.email,
+          result: emailResult
         });
 
         results.push({
           email: admin.email,
           status: 'success',
-          message: 'Email enviado com sucesso'
+          message: 'Email enviado com sucesso',
+          result: emailResult
         });
       } catch (emailError) {
         logger.error('TEST: Failed to send email', {
           adminEmail: admin.email,
           error: emailError.message,
-          stack: emailError.stack
+          errorCode: emailError.code,
+          errorName: emailError.name,
+          stack: emailError.stack,
+          fullError: JSON.stringify(emailError, null, 2)
         });
 
         results.push({
           email: admin.email,
           status: 'error',
-          error: emailError.message
+          error: emailError.message,
+          errorCode: emailError.code,
+          errorName: emailError.name,
+          errorDetails: emailError.toString()
         });
       }
     }
 
     return ApiResponse.success(res, 200, {
       admins: admins.length,
-      results
+      results,
+      emailConfig: {
+        usingSendGrid: !!process.env.SENDGRID_API_KEY,
+        usingSmtp: !process.env.SENDGRID_API_KEY,
+        smtpHost: process.env.EMAIL_HOST,
+        smtpPort: process.env.EMAIL_PORT,
+        smtpSecure: process.env.EMAIL_SECURE,
+        smtpUser: process.env.EMAIL_USER,
+        hasSmtpPass: !!process.env.EMAIL_PASS,
+        emailFrom: process.env.EMAIL_FROM
+      }
     }, 'Teste de email concluído');
 
   } catch (error) {
