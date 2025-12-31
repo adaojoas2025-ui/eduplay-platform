@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📧 Configurar SendGrid - EDUPLAY</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #1e88e5;
+            margin-bottom: 10px;
+            font-size: 36px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .why {
+            background: #e3f2fd;
+            border-left: 4px solid #1e88e5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #1e88e5;
+        }
+        .step h2 {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .step-number {
+            background: #1e88e5;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .btn-primary {
+            background: #1e88e5;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+            text-decoration: none;
+            margin: 10px 5px;
+        }
+        .btn-primary:hover {
+            background: #1565c0;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(30, 136, 229, 0.3);
+        }
+        .btn-success {
+            background: #4CAF50;
+        }
+        .btn-success:hover {
+            background: #45a049;
+        }
+        .code-box {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 15px 0;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .copy-btn:hover {
+            background: #45a049;
+        }
+        .copy-btn.copied {
+            background: #2196F3;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #155724;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 2px solid #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Configurar SendGrid para EDUPLAY</h1>
+        <p class="subtitle">Solução profissional e GRATUITA para envio de emails (100 emails/dia)</p>
+
+        <div class="why">
+            <h3 style="margin-bottom: 10px;">🤔 Por que usar SendGrid?</h3>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>✅ <strong>100% GRATUITO</strong> até 100 emails por dia</li>
+                <li>✅ <strong>Confiável</strong> - usado por empresas grandes</li>
+                <li>✅ <strong>Não é bloqueado</strong> pelo Render</li>
+                <li>✅ <strong>Fácil de configurar</strong> - só precisa de uma API Key</li>
+                <li>✅ <strong>Rastreamento</strong> - você vê se o email foi entregue</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">1</span> Criar Conta no SendGrid</h2>
+            <p>Clique no botão abaixo para criar uma conta GRATUITA:</p>
+            <a href="https://signup.sendgrid.com/" target="_blank" class="btn-primary">
+                🌐 Criar Conta SendGrid (GRÁTIS)
+            </a>
+            <div class="warning" style="margin-top: 15px;">
+                ⚠️ Use o email <strong>adao.joas2025@gmail.com</strong> para criar a conta
+            </div>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">2</span> Verificar Email e Fazer Login</h2>
+            <ol style="margin-left: 25px; margin-top: 15px; line-height: 1.8;">
+                <li>Abra o email de confirmação do SendGrid</li>
+                <li>Clique no link para verificar sua conta</li>
+                <li>Faça login no SendGrid</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">3</span> Criar API Key</h2>
+            <p>Após fazer login:</p>
+            <ol style="margin-left: 25px; margin-top: 15px; line-height: 1.8;">
+                <li>Clique em <strong>"Settings"</strong> no menu lateral esquerdo</li>
+                <li>Clique em <strong>"API Keys"</strong></li>
+                <li>Clique em <strong>"Create API Key"</strong></li>
+                <li>Dê um nome: <code style="background: #f0f0f0; padding: 3px 8px; border-radius: 4px;">EDUPLAY-BACKEND</code></li>
+                <li>Selecione <strong>"Full Access"</strong></li>
+                <li>Clique em <strong>"Create & View"</strong></li>
+                <li><strong>COPIE A API KEY</strong> (você só verá ela uma vez!)</li>
+            </ol>
+            <a href="https://app.sendgrid.com/settings/api_keys" target="_blank" class="btn-primary">
+                🔑 Ir para API Keys
+            </a>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">4</span> Adicionar API Key no Render</h2>
+            <p>Agora vamos adicionar a API Key no Render:</p>
+            <ol style="margin-left: 25px; margin-top: 15px; line-height: 1.8;">
+                <li>Abra as variáveis de ambiente do Render (botão abaixo)</li>
+                <li>Clique em <strong>"Add Environment Variable"</strong></li>
+                <li>Key: <code style="background: #f0f0f0; padding: 3px 8px; border-radius: 4px;">SENDGRID_API_KEY</code></li>
+                <li>Value: <strong>[Cole a API Key do SendGrid aqui]</strong></li>
+                <li>Clique em <strong>"Save Changes"</strong></li>
+            </ol>
+            <a href="https://dashboard.render.com/web/srv-d5a5badactks73f4mcq0/env" target="_blank" class="btn-primary">
+                🌐 Abrir Render
+            </a>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">5</span> Instalar Pacote SendGrid</h2>
+            <p>O sistema precisa do pacote @sendgrid/mail. Vou instalar agora:</p>
+            <div class="code-box">
+                <button class="copy-btn" onclick="copyCode('npm-install', this)">Copiar</button>
+                <div id="npm-install">cd c:\projetos\backend && npm install @sendgrid/mail</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">6</span> Aguardar Deploy</h2>
+            <p>Depois de salvar a variável no Render:</p>
+            <ol style="margin-left: 25px; margin-top: 15px; line-height: 1.8;">
+                <li>O Render vai fazer <strong>redeploy automático</strong></li>
+                <li>Aguarde 2-3 minutos até ver <strong>"Deploy live ✅"</strong></li>
+                <li>Teste criando um novo produto</li>
+            </ol>
+        </div>
+
+        <div class="success">
+            <h3 style="margin-bottom: 10px;">✅ Pronto!</h3>
+            <p>Quando o deploy terminar, os emails vão funcionar perfeitamente!</p>
+            <p style="margin-top: 10px;"><strong>Teste:</strong> Crie um produto e veja o email chegar em segundos! 📧</p>
+        </div>
+
+        <div class="warning">
+            <h3 style="margin-bottom: 10px;">⚠️ Importante:</h3>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>Guarde a API Key em local seguro (você não verá ela novamente!)</li>
+                <li>Não compartilhe a API Key publicamente</li>
+                <li>O plano gratuito tem limite de 100 emails/dia</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function copyCode(id, btn) {
+            const text = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = '✓ Copiado!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copiar';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Auto-abrir SendGrid após 2 segundos
+        setTimeout(() => {
+            const confirmOpen = confirm('Deseja abrir o SendGrid agora para criar sua conta?');
+            if (confirmOpen) {
+                window.open('https://signup.sendgrid.com/', '_blank');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

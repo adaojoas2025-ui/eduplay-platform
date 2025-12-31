@@ -1,12 +1,29 @@
 /**
  * Email Configuration
- * Email service using Nodemailer
+ * Email service using SendGrid (preferred) or Nodemailer (fallback)
  * @module config/email
  */
 
 const nodemailer = require('nodemailer');
 const config = require('./env');
 const logger = require('../utils/logger');
+
+// Try to use SendGrid if available
+let useSendGrid = false;
+let sgMail = null;
+
+if (process.env.SENDGRID_API_KEY) {
+  try {
+    sgMail = require('@sendgrid/mail');
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    useSendGrid = true;
+    logger.info('✅ Using SendGrid for email service');
+  } catch (error) {
+    logger.warn('⚠️  SendGrid not available, falling back to SMTP');
+  }
+} else {
+  logger.info('ℹ️  SendGrid API Key not found, using SMTP');
+}
 
 /**
  * Create email transporter
@@ -26,9 +43,14 @@ const transporter = nodemailer.createTransport({
  */
 const verifyConnection = async () => {
   try {
-    await transporter.verify();
-    logger.info('✅ Email service connected');
-    return true;
+    if (useSendGrid) {
+      logger.info('✅ SendGrid email service ready');
+      return true;
+    } else {
+      await transporter.verify();
+      logger.info('✅ SMTP email service connected');
+      return true;
+    }
   } catch (error) {
     logger.error('❌ Email service connection failed:', error);
     return false;
@@ -46,25 +68,52 @@ const verifyConnection = async () => {
  */
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
-    const mailOptions = {
-      from: config.email.from,
-      to,
-      subject,
-      html,
-      text,
-    };
+    if (useSendGrid && sgMail) {
+      // Use SendGrid
+      const msg = {
+        to,
+        from: config.email.from,
+        subject,
+        text: text || subject,
+        html,
+      };
 
-    const info = await transporter.sendMail(mailOptions);
+      const [response] = await sgMail.send(msg);
 
-    logger.info('Email sent successfully', {
-      to,
-      subject,
-      messageId: info.messageId,
-    });
+      logger.info('✅ Email sent successfully via SendGrid', {
+        to,
+        subject,
+        statusCode: response.statusCode,
+      });
 
-    return info;
+      return response;
+    } else {
+      // Fallback to SMTP
+      const mailOptions = {
+        from: config.email.from,
+        to,
+        subject,
+        html,
+        text,
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+
+      logger.info('✅ Email sent successfully via SMTP', {
+        to,
+        subject,
+        messageId: info.messageId,
+      });
+
+      return info;
+    }
   } catch (error) {
-    logger.error('Error sending email:', error);
+    logger.error('❌ Error sending email:', {
+      service: useSendGrid ? 'SendGrid' : 'SMTP',
+      error: error.message,
+      to,
+      subject
+    });
     throw error;
   }
 };
@@ -73,4 +122,5 @@ module.exports = {
   transporter,
   verifyConnection,
   sendEmail,
+  usingSendGrid: useSendGrid,
 };

@@ -121,7 +121,17 @@
       "Bash(grep:*)",
       "Bash(timeout /t 15 /nobreak)",
       "Bash(git restore:*)",
-      "Bash(railway login:*)"
+      "Bash(railway login:*)",
+      "Bash(railway --version:*)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_5rjn_user:nIbDLtzPaXGnieArVz4TbRvowJcb0e7J@dpg-d5a4te1r0fns7385cop0-a.oregon-postgres.render.com/eduplay_5rjn?sslmode=require\" node scripts/set-admin.js:*)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_5rjn_user:nIbDLtzPaXGnieArVz4TbRvowJcb0e7J@dpg-d5a4te1r0fns7385cop0-a.oregon-postgres.render.com/eduplay_5rjn?sslmode=require\" node:*)",
+      "Bash(render:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmNjE2MzcwMS1kOGQ1LTRlMTUtYjMxYi1mM2M0ZWI0N2I0MjUiLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzY3MTkwNjA0LCJleHAiOjE3Njc3OTU0MDR9.hYB5H7EUtHQ1hcT04jayG7B-ArrehazDARP1BuvwKVE\")",
+      "Bash(PRODUCER_TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDU4ZTU0Yy00NjUwLTRjNGEtOGY2Zi00NDYzNTZmNDIwMzEiLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzY3MTkwNjM2LCJleHAiOjE3Njc3OTU0MzZ9.40hK0dbBKS60pEl7QxL4ukIUVQC5XeT0YOjPhCZbgD8\")",
+      "Bash(ADMIN_TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmNjE2MzcwMS1kOGQ1LTRlMTUtYjMxYi1mM2M0ZWI0N2I0MjUiLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzY3MTkwNjA0LCJleHAiOjE3Njc3OTU0MDR9.hYB5H7EUtHQ1hcT04jayG7B-ArrehazDARP1BuvwKVE\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDU4ZTU0Yy00NjUwLTRjNGEtOGY2Zi00NDYzNTZmNDIwMzEiLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzY3MjA5NzUzLCJleHAiOjE3Njc4MTQ1NTN9.7tqYuS_ZVaAdPzYFHcSSWnKK_RHOeS0ac4cLmDzIpfk\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDU4ZTU0Yy00NjUwLTRjNGEtOGY2Zi00NDYzNTZmNDIwMzEiLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzY3MjExODY0LCJleHAiOjE3Njc4MTY2NjR9.HoGRKZRUBmskARehmh6f-y-3ok-vS-CD5AHCUIbp3ms\")",
+      "Bash(timeout 60 bash -c 'while true; do response=$\\(curl -s \"\"https://eduplay-backend-yw7z.onrender.com/api/v1/health\"\"\\); if echo \"\"$response\"\" | grep -q \"\"API is running\"\"; then echo \"\"Backend está respondendo!\"\"; curl -s \"\"https://eduplay-backend-yw7z.onrender.com/api/v1/diagnostic/recent-products\"\" -H \"\"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDU4ZTU0Yy00NjUwLTRjNGEtOGY2Zi00NDYzNTZmNDIwMzEiLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzY3MjExODY0LCJleHAiOjE3Njc4MTY2NjR9.HoGRKZRUBmskARehmh6f-y-3ok-vS-CD5AHCUIbp3ms\"\" > /tmp/diagnostic.json; if grep -q \"\"emailConfig\"\" /tmp/diagnostic.json 2>/dev/null; then echo \"\"✅ Deploy concluído!\"\"; cat /tmp/diagnostic.json; break; else echo \"\"⏳ Aguardando deploy... \\($\\(date +%H:%M:%S\\)\\)\"\"; fi; fi; sleep 5; done')"
     ],
     "deny": [],
     "ask": []

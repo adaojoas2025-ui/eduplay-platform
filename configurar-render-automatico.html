@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Email no Render - EDUPLAY</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .step h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+        .copy-btn.copied {
+            background: #10b981;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .env-var {
+            display: flex;
+            margin: 8px 0;
+        }
+        .env-key {
+            color: #50fa7b;
+            margin-right: 5px;
+        }
+        .env-value {
+            color: #f1fa8c;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Configurar Email no Render</h1>
+        <p class="subtitle">Siga os passos abaixo para ativar o envio de emails na plataforma EDUPLAY</p>
+
+        <div class="step">
+            <h2><span class="step-number">1</span> Abrir o Render Dashboard</h2>
+            <p>Clique no botão abaixo para abrir o painel do Render:</p>
+            <button class="btn-primary" onclick="window.open('https://dashboard.render.com/web/srv-d4tjga3uibrs73aohlpg/env', '_blank')">
+                🌐 Abrir Render Dashboard
+            </button>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">2</span> Fazer Login</h2>
+            <p>Se não estiver logado, faça login com suas credenciais do Render.</p>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">3</span> Adicionar Variáveis de Ambiente</h2>
+            <p>No painel do Render, você vai ver a seção "Environment Variables". Clique em <strong>"Add Environment Variable"</strong> e adicione cada uma das variáveis abaixo:</p>
+
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyEnv(1, this)">Copiar Tudo</button>
+                <div class="env-var"><span class="env-key">EMAIL_HOST</span>=<span class="env-value">smtp.gmail.com</span></div>
+                <div class="env-var"><span class="env-key">EMAIL_PORT</span>=<span class="env-value">587</span></div>
+                <div class="env-var"><span class="env-key">EMAIL_SECURE</span>=<span class="env-value">false</span></div>
+                <div class="env-var"><span class="env-key">EMAIL_USER</span>=<span class="env-value">adao.joas2025@gmail.com</span></div>
+                <div class="env-var"><span class="env-key">EMAIL_PASS</span>=<span class="env-value">kiiu xadt rbmk whns</span></div>
+                <div class="env-var"><span class="env-key">EMAIL_FROM</span>=<span class="env-value">EducaplayJA &lt;adao.joas2025@gmail.com&gt;</span></div>
+                <div class="env-var"><span class="env-key">FRONTEND_URL</span>=<span class="env-value">https://eduplay-platform.vercel.app</span></div>
+            </div>
+
+            <div class="warning">
+                ⚠️ <strong>Importante:</strong> Adicione cada variável SEPARADAMENTE no Render. Não cole tudo de uma vez!
+            </div>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">4</span> Salvar e Aguardar Deploy</h2>
+            <p>Depois de adicionar TODAS as 7 variáveis:</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Clique em <strong>"Save Changes"</strong></li>
+                <li>O Render vai fazer redeploy automático (2-3 minutos)</li>
+                <li>Aguarde até ver "Deploy live" ✅</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">5</span> Testar</h2>
+            <p>Para testar se funcionou:</p>
+            <ol style="margin-left: 20px; margin-top: 10px;">
+                <li>Entre como PRODUTOR: adao1980aguiar@gmail.com</li>
+                <li>Crie um novo produto</li>
+                <li>Entre como ADMIN: ja.eduplay@gmail.com</li>
+                <li>Aprove o produto</li>
+                <li>Verifique o email de adao1980aguiar@gmail.com</li>
+            </ol>
+        </div>
+
+        <div class="success" style="display: none;" id="successMsg">
+            ✅ <strong>Tudo pronto!</strong> Quando o deploy terminar, os emails vão funcionar automaticamente!
+        </div>
+    </div>
+
+    <script>
+        const envVars = [
+            { key: 'EMAIL_HOST', value: 'smtp.gmail.com' },
+            { key: 'EMAIL_PORT', value: '587' },
+            { key: 'EMAIL_SECURE', value: 'false' },
+            { key: 'EMAIL_USER', value: 'adao.joas2025@gmail.com' },
+            { key: 'EMAIL_PASS', value: 'kiiu xadt rbmk whns' },
+            { key: 'EMAIL_FROM', value: 'EducaplayJA <adao.joas2025@gmail.com>' },
+            { key: 'FRONTEND_URL', value: 'https://eduplay-platform.vercel.app' }
+        ];
+
+        function copyEnv(num, btn) {
+            const text = envVars.map(v => `${v.key}=${v.value}`).join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = '✓ Copiado!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copiar Tudo';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Auto-abrir o Render após 2 segundos
+        setTimeout(() => {
+            const confirmOpen = confirm('Deseja abrir o Render Dashboard agora?');
+            if (confirmOpen) {
+                window.open('https://dashboard.render.com/web/srv-d4tjga3uibrs73aohlpg/env', '_blank');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

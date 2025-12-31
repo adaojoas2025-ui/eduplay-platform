@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 CORRIGIR EMAIL NO RENDER - EDUPLAY</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #f44336;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #856404;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #f44336;
+        }
+        .step h2 {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .step-number {
+            background: #f44336;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .env-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .env-table th {
+            background: #f44336;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        .env-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .env-table tr:last-child td {
+            border-bottom: none;
+        }
+        .env-key {
+            font-weight: bold;
+            color: #f44336;
+            font-family: 'Courier New', monospace;
+        }
+        .env-value {
+            font-family: 'Courier New', monospace;
+            color: #2196F3;
+        }
+        .copy-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        .copy-btn.copied {
+            background: #2196F3;
+        }
+        .btn-primary {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(244, 67, 54, 0.3);
+        }
+        .warning {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #c62828;
+        }
+        .highlight {
+            background: #fff9c4;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 CORRIGIR CONFIGURAÇÃO DE EMAIL</h1>
+        <p class="subtitle">O email não está funcionando porque as variáveis estão incorretas</p>
+
+        <div class="alert">
+            ⚠️ ATENÇÃO: O endpoint retorna "sucesso" mas o email NÃO está sendo enviado!
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">1</span> Abrir Render Dashboard</h2>
+            <p>Clique no botão para abrir as configurações de ambiente:</p>
+            <button class="btn-primary" onclick="window.open('https://dashboard.render.com/web/srv-d5a5badactks73f4mcq0/env', '_blank')">
+                🌐 Abrir Configurações do Render
+            </button>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">2</span> Verificar Variáveis</h2>
+            <p>As variáveis atuais no Render estão <span class="highlight">CORRETAS</span>? Veja a tabela abaixo:</p>
+
+            <table class="env-table">
+                <thead>
+                    <tr>
+                        <th>Variável</th>
+                        <th>Valor Correto</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="env-key">EMAIL_HOST</td>
+                        <td class="env-value">smtp.gmail.com</td>
+                        <td><button class="copy-btn" onclick="copyValue('smtp.gmail.com', this)">Copiar</button></td>
+                    </tr>
+                    <tr>
+                        <td class="env-key">EMAIL_PORT</td>
+                        <td class="env-value">465</td>
+                        <td><button class="copy-btn" onclick="copyValue('465', this)">Copiar</button></td>
+                    </tr>
+                    <tr>
+                        <td class="env-key">EMAIL_SECURE</td>
+                        <td class="env-value">true</td>
+                        <td><button class="copy-btn" onclick="copyValue('true', this)">Copiar</button></td>
+                    </tr>
+                    <tr>
+                        <td class="env-key">EMAIL_USER</td>
+                        <td class="env-value">adao.joas2025@gmail.com</td>
+                        <td><button class="copy-btn" onclick="copyValue('adao.joas2025@gmail.com', this)">Copiar</button></td>
+                    </tr>
+                    <tr>
+                        <td class="env-key">EMAIL_PASS</td>
+                        <td class="env-value">kiiu xadt rbmk whns</td>
+                        <td><button class="copy-btn" onclick="copyValue('kiiu xadt rbmk whns', this)">Copiar</button></td>
+                    </tr>
+                    <tr>
+                        <td class="env-key">EMAIL_FROM</td>
+                        <td class="env-value">EducaplayJA &lt;adao.joas2025@gmail.com&gt;</td>
+                        <td><button class="copy-btn" onclick="copyValue('EducaplayJA <adao.joas2025@gmail.com>', this)">Copiar</button></td>
+                    </tr>
+                    <tr>
+                        <td class="env-key">FRONTEND_URL</td>
+                        <td class="env-value">https://eduplay-platform.vercel.app</td>
+                        <td><button class="copy-btn" onclick="copyValue('https://eduplay-platform.vercel.app', this)">Copiar</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">3</span> O Que Fazer</h2>
+            <ol style="margin-left: 25px; margin-top: 15px; line-height: 1.8;">
+                <li><strong>Abra o Render</strong> usando o botão acima</li>
+                <li><strong>Faça login</strong> se necessário</li>
+                <li><strong>Procure cada variável</strong> na lista (EMAIL_HOST, EMAIL_PORT, etc.)</li>
+                <li><strong>Clique em "Edit"</strong> ao lado de cada variável</li>
+                <li><strong>Cole o valor correto</strong> usando os botões "Copiar" acima</li>
+                <li><strong>Clique em "Save Changes"</strong></li>
+                <li><strong>Aguarde o redeploy</strong> (2-3 minutos)</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <h3 style="margin-bottom: 10px;">🔴 IMPORTANTE:</h3>
+            <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                <li><strong>EMAIL_PORT</strong> DEVE ser <span class="highlight">465</span> (não 587!)</li>
+                <li><strong>EMAIL_SECURE</strong> DEVE ser <span class="highlight">true</span> (não false!)</li>
+                <li><strong>EMAIL_PASS</strong> deve ter os espaços: <span class="highlight">kiiu xadt rbmk whns</span></li>
+                <li>Depois de salvar, aguarde o deploy terminar antes de testar</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">4</span> Testar Depois</h2>
+            <p>Após salvar e o deploy terminar:</p>
+            <ol style="margin-left: 25px; margin-top: 15px; line-height: 1.8;">
+                <li>Crie um novo produto como PRODUTOR</li>
+                <li>Verifique se o email chegou em <strong>ja.eduplay@gmail.com</strong></li>
+                <li>Verifique também a pasta SPAM</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function copyValue(value, btn) {
+            navigator.clipboard.writeText(value).then(() => {
+                btn.textContent = '✓ Copiado!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copiar';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Auto-abrir o Render após 2 segundos
+        setTimeout(() => {
+            const confirmOpen = confirm('Deseja abrir o Render Dashboard agora para corrigir as variáveis?');
+            if (confirmOpen) {
+                window.open('https://dashboard.render.com/web/srv-d5a5badactks73f4mcq0/env', '_blank');
+            }
+        }, 1500);
+    </script>
+</body>
+</html>

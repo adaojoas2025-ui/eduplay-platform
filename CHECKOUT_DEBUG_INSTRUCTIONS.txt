@@ -1,0 +1,32 @@
+INSTRUÇÕES PARA DEBUG DO CHECKOUT
+==================================
+
+O pagamento está travando em "Processando Pagamento...". 
+
+PASSOS PARA RESOLVER:
+
+1. Abra o Console do Navegador (F12)
+2. Vá na aba "Console"
+3. Clique novamente em "Pagar Agora"
+4. Veja os logs que aparecem:
+   - Se aparecer "Criando pedido para: Livros" = pedido está sendo criado
+   - Se aparecer "Pedido criado: [ID]" = pedido foi criado com sucesso  
+   - Se aparecer "Aprovando pagamento..." = está tentando aprovar
+   - Se aparecer "Pagamento aprovado" = funcionou!
+
+5. Se aparecer ERRO, copie a mensagem de erro e me envie
+
+POSSÍVEIS CAUSAS:
+-----------------
+a) Erro ao criar o pedido (POST /orders)
+b) Erro ao aprovar pagamento (POST /test/approve-payment)
+c) Token expirado (faça logout e login novamente)
+d) Produto já comprado
+
+SOLUÇÃO RÁPIDA:
+--------------
+1. Faça logout
+2. Faça login novamente com: ja.eduplay@gmail.com / Asa122448@
+3) Tente comprar novamente
+
+Se continuar travando, me envie os logs do console!
