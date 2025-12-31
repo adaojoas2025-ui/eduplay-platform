@@ -1,0 +1,83 @@
+================================================
+VARIÁVEIS DE AMBIENTE PARA O BACKEND NO VERCEL
+================================================
+
+Acesse: https://vercel.com/eduplays-projects/backend/settings/environment-variables
+
+Adicione as seguintes variáveis (marque "Production" para cada uma):
+
+1. DATABASE_URL
+   postgresql://eduplay_5rjn_user:nIbDLtzPaXGnieArVz4TbRvowJcb0e7J@dpg-d5a4te1r0fns7385cop0-a.oregon-postgres.render.com/eduplay_5rjn?sslmode=require
+
+2. JWT_SECRET
+   eduplay-super-secret-jwt-key-2024-change-in-production
+
+3. JWT_EXPIRES_IN
+   7d
+
+4. JWT_REFRESH_SECRET
+   eduplay-refresh-secret-2024-change-in-production
+
+5. JWT_REFRESH_EXPIRES_IN
+   30d
+
+6. NODE_ENV
+   production
+
+7. FRONTEND_URL
+   https://frontend-alpha-pied-73.vercel.app
+
+8. BACKEND_URL
+   https://backend-jet-ten-48.vercel.app
+
+9. MP_ACCESS_TOKEN
+   TEST-4893843815915945-120117-dc45f68f6805eb7bf92f3d0dbe637ee5-145851665
+
+10. MP_PUBLIC_KEY
+    TEST-d1674a6b-17bd-46d4-acc4-c95ad9fe02d9
+
+11. CLOUDINARY_CLOUD_NAME
+    dexlzykqm
+
+12. CLOUDINARY_API_KEY
+    761719984596219
+
+13. CLOUDINARY_API_SECRET
+    QkAyuumJD-_EsIezBPd2UQVYKew
+
+14. EMAIL_HOST
+    smtp.gmail.com
+
+15. EMAIL_PORT
+    587
+
+16. EMAIL_SECURE
+    false
+
+17. EMAIL_USER
+    adao.joas2025@gmail.com
+
+18. EMAIL_PASS
+    kiiu xadt rbmk whns
+
+19. EMAIL_FROM
+    EDUPLAY <adao.joas2025@gmail.com>
+
+20. PLATFORM_NAME
+    EDUPLAY
+
+21. GOOGLE_CLIENT_ID
+    763826185307-f8utvlugc36q9hvd4enokig6ic6l9ddh.apps.googleusercontent.com
+
+22. GOOGLE_CLIENT_SECRET
+    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
+
+23. GOOGLE_CALLBACK_URL
+    https://backend-jet-ten-48.vercel.app/api/v1/auth/google/callback
+
+================================================
+APÓS ADICIONAR AS VARIÁVEIS:
+1. Clique em "Redeploy" no dashboard do Vercel
+2. Aguarde o deploy finalizar
+3. Teste o endpoint: https://backend-jet-ten-48.vercel.app/api/v1/health
+================================================
