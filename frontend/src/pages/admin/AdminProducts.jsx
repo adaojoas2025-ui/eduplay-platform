@@ -47,14 +47,19 @@ const AdminProducts = () => {
     }
 
     try {
-      setLoading(true);
+      // Remove o produto imediatamente da lista para dar feedback rápido
+      setProducts(products.filter(p => p.id !== productId));
+
       await api.post(`/admin/products/${productId}/approve`);
-      alert('✅ Produto aprovado com sucesso! A lista será atualizada.');
-      await fetchProducts();
+      alert('✅ Produto aprovado com sucesso!');
+
+      // Recarrega a lista atualizada do servidor
+      fetchProducts();
     } catch (error) {
       console.error('Error approving product:', error);
       alert('Erro ao aprovar produto: ' + (error.response?.data?.message || error.message));
-      setLoading(false);
+      // Se deu erro, recarrega a lista para voltar ao estado correto
+      fetchProducts();
     }
   };
 
