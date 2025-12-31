@@ -1,0 +1,117 @@
+============================================
+GUIA DE DEPLOY NO RAILWAY - EDUPLAY BACKEND
+============================================
+
+PASSO 1: LOGIN NO RAILWAY
+--------------------------
+1. Acesse: https://railway.app/login
+2. Faça login com GitHub (recomendado)
+
+PASSO 2: CRIAR NOVO PROJETO
+----------------------------
+1. No dashboard, clique em "New Project"
+2. Selecione "Deploy from GitHub repo"
+3. Conecte sua conta GitHub se ainda não fez
+4. Selecione o repositório: adaojoas2025-ui/eduplay-platform
+5. Selecione a branch: main
+6. Clique em "Deploy"
+
+PASSO 3: CONFIGURAR ROOT DIRECTORY
+-----------------------------------
+1. No projeto criado, vá em "Settings"
+2. Em "Root Directory", coloque: backend
+3. Salve as alterações
+
+PASSO 4: ADICIONAR BANCO DE DADOS POSTGRESQL
+---------------------------------------------
+1. No mesmo projeto, clique em "+ New"
+2. Selecione "Database"
+3. Escolha "PostgreSQL"
+4. Railway criará automaticamente e fornecerá a DATABASE_URL
+
+PASSO 5: CONFIGURAR VARIÁVEIS DE AMBIENTE
+------------------------------------------
+1. Clique no serviço do backend (não no database)
+2. Vá em "Variables"
+3. Adicione as seguintes variáveis:
+
+NODE_ENV=production
+JWT_SECRET=eduplay-super-secret-jwt-key-2024-change-in-production
+JWT_EXPIRES_IN=7d
+JWT_REFRESH_SECRET=eduplay-refresh-secret-2024-change-in-production
+JWT_REFRESH_EXPIRES_IN=30d
+MP_ACCESS_TOKEN=TEST-4893843815915945-120117-dc45f68f6805eb7bf92f3d0dbe637ee5-145851665
+MP_PUBLIC_KEY=TEST-d1674a6b-17bd-46d4-acc4-c95ad9fe02d9
+CLOUDINARY_CLOUD_NAME=dexlzykqm
+CLOUDINARY_API_KEY=761719984596219
+CLOUDINARY_API_SECRET=QkAyuumJD-_EsIezBPd2UQVYKew
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=adao.joas2025@gmail.com
+EMAIL_PASS=kiiu xadt rbmk whns
+EMAIL_FROM=EDUPLAY <adao.joas2025@gmail.com>
+PLATFORM_NAME=EDUPLAY
+GOOGLE_CLIENT_ID=763826185307-f8utvlugc36q9hvd4enokig6ic6l9ddh.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+
+IMPORTANTE: A variável DATABASE_URL será criada AUTOMATICAMENTE quando você conectar o PostgreSQL!
+
+PASSO 6: CONECTAR O DATABASE AO BACKEND
+----------------------------------------
+1. No serviço do backend, vá em "Variables"
+2. Clique em "+ New Variable"
+3. Clique em "Add Reference"
+4. Selecione o PostgreSQL database
+5. Escolha DATABASE_URL
+6. Isso conectará automaticamente!
+
+PASSO 7: CONFIGURAR FRONTEND_URL E BACKEND_URL
+-----------------------------------------------
+Após o deploy, Railway fornecerá uma URL pública (ex: https://seu-app.railway.app)
+
+1. Copie a URL gerada
+2. Adicione mais duas variáveis:
+
+FRONTEND_URL=https://frontend-alpha-pied-73.vercel.app
+BACKEND_URL=https://[SUA-URL-RAILWAY].railway.app
+GOOGLE_CALLBACK_URL=https://[SUA-URL-RAILWAY].railway.app/api/v1/auth/google/callback
+
+PASSO 8: TRIGGER REDEPLOY
+--------------------------
+1. Vá em "Deployments"
+2. Clique em "Deploy" ou aguarde o deploy automático
+
+PASSO 9: VERIFICAR LOGS
+------------------------
+1. Clique em "Deployments"
+2. Clique no deployment mais recente
+3. Verifique os logs para ver se está funcionando
+4. Procure por: "Server running on port..."
+
+PASSO 10: TESTAR A API
+-----------------------
+Teste o endpoint de saúde:
+https://[SUA-URL-RAILWAY].railway.app/api/v1/health
+
+Deve retornar: {"success":true,"message":"API is running",...}
+
+============================================
+APÓS O DEPLOY FUNCIONAR:
+============================================
+1. Copie a URL do Railway
+2. Me avise a URL para eu atualizar o frontend
+3. Vou fazer o deploy do frontend com a nova URL
+4. Vamos testar o registro e login!
+
+============================================
+VANTAGENS DO RAILWAY:
+============================================
+✅ Deploy automático a cada push no GitHub
+✅ PostgreSQL integrado (sem configuração externa)
+✅ Logs em tempo real
+✅ $5 grátis por mês (suficiente para desenvolvimento)
+✅ Muito mais confiável que Render ou Vercel para backend
+✅ Suporta Node.js, Python, Go, etc.
+✅ Zero downtime deployments
+============================================
