@@ -22,6 +22,7 @@ const tempUpgradeRoutes = require('./temp-upgrade.routes'); // TEMPORARY - Remov
 const testRoutes = require('./test.routes');
 const uploadRoutes = require('./upload.routes');
 const comboRoutes = require('./combo.routes');
+const emailTestRoutes = require('./email-test.routes'); // TEMPORARY - For email debugging
 
 /**
  * Health check route
@@ -53,6 +54,7 @@ router.use('/temp-upgrade', tempUpgradeRoutes); // TEMPORARY - Remove after use
 router.use('/test', testRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/combos', comboRoutes);
+router.use('/email-debug', emailTestRoutes); // TEMPORARY - For email debugging
 
 /**
  * 404 handler for API routes
