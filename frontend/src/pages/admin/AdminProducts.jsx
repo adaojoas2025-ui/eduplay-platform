@@ -47,12 +47,14 @@ const AdminProducts = () => {
     }
 
     try {
+      setLoading(true);
       await api.post(`/admin/products/${productId}/approve`);
-      alert('Produto aprovado com sucesso!');
-      fetchProducts();
+      alert('✅ Produto aprovado com sucesso! A lista será atualizada.');
+      await fetchProducts();
     } catch (error) {
       console.error('Error approving product:', error);
       alert('Erro ao aprovar produto: ' + (error.response?.data?.message || error.message));
+      setLoading(false);
     }
   };
 
