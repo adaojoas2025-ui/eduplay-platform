@@ -303,18 +303,25 @@ const approveProduct = async (productId, adminId) => {
       approvedBy: adminId,
       approvedAt: new Date()
     });
-    // Update status to PUBLISHED with approval data
-    const updatedProduct = await productRepository.updateProduct(productId, {
-      status: PRODUCT_STATUS.PUBLISHED,
-      approvedBy: adminId,
-      approvedAt: new Date()
-    });
 
     // Get producer data
     const producer = await userRepository.findUserById(product.producerId);
 
     // Send approval email to producer
-    await emailService.sendProductApprovedEmail(updatedProduct, producer);
+    try {
+      await emailService.sendProductApprovedEmail(updatedProduct, producer);
+      logger.info('Approval email sent to producer', {
+        productId,
+        producerEmail: producer.email
+      });
+    } catch (emailError) {
+      logger.error('Failed to send approval email to producer', {
+        productId,
+        producerEmail: producer.email,
+        error: emailError.message
+      });
+      // Não bloqueia a aprovação se o email falhar
+    }
 
     logger.info('Product approved', { productId, adminId });
 
