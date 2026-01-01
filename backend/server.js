@@ -12,6 +12,9 @@ const { connectDatabase } = require('./src/config/database');
 const logger = require('./src/utils/logger');
 const config = require('./src/config/env');
 
+// Initialize email service on startup to verify configuration
+require('./src/config/email');
+
 /**
  * Server instance
  */
