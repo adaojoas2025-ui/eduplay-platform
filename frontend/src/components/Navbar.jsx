@@ -153,7 +153,11 @@ export default function Navbar() {
             )}
           </div>
 
-          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-2xl text-gray-700">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden text-2xl text-gray-700 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Menu"
+          >
             {menuOpen ? <FiX /> : <FiMenu />}
           </button>
         </div>

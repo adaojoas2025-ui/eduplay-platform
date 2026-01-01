@@ -126,9 +126,9 @@ export default function Home() {
   return (
     <div>
       {/* Promotional Banner Carousel */}
-      <section className="py-8 bg-gradient-to-b from-gray-50 to-white">
+      <section className="pt-4 pb-6 md:py-8 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-4 md:mb-6">
             🎯 Destaques da Plataforma
           </h2>
           <div
@@ -146,29 +146,29 @@ export default function Home() {
                   key={banner.id}
                   className={`min-w-full bg-gradient-to-r ${banner.bgGradient} text-white`}
                 >
-                  <div className="flex flex-col md:flex-row items-center justify-between px-8 md:px-16 py-12 md:py-16">
+                  <div className="flex flex-col md:flex-row items-center justify-between px-6 md:px-16 py-8 md:py-16">
                     {/* Content */}
-                    <div className="flex-1 text-center md:text-left mb-8 md:mb-0">
-                      <div className="inline-block px-4 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-4">
+                    <div className="flex-1 text-center md:text-left mb-6 md:mb-0">
+                      <div className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs md:text-sm font-semibold mb-2 md:mb-4">
                         {banner.subtitle}
                       </div>
-                      <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                      <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">
                         {banner.title}
                       </h2>
-                      <p className="text-lg md:text-xl text-white/90 mb-6 max-w-2xl">
+                      <p className="text-sm md:text-lg lg:text-xl text-white/90 mb-4 md:mb-6 max-w-2xl">
                         {banner.description}
                       </p>
                       <Link
                         to={banner.buttonLink}
-                        className="inline-block bg-white text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                        className="inline-block bg-white text-gray-900 px-6 py-3 md:px-8 md:py-4 rounded-lg font-bold text-base md:text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
                       >
                         {banner.buttonText} →
                       </Link>
                     </div>
 
                     {/* Image/Icon */}
-                    <div className="flex-shrink-0">
-                      <div className="text-8xl md:text-9xl animate-bounce-slow">
+                    <div className="flex-shrink-0 mt-4 md:mt-0">
+                      <div className="text-6xl md:text-8xl lg:text-9xl animate-bounce-slow">
                         {banner.image}
                       </div>
                     </div>
