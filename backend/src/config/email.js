@@ -1,6 +1,7 @@
 /**
  * Email Configuration
  * Email service using SendGrid (API-based, works on Render)
+ * Updated: 2026-01-01 - SendGrid API Key configured
  * @module config/email
  */
 
