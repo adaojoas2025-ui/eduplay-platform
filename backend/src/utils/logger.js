@@ -64,14 +64,12 @@ const logger = winston.createLogger({
   ],
 });
 
-// Add console transport in development
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(
-    new winston.transports.Console({
-      format: consoleFormat,
-    })
-  );
-}
+// Add console transport (always enabled for debugging in Render)
+logger.add(
+  new winston.transports.Console({
+    format: consoleFormat,
+  })
+);
 
 /**
  * Stream object for Morgan HTTP logging
