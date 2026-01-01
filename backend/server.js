@@ -13,7 +13,9 @@ const logger = require('./src/utils/logger');
 const config = require('./src/config/env');
 
 // Initialize email service on startup to verify configuration
+logger.info('🔧 Loading email configuration module...');
 require('./src/config/email');
+logger.info('✅ Email configuration module loaded');
 
 /**
  * Server instance
