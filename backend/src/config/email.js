@@ -1,58 +1,45 @@
 /**
  * Email Configuration
- * Email service using SMTP Gmail
+ * Email service using SendGrid (API-based, works on Render)
  * @module config/email
  */
 
-const nodemailer = require('nodemailer');
 const config = require('./env');
 const logger = require('../utils/logger');
 
 logger.info('📧 Initializing email service...');
-logger.info('✅ Using SMTP Gmail for email service');
 
-/**
- * Create email transporter with Render-compatible settings
- */
-const transporter = nodemailer.createTransport({
-  host: config.email.host,
-  port: config.email.port,
-  secure: config.email.port === 465,
-  auth: {
-    user: config.email.user,
-    pass: config.email.pass,
-  },
-  // Configurações adicionais para Render
-  connectionTimeout: 60000, // 60 segundos
-  greetingTimeout: 30000,   // 30 segundos
-  socketTimeout: 60000,     // 60 segundos
-  tls: {
-    rejectUnauthorized: true,
-    minVersion: 'TLSv1.2'
-  },
-  debug: process.env.NODE_ENV === 'production', // Debug em produção
-  logger: process.env.NODE_ENV === 'production' // Logger em produção
-});
+// Use SendGrid (API-based, not SMTP - works on Render!)
+let useSendGrid = false;
+let sgMail = null;
+
+if (process.env.SENDGRID_API_KEY) {
+  try {
+    sgMail = require('@sendgrid/mail');
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    useSendGrid = true;
+    logger.info('✅ Using SendGrid for email service (API-based)');
+  } catch (error) {
+    logger.error('❌ Failed to initialize SendGrid:', error.message);
+  }
+} else {
+  logger.warn('⚠️  SENDGRID_API_KEY not found');
+}
 
 /**
  * Verify email connection
  */
 const verifyConnection = async () => {
   try {
-    await transporter.verify();
-    logger.info('✅ SMTP email service connected', {
-      host: config.email.host,
-      port: config.email.port,
-      secure: config.email.port === 465,
-      user: config.email.user
-    });
-    return true;
+    if (useSendGrid) {
+      logger.info('✅ SendGrid email service ready');
+      return true;
+    } else {
+      logger.error('❌ No email service configured');
+      return false;
+    }
   } catch (error) {
-    logger.error('❌ Email service connection failed:', {
-      error: error.message,
-      code: error.code,
-      command: error.command
-    });
+    logger.error('❌ Email service connection failed:', error);
     return false;
   }
 };
@@ -68,47 +55,47 @@ const verifyConnection = async () => {
  */
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
-    logger.info('📤 Attempting to send email...', {
-      to,
-      subject,
-      from: config.email.from
-    });
+    if (useSendGrid && sgMail) {
+      logger.info('📤 Sending email via SendGrid...', {
+        to,
+        subject,
+      });
 
-    const mailOptions = {
-      from: config.email.from,
-      to,
-      subject,
-      html,
-      text,
-    };
+      const msg = {
+        to,
+        from: process.env.EMAIL_FROM || 'EDUPLAY <ja.eduplay@gmail.com>', // SendGrid verified sender
+        subject,
+        text: text || subject,
+        html,
+      };
 
-    const info = await transporter.sendMail(mailOptions);
+      const [response] = await sgMail.send(msg);
 
-    logger.info('✅ Email sent successfully via SMTP Gmail', {
-      to,
-      subject,
-      messageId: info.messageId,
-      response: info.response
-    });
+      logger.info('✅ Email sent successfully via SendGrid', {
+        to,
+        subject,
+        statusCode: response.statusCode,
+      });
 
-    return info;
+      return response;
+    } else {
+      throw new Error('No email service configured');
+    }
   } catch (error) {
-    logger.error('❌ Error sending email via SMTP:', {
+    logger.error('❌ Error sending email via SendGrid:', {
       error: error.message,
       code: error.code,
-      command: error.command,
+      response: error.response?.body,
       to,
       subject,
-      stack: error.stack
     });
     throw error;
   }
 };
 
 module.exports = {
-  transporter,
   verifyConnection,
   sendEmail,
   usingResend: false,
-  usingSendGrid: false,
+  usingSendGrid: useSendGrid,
 };
