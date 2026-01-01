@@ -8,19 +8,25 @@ const nodemailer = require('nodemailer');
 const config = require('./env');
 const logger = require('../utils/logger');
 
+logger.info('📧 Initializing email service...');
+
 // Try to use Resend first (most reliable)
 let useResend = false;
 let resendClient = null;
 
 if (process.env.RESEND_API_KEY) {
+  logger.info('🔑 RESEND_API_KEY found, attempting to initialize Resend...');
   try {
     const { Resend } = require('resend');
     resendClient = new Resend(process.env.RESEND_API_KEY);
     useResend = true;
     logger.info('✅ Using Resend for email service (PROFESSIONAL)');
   } catch (error) {
+    logger.error('❌ Failed to initialize Resend:', error.message);
     logger.warn('⚠️  Resend not available, trying SendGrid');
   }
+} else {
+  logger.warn('⚠️  RESEND_API_KEY not found in environment variables');
 }
 
 // Try SendGrid if Resend not available
