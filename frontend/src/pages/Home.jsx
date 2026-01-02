@@ -217,20 +217,20 @@ export default function Home() {
       </section>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-20">
+      <section className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-6 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              A Maior Plataforma de<br />Produtos Digitais do Brasil
+            <h1 className="text-xl md:text-5xl lg:text-6xl font-bold mb-2 md:mb-6">
+              A Maior Plataforma de<br className="hidden md:block" /><span className="md:hidden"> </span>Produtos Digitais do Brasil
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-white/90">
+            <p className="text-xs md:text-xl lg:text-2xl mb-3 md:mb-8 text-white/90">
               Compre e venda cursos, ebooks, mentorias e muito mais
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/marketplace" className="bg-white text-primary-500 px-8 py-4 rounded-lg font-bold text-lg hover:shadow-xl transition-all duration-200">
+            <div className="flex flex-col sm:flex-row gap-2 md:gap-4 justify-center">
+              <Link to="/marketplace" className="bg-white text-primary-500 px-4 py-2 md:px-8 md:py-4 rounded-lg font-bold text-sm md:text-lg hover:shadow-xl transition-all duration-200">
                 Explorar Produtos
               </Link>
-              <Link to="/seller/products/new" className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-primary-500 transition-all duration-200">
+              <Link to="/seller/products/new" className="bg-transparent border-2 border-white text-white px-4 py-2 md:px-8 md:py-4 rounded-lg font-bold text-sm md:text-lg hover:bg-white hover:text-primary-500 transition-all duration-200">
                 Começar a Vender
               </Link>
             </div>
