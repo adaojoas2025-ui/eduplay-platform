@@ -7,5 +7,14 @@ export default defineConfig({
     port: 5173,
     open: true
   },
-  publicDir: 'public'
+  publicDir: 'public',
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name].` + Date.now() + `.js`,
+        chunkFileNames: `assets/[name].` + Date.now() + `.js`,
+        assetFileNames: `assets/[name].` + Date.now() + `.[ext]`
+      }
+    }
+  }
 })
