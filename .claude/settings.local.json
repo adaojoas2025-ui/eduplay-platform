@@ -157,7 +157,9 @@
       "Bash(timeout 5 bash:*)",
       "Bash(ipconfig:*)",
       "Bash(timeout:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(if exist node_modules/.vite rd /s /q node_modules/.vite)",
+      "Bash(if exist .vite rd /s /q .vite)"
     ],
     "deny": [],
     "ask": []

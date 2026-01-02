@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 DEPLOY MANUAL</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #dc3545;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+        }
+        h1 { color: #dc3545; font-size: 36px; margin-bottom: 30px; }
+        .alert {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+        }
+        .btn {
+            display: block;
+            background: #dc3545;
+            color: white;
+            padding: 25px;
+            text-decoration: none;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 24px;
+            margin: 25px 0;
+        }
+        .code {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 DEPLOY MANUAL</h1>
+        <div class="alert">
+            <h2 style="color: #856404; font-size: 24px; margin-bottom: 15px;">Render deployou COMMIT ERRADO!</h2>
+            <p style="color: #856404; font-size: 18px;">
+                Deployou: 0c005f1 ❌<br>
+                Correto: fcfce1d ✅
+            </p>
+        </div>
+        <a href="https://dashboard.render.com" class="btn">ABRIR RENDER</a>
+        <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; margin: 25px 0;">
+            <p style="font-size: 18px; margin-bottom: 15px; color: #333;">
+                1. Clique em <strong>eduplay-frontend</strong><br>
+                2. Clique em <strong>Manual Deploy</strong><br>
+                3. Clique em <strong>Deploy latest commit</strong>
+            </p>
+            <div class="code">fcfce1d</div>
+        </div>
+    </div>
+</body>
+</html>
