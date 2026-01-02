@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Frontend no Render</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .step h3 {
+            display: inline-block;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .step-content {
+            margin-top: 15px;
+            color: #555;
+            line-height: 1.6;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            color: #856404;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            color: #155724;
+        }
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            color: #0c5460;
+        }
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        li {
+            margin: 8px 0;
+            color: #555;
+        }
+        strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Configurar Frontend EDUPLAY no Render</h1>
+        <p class="subtitle">Guia completo para hospedar seu frontend React no Render (mesmo servidor do backend)</p>
+
+        <div class="success">
+            <strong>✅ Por que fazer isso?</strong><br>
+            - Tudo no mesmo lugar (Render)<br>
+            - Deploy automático quando você fizer git push<br>
+            - Mais simples de gerenciar<br>
+            - Sem confusão com Vercel
+        </div>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            <h3>Abrir o Render Dashboard</h3>
+            <div class="step-content">
+                <p>Acesse o painel do Render:</p>
+                <a href="https://dashboard.render.com" target="_blank" class="btn">🔗 Abrir Render Dashboard</a>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <h3>Criar Novo Static Site</h3>
+            <div class="step-content">
+                <p>No dashboard do Render:</p>
+                <ul>
+                    <li>Clique em <strong>"New +"</strong> no canto superior direito</li>
+                    <li>Selecione <strong>"Static Site"</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <h3>Conectar o Repositório</h3>
+            <div class="step-content">
+                <p>Configure a conexão com o GitHub:</p>
+                <ul>
+                    <li><strong>Repositório:</strong> eduplay-platform</li>
+                    <li><strong>Nome:</strong> eduplay-frontend</li>
+                    <li><strong>Branch:</strong> main</li>
+                    <li><strong>Root Directory:</strong> <code>frontend</code></li>
+                </ul>
+                <div class="warning">
+                    ⚠️ <strong>IMPORTANTE:</strong> Defina "Root Directory" como <code>frontend</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <h3>Configurar Build Settings</h3>
+            <div class="step-content">
+                <p>Preencha os campos de build:</p>
+
+                <p><strong>Build Command:</strong></p>
+                <div class="code-block">npm install && npm run build</div>
+
+                <p><strong>Publish Directory:</strong></p>
+                <div class="code-block">dist</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">5</span>
+            <h3>Adicionar Variável de Ambiente</h3>
+            <div class="step-content">
+                <p>Na seção "Environment Variables", adicione:</p>
+
+                <p><strong>Key:</strong></p>
+                <div class="code-block">VITE_API_URL</div>
+
+                <p><strong>Value:</strong></p>
+                <div class="code-block">https://eduplay-backend-yw7z.onrender.com/api/v1</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">6</span>
+            <h3>Configurar Redirects/Rewrites</h3>
+            <div class="step-content">
+                <p>Role até a seção <strong>"Redirects/Rewrites"</strong> e adicione:</p>
+
+                <p><strong>Source:</strong></p>
+                <div class="code-block">/*</div>
+
+                <p><strong>Destination:</strong></p>
+                <div class="code-block">/index.html</div>
+
+                <p><strong>Action:</strong> Rewrite</p>
+
+                <div class="info">
+                    ℹ️ Isso garante que todas as rotas do React funcionem corretamente
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">7</span>
+            <h3>Criar o Site</h3>
+            <div class="step-content">
+                <p>Clique no botão <strong>"Create Static Site"</strong></p>
+                <p>O Render vai começar a fazer o build automaticamente!</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">8</span>
+            <h3>Aguardar o Deploy</h3>
+            <div class="step-content">
+                <p>O primeiro deploy pode levar 3-5 minutos. Você verá:</p>
+                <ul>
+                    <li>🔨 Build in progress...</li>
+                    <li>✅ Live (quando terminar)</li>
+                </ul>
+                <p>Seu site estará disponível em uma URL como:</p>
+                <div class="code-block">https://eduplay-frontend.onrender.com</div>
+            </div>
+        </div>
+
+        <div class="success">
+            <strong>🎉 Pronto!</strong><br><br>
+            Agora você tem:<br>
+            <ul>
+                <li>✅ Backend: https://eduplay-backend-yw7z.onrender.com</li>
+                <li>✅ Frontend: https://eduplay-frontend.onrender.com (ou similar)</li>
+            </ul>
+            <br>
+            <strong>Deploy automático:</strong> Sempre que você fizer <code>git push</code>, o Render atualiza automaticamente!
+        </div>
+
+        <div class="info">
+            <strong>📱 Para testar a navbar com scroll horizontal:</strong><br>
+            Depois do deploy, abra o site no celular e arraste a barra superior horizontalmente!
+        </div>
+
+        <div class="warning">
+            <strong>🗑️ Depois de configurar, você pode desativar o Vercel:</strong><br>
+            Acesse https://vercel.com/dashboard e delete o projeto <code>frontend</code> se quiser.
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 2px solid #eee;">
+            <a href="https://dashboard.render.com" target="_blank" class="btn">🚀 Começar Agora no Render</a>
+            <a href="https://render.com/docs/static-sites" target="_blank" class="btn" style="background: #6c757d;">📚 Documentação do Render</a>
+        </div>
+    </div>
+
+    <script>
+        console.log('✅ Guia de configuração carregado');
+        console.log('📝 Siga os passos numerados para configurar o frontend no Render');
+    </script>
+</body>
+</html>

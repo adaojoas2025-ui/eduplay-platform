@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VERIFICAR Configuração do Frontend no Render</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #dc3545;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .error-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            color: #721c24;
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .step h3 {
+            display: inline-block;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .step-content {
+            margin-top: 15px;
+            color: #555;
+            line-height: 1.6;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            color: #856404;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            color: #155724;
+        }
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        li {
+            margin: 8px 0;
+            color: #555;
+        }
+        strong {
+            color: #667eea;
+        }
+        .highlight {
+            background: yellow;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>❌ PROBLEMA IDENTIFICADO</h1>
+        <p class="subtitle">O site está retornando "Not Found" - Configuração incorreta no Render</p>
+
+        <div class="error-box">
+            <strong>🔍 TESTE REALIZADO:</strong><br><br>
+            ❌ Site: https://eduplay-frontend-9r0z.onrender.com<br>
+            ❌ Retorna: "Not Found"<br>
+            ❌ Código do scroll horizontal: NÃO ENCONTRADO<br>
+            ❌ Novo texto "EducaplayJA": NÃO ENCONTRADO<br><br>
+            <strong>CONCLUSÃO:</strong> O serviço foi criado mas as configurações estão erradas!
+        </div>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            <h3>Abrir o Serviço no Render</h3>
+            <div class="step-content">
+                <a href="https://dashboard.render.com/web/srv-d5acdu0gph6c73f2bpfg" target="_blank" class="btn">🔗 Abrir eduplay-frontend no Render</a>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <h3>Ir em Settings (Configurações)</h3>
+            <div class="step-content">
+                <p>No menu lateral esquerdo, clique em <strong>"Settings"</strong></p>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <h3>VERIFICAR: Root Directory</h3>
+            <div class="step-content">
+                <p>Procure a seção <strong>"Root Directory"</strong></p>
+                <p><span class="highlight">DEVE ESTAR:</span></p>
+                <div class="code-block">frontend</div>
+                <p>Se estiver vazio ou diferente, clique em <strong>"Edit"</strong> e mude para <code>frontend</code></p>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <h3>VERIFICAR: Build Command</h3>
+            <div class="step-content">
+                <p>Procure a seção <strong>"Build Command"</strong></p>
+                <p><span class="highlight">DEVE ESTAR:</span></p>
+                <div class="code-block">npm install && npm run build</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">5</span>
+            <h3>VERIFICAR: Publish Directory</h3>
+            <div class="step-content">
+                <p>Procure a seção <strong>"Publish Directory"</strong></p>
+                <p><span class="highlight">DEVE ESTAR:</span></p>
+                <div class="code-block">dist</div>
+                <p><strong>NÃO PODE SER:</strong> <code>./dist</code> ou <code>frontend/dist</code></p>
+                <p>Apenas: <code>dist</code></p>
+            </div>
+        </div>
+
+        <div class="warning">
+            ⚠️ <strong>ATENÇÃO:</strong><br>
+            Se você mudar qualquer uma dessas configurações, o Render vai fazer um novo deploy automaticamente!
+        </div>
+
+        <div class="step">
+            <span class="step-number">6</span>
+            <h3>Depois de Verificar/Corrigir</h3>
+            <div class="step-content">
+                <p>Se você mudou alguma configuração:</p>
+                <ul>
+                    <li>Clique em <strong>"Save Changes"</strong></li>
+                    <li>Aguarde o novo deploy (3-5 minutos)</li>
+                    <li>Acesse: https://eduplay-frontend-9r0z.onrender.com</li>
+                </ul>
+                <p>Se NÃO mudou nada (já estava tudo correto):</p>
+                <ul>
+                    <li>Vá em <strong>"Manual Deploy"</strong></li>
+                    <li>Clique em <strong>"Clear build cache & deploy"</strong></li>
+                    <li>Aguarde o deploy</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="success">
+            <strong>✅ Como saber se funcionou:</strong><br><br>
+            Quando o deploy terminar, abra o site no celular:<br>
+            https://eduplay-frontend-9r0z.onrender.com<br><br>
+            Você deve ver:<br>
+            ✅ Navbar com "EducaplayJA" (não "EducaPlatform")<br>
+            ✅ Pode arrastar a navbar horizontalmente com o dedo<br>
+            ✅ Vê os botões "Entrar" e "Criar Conta"
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 2px solid #eee;">
+            <a href="https://dashboard.render.com/web/srv-d5acdu0gph6c73f2bpfg" target="_blank" class="btn btn-danger">🚨 ABRIR E VERIFICAR AGORA</a>
+        </div>
+    </div>
+
+    <script>
+        console.log('❌ Site retornando Not Found');
+        console.log('🔧 Verificar configurações do Render');
+    </script>
+</body>
+</html>

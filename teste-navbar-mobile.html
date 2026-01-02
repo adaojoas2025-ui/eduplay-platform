@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Navbar Mobile - EducaplayJA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <!-- Mobile: Scroll horizontal -->
+        <div class="overflow-x-auto scrollbar-hide">
+            <div class="flex items-center gap-3 px-2 h-12 min-w-max">
+                <a href="#" class="flex items-center space-x-1 flex-shrink-0">
+                    <div class="text-xl">🎓</div>
+                    <span class="text-base font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent whitespace-nowrap">
+                        EducaplayJA
+                    </span>
+                </a>
+
+                <div class="h-6 w-px bg-gray-300"></div>
+
+                <a href="#" class="text-xs font-semibold text-gray-700 hover:text-indigo-500 px-3 py-1.5 whitespace-nowrap flex items-center gap-1">
+                    📦 Marketplace
+                </a>
+                <a href="#" class="text-xs font-semibold text-gray-700 hover:text-indigo-500 px-3 py-1.5 whitespace-nowrap flex items-center gap-1">
+                    📱 Apps
+                </a>
+                <a href="#" class="text-xs font-semibold text-gray-700 hover:text-indigo-500 px-3 py-1.5 whitespace-nowrap border border-gray-300 rounded-lg">
+                    Entrar
+                </a>
+                <a href="#" class="text-xs font-bold bg-indigo-500 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-600 whitespace-nowrap">
+                    Criar Conta
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="p-6 max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">✅ Teste da Navbar Mobile</h1>
+            <p class="text-gray-600 mb-4">
+                Esta página demonstra como a navbar mobile deve funcionar no EducaplayJA.
+            </p>
+
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                <h2 class="font-bold text-blue-800 mb-2">📱 Instruções:</h2>
+                <ol class="list-decimal list-inside text-blue-700 space-y-1">
+                    <li>Arraste a barra superior HORIZONTALMENTE com o dedo</li>
+                    <li>Você deve ver: EducaplayJA | Marketplace | Apps | Entrar | Criar Conta</li>
+                    <li>A scrollbar está invisível (escondida)</li>
+                    <li>Todos os botões devem estar visíveis ao arrastar</li>
+                </ol>
+            </div>
+
+            <div class="bg-green-50 border-l-4 border-green-500 p-4">
+                <h2 class="font-bold text-green-800 mb-2">✅ O que você deve ver:</h2>
+                <ul class="list-disc list-inside text-green-700 space-y-1">
+                    <li>Barra branca no topo com altura de 48px</li>
+                    <li>Logo EducaplayJA à esquerda</li>
+                    <li>Linha divisória cinza</li>
+                    <li>Botões em linha horizontal que você pode arrastar</li>
+                    <li>SEM scrollbar visível</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-8 rounded-lg shadow-lg">
+            <h2 class="text-3xl font-bold mb-4">A Maior Plataforma de Produtos Digitais do Brasil</h2>
+            <p class="text-lg mb-6">Compre e venda cursos, ebooks, mentorias e muito mais</p>
+            <div class="flex gap-4">
+                <button class="bg-white text-indigo-500 px-6 py-3 rounded-lg font-bold hover:shadow-xl">
+                    Explorar Produtos
+                </button>
+                <button class="border-2 border-white text-white px-6 py-3 rounded-lg font-bold hover:bg-white hover:text-indigo-500">
+                    Começar a Vender
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Log para debug
+        console.log('✅ Página de teste carregada');
+        console.log('📱 Largura da tela:', window.innerWidth);
+
+        // Detectar scroll horizontal
+        const navbar = document.querySelector('.overflow-x-auto');
+        navbar.addEventListener('scroll', () => {
+            console.log('🔄 Scroll detectado! Position:', navbar.scrollLeft);
+        });
+    </script>
+</body>
+</html>

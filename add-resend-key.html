@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ Adicionar Resend API Key no Render</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #10b981;
+            margin-bottom: 20px;
+            font-size: 32px;
+            text-align: center;
+        }
+        .api-key-box {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .api-key {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            color: #065f46;
+            word-break: break-all;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #065f46;
+            display: none;
+        }
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+        .step {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Adicionar Resend API Key</h1>
+
+        <div class="api-key-box">
+            <p style="margin-bottom: 10px; font-size: 14px; color: #666;">Sua API Key do Resend:</p>
+            <div class="api-key">rnd_KEeok6oD7nWFmLejFY1dtHgbISus</div>
+        </div>
+
+        <button class="btn-primary" onclick="copyAndOpen()">
+            🚀 Copiar API Key e Abrir Render
+        </button>
+
+        <div class="success" id="successMsg">
+            <h3 style="margin-bottom: 10px;">✅ API Key copiada!</h3>
+            <p>Render foi aberto. Agora siga as instruções abaixo:</p>
+        </div>
+
+        <div class="instructions">
+            <h3 style="color: #333; margin-bottom: 15px;">📝 Instruções no Render:</h3>
+            <div class="step">1. Clique em <strong>"Add Environment Variable"</strong></div>
+            <div class="step">2. Key: <code style="background: #e5e7eb; padding: 3px 8px; border-radius: 4px;">RESEND_API_KEY</code></div>
+            <div class="step">3. Value: <strong>Cole (CTRL+V)</strong> a API Key</div>
+            <div class="step">4. Clique em <strong>"Save Changes"</strong></div>
+            <div class="step">5. Aguarde deploy (2-3 minutos)</div>
+            <div class="step">6. <strong>🎉 PRONTO!</strong> Emails vão funcionar!</div>
+        </div>
+    </div>
+
+    <script>
+        function copyAndOpen() {
+            const apiKey = 'rnd_KEeok6oD7nWFmLejFY1dtHgbISus';
+
+            navigator.clipboard.writeText(apiKey).then(() => {
+                document.getElementById('successMsg').style.display = 'block';
+
+                setTimeout(() => {
+                    window.open('https://dashboard.render.com/web/srv-d5a5badactks73f4mcq0/env', '_blank');
+                }, 500);
+
+                setTimeout(() => {
+                    alert(
+                        '✅ API Key copiada!\n\n' +
+                        'NO RENDER:\n' +
+                        '1. Add Environment Variable\n' +
+                        '2. Key: RESEND_API_KEY\n' +
+                        '3. Value: Cole (CTRL+V)\n' +
+                        '4. Save Changes\n\n' +
+                        '⏳ Aguarde deploy (2-3 min)\n' +
+                        '🎉 Emails instantâneos!'
+                    );
+                }, 1500);
+            });
+        }
+
+        // Auto-executar após 2 segundos
+        setTimeout(() => {
+            const confirm1 = confirm('Deseja adicionar a API Key do Resend no Render agora?\n\n✅ API Key já configurada\n✅ Processo automático\n✅ 2 minutos');
+            if (confirm1) {
+                copyAndOpen();
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
