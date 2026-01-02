@@ -45,7 +45,7 @@ export default function Navbar() {
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
-      {/* Mobile: Scroll horizontal */}
+      {/* Mobile: Horizontal scroll navbar - v2.0 */}
       <div className="md:hidden overflow-x-auto scrollbar-hide">
         <div className="flex items-center gap-3 px-2 h-12 min-w-max">
           <Link to="/" className="flex items-center space-x-1 flex-shrink-0">
