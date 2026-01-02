@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Cache buster - Updated 2026-01-02 07:50 - HORIZONTAL SCROLL NAVBAR */
+/* Cache buster - Updated 2026-01-02 12:20 - FORCE NEW BUILD HASH */
 
 * {
   margin: 0;
