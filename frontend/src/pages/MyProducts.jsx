@@ -159,7 +159,7 @@ export default function MyProducts() {
                         ))
                       ) : (
                         <Link
-                          to={`/product/${purchase.product?.id}`}
+                          to={`/product/${purchase.product?.slug || purchase.product?.id}`}
                           className="block w-full bg-blue-600 text-white text-center py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
                         >
                           🔓 Acessar Produto
