@@ -97,69 +97,72 @@ export default function Navbar() {
                 )}
               </Link>
 
-              <div className="relative">
-                <button
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="text-xs font-semibold text-gray-700 hover:text-primary-500 px-3 py-1.5 whitespace-nowrap flex items-center gap-1"
-                >
-                  <FiUser className="w-3 h-3" />
-                  {user?.name?.split(' ')[0]}
-                </button>
-                {mobileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    <Link to="/my-courses" className="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
-                      Meus Cursos
-                    </Link>
-                    <Link to="/my-products" className="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
-                      Meus Produtos
-                    </Link>
-                    <Link to="/orders" className="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
-                      Pedidos
-                    </Link>
-                    <Link to="/seller/dashboard" className="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
-                      💰 Financeiro
-                    </Link>
-                    {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
-                      <Link to="/seller/combos" className="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
-                        📦 Meus Combos
-                      </Link>
-                    )}
-                    <Link to="/profile" className="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
-                      Perfil
-                    </Link>
-                    {user?.role === 'BUYER' && (
-                      <>
-                        <div className="border-t border-gray-200 my-2"></div>
-                        <Link to="/upgrade-to-producer" className="block px-4 py-2 text-xs hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                          🚀 Tornar-se Vendedor
-                        </Link>
-                      </>
-                    )}
-                    {user?.role === 'ADMIN' && (
-                      <>
-                        <div className="border-t border-gray-200 my-2"></div>
-                        <Link to="/admin/products" className="block px-4 py-2 text-xs hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                          📋 Produtos Pendentes
-                        </Link>
-                        <Link to="/admin/combos" className="block px-4 py-2 text-xs hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                          📦 Gerenciar Combos
-                        </Link>
-                        <Link to="/admin/commissions" className="block px-4 py-2 text-xs hover:bg-green-50 text-green-600 font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                          💰 Comissões (3%)
-                        </Link>
-                      </>
-                    )}
-                    <div className="border-t border-gray-200 my-2"></div>
-                    <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-100">
-                      Sair
-                    </button>
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-xs font-semibold text-gray-700 hover:text-primary-500 px-3 py-1.5 whitespace-nowrap flex items-center gap-1 border border-gray-300 rounded-lg flex-shrink-0"
+              >
+                <FiUser className="w-3 h-3" />
+                {user?.name?.split(' ')[0]}
+              </button>
             </>
           )}
         </div>
       </div>
+
+      {/* Mobile Dropdown Menu - Outside scroll container */}
+      {mobileMenuOpen && authenticated && (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-25 z-40 md:hidden" onClick={() => setMobileMenuOpen(false)}></div>
+          <div className="fixed top-14 right-2 w-56 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-50 md:hidden max-h-96 overflow-y-auto">
+            <Link to="/my-courses" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
+              Meus Cursos
+            </Link>
+            <Link to="/my-products" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
+              Meus Produtos
+            </Link>
+            <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
+              Pedidos
+            </Link>
+            <Link to="/seller/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
+              💰 Financeiro
+            </Link>
+            {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
+              <Link to="/seller/combos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
+                📦 Meus Combos
+              </Link>
+            )}
+            <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
+              Perfil
+            </Link>
+            {user?.role === 'BUYER' && (
+              <>
+                <div className="border-t border-gray-200 my-2"></div>
+                <Link to="/upgrade-to-producer" className="block px-4 py-2 text-sm hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setMobileMenuOpen(false)}>
+                  🚀 Tornar-se Vendedor
+                </Link>
+              </>
+            )}
+            {user?.role === 'ADMIN' && (
+              <>
+                <div className="border-t border-gray-200 my-2"></div>
+                <Link to="/admin/products" className="block px-4 py-2 text-sm hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setMobileMenuOpen(false)}>
+                  📋 Produtos Pendentes
+                </Link>
+                <Link to="/admin/combos" className="block px-4 py-2 text-sm hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setMobileMenuOpen(false)}>
+                  📦 Gerenciar Combos
+                </Link>
+                <Link to="/admin/commissions" className="block px-4 py-2 text-sm hover:bg-green-50 text-green-600 font-semibold" onClick={() => setMobileMenuOpen(false)}>
+                  💰 Comissões (3%)
+                </Link>
+              </>
+            )}
+            <div className="border-t border-gray-200 my-2"></div>
+            <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+              Sair
+            </button>
+          </div>
+        </>
+      )}
 
       {/* DESKTOP: Normal Navbar */}
       <div className="hidden md:block">
