@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import useStore from '../store/useStore';
 import { toast } from 'react-toastify';
 import { getUser, isAuthenticated, clearAuth } from '../lib/auth';
+// v2.1 - Admin menu items reorganized
 
 export default function Navbar() {
   const { cart } = useStore();
@@ -40,6 +41,9 @@ export default function Navbar() {
   };
 
   const { user, authenticated } = authState;
+
+  // Debug: verificar role do usuário
+  console.log('Navbar - User role:', user?.role, 'User:', user);
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
