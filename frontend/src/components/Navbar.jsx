@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiDollarSign } from 'react-icons/fi';
+import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiDollarSign, FiChevronDown } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import useStore from '../store/useStore';
 import { toast } from 'react-toastify';
@@ -103,6 +103,7 @@ export default function Navbar() {
               >
                 <FiUser className="w-3 h-3" />
                 {user?.name?.split(' ')[0]}
+                <FiChevronDown className={`w-3 h-3 transition-transform ${mobileMenuOpen ? 'rotate-180' : ''}`} />
               </button>
             </>
           )}
@@ -221,6 +222,7 @@ export default function Navbar() {
                     <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center space-x-2 text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                       <FiUser className="w-5 h-5" />
                       <span>{user?.name?.split(' ')[0]}</span>
+                      <FiChevronDown className={`w-4 h-4 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {userMenuOpen && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
