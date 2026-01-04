@@ -79,13 +79,15 @@ export default function Navbar() {
                 📱 Apps
               </Link>
               {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
-                <Link to="/producer/dashboard" className="text-xs font-semibold text-primary-600 hover:text-primary-700 px-3 py-1.5 whitespace-nowrap">
+                <Link to="/producer/dashboard" className="text-xs font-semibold text-primary-600 hover:text-primary-700 px-3 py-1.5 whitespace-nowrap flex items-center gap-1">
                   💰 Vender
+                  <FiChevronDown className="w-3 h-3 -rotate-90" />
                 </Link>
               )}
               {user?.role === 'ADMIN' && (
-                <Link to="/admin/dashboard" className="text-xs font-semibold text-purple-600 hover:text-purple-700 px-3 py-1.5 whitespace-nowrap">
+                <Link to="/admin/dashboard" className="text-xs font-semibold text-purple-600 hover:text-purple-700 px-3 py-1.5 whitespace-nowrap flex items-center gap-1">
                   Admin
+                  <FiChevronDown className="w-3 h-3 -rotate-90" />
                 </Link>
               )}
               <Link to="/cart" className="relative text-xs font-semibold text-gray-700 hover:text-primary-500 px-3 py-1.5 whitespace-nowrap">
@@ -127,9 +129,19 @@ export default function Navbar() {
             <Link to="/seller/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
               💰 Financeiro
             </Link>
+            {user?.role === 'ADMIN' && (
+              <Link to="/admin/commissions" className="block px-4 py-2 text-sm pl-8 hover:bg-green-50 text-green-600 font-medium" onClick={() => setMobileMenuOpen(false)}>
+                💰 Comissões (3%)
+              </Link>
+            )}
             {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
               <Link to="/seller/combos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
                 📦 Meus Combos
+              </Link>
+            )}
+            {user?.role === 'ADMIN' && (
+              <Link to="/admin/products" className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-semibold" onClick={() => setMobileMenuOpen(false)}>
+                📋 Produtos Pendentes
               </Link>
             )}
             <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
@@ -146,14 +158,8 @@ export default function Navbar() {
             {user?.role === 'ADMIN' && (
               <>
                 <div className="border-t border-gray-200 my-2"></div>
-                <Link to="/admin/products" className="block px-4 py-2 text-sm hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                  📋 Produtos Pendentes
-                </Link>
                 <Link to="/admin/combos" className="block px-4 py-2 text-sm hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setMobileMenuOpen(false)}>
                   📦 Gerenciar Combos
-                </Link>
-                <Link to="/admin/commissions" className="block px-4 py-2 text-sm hover:bg-green-50 text-green-600 font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                  💰 Comissões (3%)
                 </Link>
               </>
             )}
@@ -203,11 +209,13 @@ export default function Navbar() {
                     <Link to="/producer/dashboard" className="flex items-center space-x-1 text-primary-600 hover:text-primary-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
                       <FiDollarSign className="w-4 h-4" />
                       <span>Vender</span>
+                      <FiChevronDown className="w-4 h-4 -rotate-90" />
                     </Link>
                   )}
                   {user?.role === 'ADMIN' && (
-                    <Link to="/admin/dashboard" className="text-purple-600 hover:text-purple-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                      Admin
+                    <Link to="/admin/dashboard" className="flex items-center space-x-1 text-purple-600 hover:text-purple-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                      <span>Admin</span>
+                      <FiChevronDown className="w-4 h-4 -rotate-90" />
                     </Link>
                   )}
                   <Link to="/cart" className="relative text-gray-700 hover:text-primary-500 p-2 transition-colors">
@@ -238,9 +246,19 @@ export default function Navbar() {
                         <Link to="/seller/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
                           💰 Financeiro
                         </Link>
+                        {user?.role === 'ADMIN' && (
+                          <Link to="/admin/commissions" className="block px-4 py-2 text-sm pl-8 hover:bg-green-50 text-green-600 font-medium" onClick={() => setUserMenuOpen(false)}>
+                            💰 Comissões (3%)
+                          </Link>
+                        )}
                         {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
                           <Link to="/seller/combos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
                             📦 Meus Combos
+                          </Link>
+                        )}
+                        {user?.role === 'ADMIN' && (
+                          <Link to="/admin/products" className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-semibold" onClick={() => setUserMenuOpen(false)}>
+                            📋 Produtos Pendentes
                           </Link>
                         )}
                         <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
@@ -257,14 +275,8 @@ export default function Navbar() {
                         {user?.role === 'ADMIN' && (
                           <>
                             <div className="border-t border-gray-200 my-2"></div>
-                            <Link to="/admin/products" className="block px-4 py-2 text-sm hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setUserMenuOpen(false)}>
-                              📋 Produtos Pendentes
-                            </Link>
                             <Link to="/admin/combos" className="block px-4 py-2 text-sm hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setUserMenuOpen(false)}>
                               📦 Gerenciar Combos
-                            </Link>
-                            <Link to="/admin/commissions" className="block px-4 py-2 text-sm hover:bg-green-50 text-green-600 font-semibold" onClick={() => setUserMenuOpen(false)}>
-                              💰 Comissões (3%)
                             </Link>
                           </>
                         )}
