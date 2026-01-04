@@ -42,9 +42,6 @@ export default function Navbar() {
 
   const { user, authenticated } = authState;
 
-  // Debug: verificar role do usuário
-  console.log('Navbar - User role:', user?.role, 'User:', user);
-
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       {/* MOBILE: Horizontal Scroll Navbar */}
@@ -143,7 +140,7 @@ export default function Navbar() {
                 📦 Meus Combos
               </Link>
             )}
-            {user?.role === 'ADMIN' && (
+            {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
               <Link to="/admin/products" className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-semibold" onClick={() => setMobileMenuOpen(false)}>
                 📋 Produtos Pendentes
               </Link>
@@ -260,7 +257,7 @@ export default function Navbar() {
                             📦 Meus Combos
                           </Link>
                         )}
-                        {user?.role === 'ADMIN' && (
+                        {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
                           <Link to="/admin/products" className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-semibold" onClick={() => setUserMenuOpen(false)}>
                             📋 Produtos Pendentes
                           </Link>
