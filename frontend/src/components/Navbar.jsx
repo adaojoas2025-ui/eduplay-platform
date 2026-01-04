@@ -169,9 +169,49 @@ export default function Navbar() {
                     </button>
                     {userMenuOpen && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                        <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                          Meu Painel
+                        <Link to="/my-courses" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
+                          Meus Cursos
                         </Link>
+                        <Link to="/my-products" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
+                          Meus Produtos
+                        </Link>
+                        <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
+                          Pedidos
+                        </Link>
+                        <Link to="/seller/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
+                          💰 Financeiro
+                        </Link>
+                        {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
+                          <Link to="/seller/combos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
+                            📦 Meus Combos
+                          </Link>
+                        )}
+                        <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
+                          Perfil
+                        </Link>
+                        {user?.role === 'BUYER' && (
+                          <>
+                            <div className="border-t border-gray-200 my-2"></div>
+                            <Link to="/upgrade-to-producer" className="block px-4 py-2 text-sm hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setUserMenuOpen(false)}>
+                              🚀 Tornar-se Vendedor
+                            </Link>
+                          </>
+                        )}
+                        {user?.role === 'ADMIN' && (
+                          <>
+                            <div className="border-t border-gray-200 my-2"></div>
+                            <Link to="/admin/products" className="block px-4 py-2 text-sm hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setUserMenuOpen(false)}>
+                              📋 Produtos Pendentes
+                            </Link>
+                            <Link to="/admin/combos" className="block px-4 py-2 text-sm hover:bg-purple-50 text-purple-600 font-semibold" onClick={() => setUserMenuOpen(false)}>
+                              📦 Gerenciar Combos
+                            </Link>
+                            <Link to="/admin/commissions" className="block px-4 py-2 text-sm hover:bg-green-50 text-green-600 font-semibold" onClick={() => setUserMenuOpen(false)}>
+                              💰 Comissões (3%)
+                            </Link>
+                          </>
+                        )}
+                        <div className="border-t border-gray-200 my-2"></div>
                         <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                           Sair
                         </button>
