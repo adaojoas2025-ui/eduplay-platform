@@ -12,6 +12,8 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [relatedCombos, setRelatedCombos] = useState([]);
   const [user, setUser] = useState(null);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [checkingPurchase, setCheckingPurchase] = useState(true);
 
   useEffect(() => {
     const userData = localStorage.getItem('userData');
@@ -55,6 +57,13 @@ export default function ProductDetails() {
 
         // Fetch combos that include this product
         await fetchRelatedCombos(response.data.data.id);
+
+        // Check if user has purchased this product
+        if (user) {
+          checkIfPurchased(response.data.data.id);
+        } else {
+          setCheckingPurchase(false);
+        }
       } catch (error) {
         console.error('Error fetching product:', error);
         alert('Produto não encontrado');
@@ -66,6 +75,27 @@ export default function ProductDetails() {
 
     fetchProduct();
   }, [slug, navigate]);
+
+  const checkIfPurchased = async (productId) => {
+    try {
+      setCheckingPurchase(true);
+      const response = await api.get('/orders/purchases');
+
+      if (response.data.success) {
+        const purchases = response.data.data;
+        const purchased = purchases.some(
+          purchase =>
+            purchase.product?.id === productId &&
+            (purchase.status === 'APPROVED' || purchase.status === 'COMPLETED')
+        );
+        setHasPurchased(purchased);
+      }
+    } catch (error) {
+      console.error('Error checking purchase:', error);
+    } finally {
+      setCheckingPurchase(false);
+    }
+  };
 
   const handleAddToCart = async () => {
     if (!user) {
@@ -210,14 +240,48 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          {/* Add to Cart Button */}
-          <button
-            onClick={handleAddToCart}
-            className="w-full flex items-center justify-center gap-2 bg-purple-600 text-white px-6 py-4 rounded-lg hover:bg-purple-700 transition text-lg font-semibold mb-4"
-          >
-            <FiShoppingCart size={24} />
-            Adicionar ao Carrinho
-          </button>
+          {/* Purchase Status / Action Button */}
+          {hasPurchased ? (
+            <div className="mb-4">
+              <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4">
+                <div className="flex items-center gap-2 text-green-700 font-semibold mb-2">
+                  <span className="text-2xl">✓</span>
+                  <span>Você já possui este produto!</span>
+                </div>
+                <p className="text-green-600 text-sm">Acesse os arquivos abaixo</p>
+              </div>
+
+              {product.filesUrl && product.filesUrl.length > 0 ? (
+                <div className="space-y-2">
+                  {product.filesUrl.map((fileUrl, index) => (
+                    <a
+                      key={index}
+                      href={fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full bg-blue-600 text-white text-center py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+                    >
+                      📥 Baixar Arquivo {product.filesUrl.length > 1 ? `${index + 1}` : ''}
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-center">
+                  <p className="text-yellow-800">Este produto ainda não tem arquivos disponíveis para download.</p>
+                  <p className="text-yellow-600 text-sm mt-1">Entre em contato com o produtor para mais informações.</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              disabled={checkingPurchase}
+              className="w-full flex items-center justify-center gap-2 bg-purple-600 text-white px-6 py-4 rounded-lg hover:bg-purple-700 transition text-lg font-semibold mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiShoppingCart size={24} />
+              {checkingPurchase ? 'Verificando...' : 'Adicionar ao Carrinho'}
+            </button>
+          )}
 
           {/* Features */}
           {product.features && product.features.length > 0 && (
