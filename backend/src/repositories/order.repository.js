@@ -26,7 +26,7 @@ const createOrder = async (orderData) => {
         connect: { id: productId }
       };
     }
-    const order = await prisma.order.create({
+    const order = await prisma.orders.create({
       data: prismaData,
       include: {
         product: {
@@ -65,7 +65,7 @@ const createOrder = async (orderData) => {
  */
 const findOrderById = async (orderId, options = {}) => {
   try {
-    return await prisma.order.findUnique({
+    return await prisma.orders.findUnique({
       where: { id: orderId },
       include: {
         product: {
@@ -104,7 +104,7 @@ const findOrderById = async (orderId, options = {}) => {
  */
 const findOrderByPaymentId = async (paymentId) => {
   try {
-    return await prisma.order.findUnique({
+    return await prisma.orders.findUnique({
       where: { paymentId },
       include: {
         product: true,
@@ -150,7 +150,7 @@ const updateOrder = async (orderId, updateData) => {
       statusType: typeof prismaUpdateData.status
     });
 
-    const order = await prisma.order.update({
+    const order = await prisma.orders.update({
       where: { id: orderId },
       data: prismaUpdateData,
       include: {
@@ -258,7 +258,7 @@ const listOrders = async (filters = {}, pagination = {}, sorting = {}) => {
 
     // Execute query with pagination
     const [orders, total] = await Promise.all([
-      prisma.order.findMany({
+      prisma.orders.findMany({
         where,
         skip,
         take: limit,
@@ -286,7 +286,7 @@ const listOrders = async (filters = {}, pagination = {}, sorting = {}) => {
           },
         },
       }),
-      prisma.order.count({ where }),
+      prisma.orders.count({ where }),
     ]);
 
     return {
@@ -332,20 +332,20 @@ const getOrderStats = async (filters = {}) => {
     }
 
     const [totalOrders, revenue, platformRevenue, producerRevenue] = await Promise.all([
-      prisma.order.count({ where }),
-      prisma.order.aggregate({
+      prisma.orders.count({ where }),
+      prisma.orders.aggregate({
         where,
         _sum: {
           amount: true,
         },
       }),
-      prisma.order.aggregate({
+      prisma.orders.aggregate({
         where,
         _sum: {
           platformFee: true,
         },
       }),
-      prisma.order.aggregate({
+      prisma.orders.aggregate({
         where,
         _sum: {
           producerAmount: true,
@@ -372,7 +372,7 @@ const getOrderStats = async (filters = {}) => {
  */
 const getUserPurchases = async (userId) => {
   try {
-    const orders = await prisma.order.findMany({
+    const orders = await prisma.orders.findMany({
       where: {
         buyerId: userId,
         status: {
@@ -424,7 +424,7 @@ const getUserPurchases = async (userId) => {
  */
 const hasUserPurchasedProduct = async (userId, productId) => {
   try {
-    const order = await prisma.order.findFirst({
+    const order = await prisma.orders.findFirst({
       where: {
         buyerId: userId,
         productId,
@@ -446,7 +446,7 @@ const hasUserPurchasedProduct = async (userId, productId) => {
  */
 const getRecentOrders = async (limit = 10) => {
   try {
-    return await prisma.order.findMany({
+    return await prisma.orders.findMany({
       take: limit,
       orderBy: {
         createdAt: 'desc',
@@ -520,7 +520,7 @@ const refundOrder = async (orderId, reason, amount = null) => {
  */
 const getOrdersByStatusCount = async () => {
   try {
-    const statusCounts = await prisma.order.groupBy({
+    const statusCounts = await prisma.orders.groupBy({
       by: ['status'],
       _count: {
         status: true,

@@ -606,14 +606,14 @@ class GamificationService {
       // Get user statistics
       const [totalPurchases, totalSales, reviewsMade, coursesCompleted] = await Promise.all([
         // Total de compras (pedidos completados como comprador)
-        prisma.order.count({
+        prisma.orders.count({
           where: {
             buyerId: userId,
             status: 'COMPLETED'
           }
         }),
         // Total de vendas (pedidos completados de produtos do usuário)
-        prisma.order.count({
+        prisma.orders.count({
           where: {
             product: {
               producerId: userId
@@ -622,7 +622,7 @@ class GamificationService {
           }
         }),
         // Total de avaliações feitas
-        prisma.review.count({
+        prisma.reviews.count({
           where: {
             userId: userId
           }

@@ -39,6 +39,7 @@ const register = async (userData) => {
 
     // Create user
     const user = await userRepository.createUser({
+      id: crypto.randomUUID(),
       ...userData,
       password: hashedPassword,
       status: USER_STATUS.ACTIVE,

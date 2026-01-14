@@ -15,7 +15,7 @@ async function register(req, res) {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.users.findUnique({
       where: { email },
     });
 
@@ -27,7 +27,7 @@ async function register(req, res) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const user = await prisma.user.create({
+    const user = await prisma.users.create({
       data: {
         name,
         email,
@@ -84,7 +84,7 @@ async function login(req, res) {
     }
 
     // Find user
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { email },
     });
 
@@ -130,7 +130,7 @@ async function login(req, res) {
  */
 async function me(req, res) {
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { id: req.user.id },
       select: {
         id: true,

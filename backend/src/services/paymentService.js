@@ -62,7 +62,7 @@ async function processPaymentWebhook(paymentId) {
     const { status, metadata } = paymentInfo;
 
     // Find or create order
-    let order = await prisma.order.findUnique({
+    let order = await prisma.orders.findUnique({
       where: { paymentId: String(paymentId) },
       include: {
         product: {
@@ -77,7 +77,7 @@ async function processPaymentWebhook(paymentId) {
 
     // If order doesn't exist, create it
     if (!order && metadata) {
-      const product = await prisma.product.findUnique({
+      const product = await prisma.products.findUnique({
         where: { id: metadata.product_id },
         include: { files: true, producer: true },
       });
@@ -87,7 +87,7 @@ async function processPaymentWebhook(paymentId) {
         return;
       }
 
-      const buyer = await prisma.user.findUnique({
+      const buyer = await prisma.users.findUnique({
         where: { id: metadata.buyer_id },
       });
 
@@ -99,7 +99,7 @@ async function processPaymentWebhook(paymentId) {
       const platformFee = product.price * 0.10; // 10% platform fee
       const producerAmount = product.price * 0.90; // 90% to producer
 
-      order = await prisma.order.create({
+      order = await prisma.orders.create({
         data: {
           productId: product.id,
           buyerId: buyer.id,
@@ -122,7 +122,7 @@ async function processPaymentWebhook(paymentId) {
       });
     } else if (order) {
       // Update existing order
-      order = await prisma.order.update({
+      order = await prisma.orders.update({
         where: { id: order.id },
         data: {
           paymentStatus: status.toUpperCase(),
@@ -152,7 +152,7 @@ async function processPaymentWebhook(paymentId) {
         const producerCommission = order.amount - platformFeeAmount; // 97% to producer
 
         // Get producer ID from product
-        const product = await prisma.product.findUnique({
+        const product = await prisma.products.findUnique({
           where: { id: order.productId },
           select: { producerId: true },
         });
@@ -173,7 +173,7 @@ async function processPaymentWebhook(paymentId) {
       }
 
       // Reload order with includes for emails
-      const orderWithDetails = await prisma.order.findUnique({
+      const orderWithDetails = await prisma.orders.findUnique({
         where: { id: order.id },
         include: {
           product: {

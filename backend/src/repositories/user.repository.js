@@ -14,7 +14,7 @@ const logger = require('../utils/logger');
  */
 const createUser = async (userData) => {
   try {
-    const user = await prisma.user.create({
+    const user = await prisma.users.create({
       data: userData,
     });
     logger.info('User created', { userId: user.id });
@@ -33,7 +33,7 @@ const createUser = async (userData) => {
  */
 const findUserById = async (userId, options = {}) => {
   try {
-    return await prisma.user.findUnique({
+    return await prisma.users.findUnique({
       where: { id: userId },
       ...options,
     });
@@ -51,7 +51,7 @@ const findUserById = async (userId, options = {}) => {
  */
 const findUserByEmail = async (email, options = {}) => {
   try {
-    return await prisma.user.findUnique({
+    return await prisma.users.findUnique({
       where: { email },
       ...options,
     });
@@ -69,7 +69,7 @@ const findUserByEmail = async (email, options = {}) => {
  */
 const findUserByCpf = async (cpf, options = {}) => {
   try {
-    return await prisma.user.findUnique({
+    return await prisma.users.findUnique({
       where: { cpf },
       ...options,
     });
@@ -87,7 +87,7 @@ const findUserByCpf = async (cpf, options = {}) => {
  */
 const updateUser = async (userId, updateData) => {
   try {
-    const user = await prisma.user.update({
+    const user = await prisma.users.update({
       where: { id: userId },
       data: updateData,
     });
@@ -106,7 +106,7 @@ const updateUser = async (userId, updateData) => {
  */
 const deleteUser = async (userId) => {
   try {
-    const user = await prisma.user.delete({
+    const user = await prisma.users.delete({
       where: { id: userId },
     });
     logger.info('User deleted', { userId: user.id });
@@ -150,7 +150,7 @@ const listUsers = async (filters = {}, pagination = {}, sorting = {}) => {
 
     // Execute query with pagination
     const [users, total] = await Promise.all([
-      prisma.user.findMany({
+      prisma.users.findMany({
         where,
         skip,
         take: limit,
@@ -166,7 +166,7 @@ const listUsers = async (filters = {}, pagination = {}, sorting = {}) => {
           createdAt: true,
         },
       }),
-      prisma.user.count({ where }),
+      prisma.users.count({ where }),
     ]);
 
     return {
@@ -191,7 +191,7 @@ const listUsers = async (filters = {}, pagination = {}, sorting = {}) => {
  */
 const countUsersByRole = async (role) => {
   try {
-    return await prisma.user.count({
+    return await prisma.users.count({
       where: { role },
     });
   } catch (error) {
@@ -207,7 +207,7 @@ const countUsersByRole = async (role) => {
  */
 const countUsersByStatus = async (status) => {
   try {
-    return await prisma.user.count({
+    return await prisma.users.count({
       where: { status },
     });
   } catch (error) {
@@ -292,16 +292,16 @@ const updatePixKey = async (userId, pixKey) => {
 const getProducerStats = async (producerId) => {
   try {
     const [totalProducts, totalSales, totalRevenue, totalAmount, pendingCommissions, paidCommissions] = await Promise.all([
-      prisma.product.count({
+      prisma.products.count({
         where: { producerId },
       }),
-      prisma.order.count({
+      prisma.orders.count({
         where: {
           product: { producerId },
           status: 'COMPLETED',
         },
       }),
-      prisma.order.aggregate({
+      prisma.orders.aggregate({
         where: {
           product: { producerId },
           status: 'COMPLETED',
@@ -310,7 +310,7 @@ const getProducerStats = async (producerId) => {
           producerAmount: true,
         },
       }),
-      prisma.order.aggregate({
+      prisma.orders.aggregate({
         where: {
           product: { producerId },
           status: 'COMPLETED',
@@ -360,7 +360,7 @@ const getProducerStats = async (producerId) => {
  */
 const findUsersByRole = async (role) => {
   try {
-    return await prisma.user.findMany({
+    return await prisma.users.findMany({
       where: { role },
       select: {
         id: true,

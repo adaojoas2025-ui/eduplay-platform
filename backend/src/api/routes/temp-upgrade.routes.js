@@ -24,7 +24,7 @@ router.post(
     }
 
     // Find user
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { email },
     });
 
@@ -41,7 +41,7 @@ router.post(
     }
 
     // Update user to PRODUCER
-    const updatedUser = await prisma.user.update({
+    const updatedUser = await prisma.users.update({
       where: { email },
       data: { role: 'PRODUCER' },
     });

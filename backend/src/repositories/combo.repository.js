@@ -6,7 +6,7 @@ class ComboRepository {
   async create(data) {
     const { title, description, discountPrice, productIds, producerId } = data;
 
-    return await prisma.combo.create({
+    return await prisma.combos.create({
       data: {
         title,
         description,
@@ -26,7 +26,7 @@ class ComboRepository {
 
   // Get all combos
   async findAll() {
-    return await prisma.combo.findMany({
+    return await prisma.combos.findMany({
       where: { isActive: true },
       include: {
         products: {
@@ -41,7 +41,7 @@ class ComboRepository {
 
   // Get combo by ID with full product details
   async findById(id) {
-    return await prisma.combo.findUnique({
+    return await prisma.combos.findUnique({
       where: { id },
       include: {
         products: {
@@ -56,7 +56,7 @@ class ComboRepository {
   // Get combo by product IDs (to detect if products in cart form a combo)
   async findByProductIds(productIds) {
     // Get all active combos
-    const combos = await prisma.combo.findMany({
+    const combos = await prisma.combos.findMany({
       where: { isActive: true },
       include: {
         products: {
@@ -90,7 +90,7 @@ class ComboRepository {
       });
     }
 
-    return await prisma.combo.update({
+    return await prisma.combos.update({
       where: { id },
       data: {
         ...(title && { title }),
@@ -117,7 +117,7 @@ class ComboRepository {
 
   // Delete combo (soft delete)
   async delete(id) {
-    return await prisma.combo.update({
+    return await prisma.combos.update({
       where: { id },
       data: { isActive: false }
     });
@@ -125,14 +125,14 @@ class ComboRepository {
 
   // Hard delete combo
   async hardDelete(id) {
-    return await prisma.combo.delete({
+    return await prisma.combos.delete({
       where: { id }
     });
   }
 
   // Get combo with product details
   async getComboWithProducts(comboId) {
-    const combo = await prisma.combo.findUnique({
+    const combo = await prisma.combos.findUnique({
       where: { id: comboId },
       include: {
         products: true
@@ -143,7 +143,7 @@ class ComboRepository {
 
     // Get full product details
     const productIds = combo.products.map(p => p.productId);
-    const products = await prisma.product.findMany({
+    const products = await prisma.products.findMany({
       where: {
         id: { in: productIds }
       }

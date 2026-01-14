@@ -20,7 +20,7 @@ const generateUniqueSlug = async (title) => {
     let uniqueSlug = slug;
 
     // Check if slug exists, append number if needed
-    while (await prisma.product.findUnique({ where: { slug: uniqueSlug } })) {
+    while (await prisma.products.findUnique({ where: { slug: uniqueSlug } })) {
       count++;
       uniqueSlug = `${slug}-${count}`;
     }
@@ -44,7 +44,7 @@ const createProduct = async (productData) => {
       productData.slug = await generateUniqueSlug(productData.title);
     }
 
-    const product = await prisma.product.create({
+    const product = await prisma.products.create({
       data: productData,
       include: {
         producer: {
@@ -73,7 +73,7 @@ const createProduct = async (productData) => {
  */
 const findProductById = async (productId, options = {}) => {
   try {
-    return await prisma.product.findUnique({
+    return await prisma.products.findUnique({
       where: { id: productId },
       include: {
         producer: {
@@ -103,7 +103,7 @@ const findProductById = async (productId, options = {}) => {
  */
 const findProductBySlug = async (slug, options = {}) => {
   try {
-    return await prisma.product.findUnique({
+    return await prisma.products.findUnique({
       where: { slug },
       include: {
         producer: {
@@ -135,7 +135,7 @@ const updateProduct = async (productId, updateData) => {
   try {
     // Update slug if title changed
     if (updateData.title) {
-      const currentProduct = await prisma.product.findUnique({
+      const currentProduct = await prisma.products.findUnique({
         where: { id: productId },
         select: { title: true },
       });
@@ -145,7 +145,7 @@ const updateProduct = async (productId, updateData) => {
       }
     }
 
-    const product = await prisma.product.update({
+    const product = await prisma.products.update({
       where: { id: productId },
       data: updateData,
       include: {
@@ -174,7 +174,7 @@ const updateProduct = async (productId, updateData) => {
  */
 const deleteProduct = async (productId) => {
   try {
-    const product = await prisma.product.delete({
+    const product = await prisma.products.delete({
       where: { id: productId },
     });
     logger.info('Product deleted', { productId: product.id });
@@ -236,7 +236,7 @@ const listProducts = async (filters = {}, pagination = {}, sorting = {}) => {
 
     // Execute query with pagination
     const [products, total] = await Promise.all([
-      prisma.product.findMany({
+      prisma.products.findMany({
         where,
         skip,
         take: limit,
@@ -251,7 +251,7 @@ const listProducts = async (filters = {}, pagination = {}, sorting = {}) => {
           },
         },
       }),
-      prisma.product.count({ where }),
+      prisma.products.count({ where }),
     ]);
 
     return {
@@ -276,7 +276,7 @@ const listProducts = async (filters = {}, pagination = {}, sorting = {}) => {
  */
 const incrementViews = async (productId) => {
   try {
-    return await prisma.product.update({
+    return await prisma.products.update({
       where: { id: productId },
       data: {
         views: {
@@ -297,7 +297,7 @@ const incrementViews = async (productId) => {
  */
 const incrementSales = async (productId) => {
   try {
-    return await prisma.product.update({
+    return await prisma.products.update({
       where: { id: productId },
       data: {
         sales: {
@@ -334,20 +334,20 @@ const updateStatus = async (productId, status) => {
 const getProductStats = async (productId) => {
   try {
     const [product, totalSales, totalRevenue, avgRating] = await Promise.all([
-      prisma.product.findUnique({
+      prisma.products.findUnique({
         where: { id: productId },
         select: {
           views: true,
           sales: true,
         },
       }),
-      prisma.order.count({
+      prisma.orders.count({
         where: {
           productId,
           status: 'COMPLETED',
         },
       }),
-      prisma.order.aggregate({
+      prisma.orders.aggregate({
         where: {
           productId,
           status: 'COMPLETED',
@@ -356,7 +356,7 @@ const getProductStats = async (productId) => {
           amount: true,
         },
       }),
-      prisma.review.aggregate({
+      prisma.reviews.aggregate({
         where: { productId },
         _avg: {
           rating: true,
@@ -383,7 +383,7 @@ const getProductStats = async (productId) => {
  */
 const getPopularProducts = async (limit = 10) => {
   try {
-    return await prisma.product.findMany({
+    return await prisma.products.findMany({
       where: {
         status: 'PUBLISHED',
       },
@@ -414,7 +414,7 @@ const getPopularProducts = async (limit = 10) => {
  */
 const getFeaturedProducts = async (limit = 10) => {
   try {
-    return await prisma.product.findMany({
+    return await prisma.products.findMany({
       where: {
         status: 'PUBLISHED',
         featured: true,

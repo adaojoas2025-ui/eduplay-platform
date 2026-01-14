@@ -199,7 +199,7 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
       }),
       prisma.commission.count({ where }),
       // Buscar também orders de apps (sem comissão)
-      prisma.order.findMany({
+      prisma.orders.findMany({
         where: {
           status: 'COMPLETED',
           productId: null, // App sales
@@ -223,7 +223,7 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
           },
         },
       }),
-      prisma.order.count({
+      prisma.orders.count({
         where: {
           status: 'COMPLETED',
           productId: null,
@@ -536,7 +536,7 @@ const getCommissionStats = async (filters = {}) => {
       }
     }
 
-    const appSales = await prisma.order.aggregate({
+    const appSales = await prisma.orders.aggregate({
       where: appSalesWhere,
       _sum: {
         amount: true,

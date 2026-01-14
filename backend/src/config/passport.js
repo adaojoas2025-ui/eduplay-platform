@@ -16,7 +16,7 @@ passport.serializeUser((user, done) => {
 // Deserialize user from session
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await prisma.users.findUnique({ where: { id } });
     done(null, user);
   } catch (error) {
     done(error, null);
@@ -41,14 +41,14 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           });
 
           // Check if user already exists
-          let user = await prisma.user.findUnique({
+          let user = await prisma.users.findUnique({
             where: { email: profile.emails[0].value },
           });
 
           if (user) {
             // User exists, update googleId if not set
             if (!user.googleId) {
-              user = await prisma.user.update({
+              user = await prisma.users.update({
                 where: { id: user.id },
                 data: { googleId: profile.id },
               });
@@ -56,7 +56,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             console.log('✅ Existing user logged in via Google:', user.email);
           } else {
             // Create new user from Google profile
-            user = await prisma.user.create({
+            user = await prisma.users.create({
               data: {
                 email: profile.emails[0].value,
                 name: profile.displayName,

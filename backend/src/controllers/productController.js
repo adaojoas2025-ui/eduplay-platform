@@ -23,7 +23,7 @@ async function getAllProducts(req, res) {
     }
 
     const [products, total] = await Promise.all([
-      prisma.product.findMany({
+      prisma.products.findMany({
         where,
         skip: parseInt(skip),
         take: parseInt(limit),
@@ -40,7 +40,7 @@ async function getAllProducts(req, res) {
         },
         orderBy: { createdAt: 'desc' },
       }),
-      prisma.product.count({ where }),
+      prisma.products.count({ where }),
     ]);
 
     res.json({
@@ -65,7 +65,7 @@ async function getProductById(req, res) {
   try {
     const { id } = req.params;
 
-    const product = await prisma.product.findUnique({
+    const product = await prisma.products.findUnique({
       where: { id },
       include: {
         producer: {
@@ -88,7 +88,7 @@ async function getProductById(req, res) {
 
     // Only show files to buyers who purchased
     if (req.user) {
-      const hasPurchased = await prisma.order.findFirst({
+      const hasPurchased = await prisma.orders.findFirst({
         where: {
           productId: id,
           buyerId: req.user.id,
@@ -123,7 +123,7 @@ async function createProduct(req, res) {
     }
 
     // Create product
-    const product = await prisma.product.create({
+    const product = await prisma.products.create({
       data: {
         title,
         description,
@@ -160,7 +160,7 @@ async function updateProduct(req, res) {
     const { title, description, price, status } = req.body;
 
     // Check if product exists and belongs to user
-    const existingProduct = await prisma.product.findUnique({
+    const existingProduct = await prisma.products.findUnique({
       where: { id },
     });
 
@@ -173,7 +173,7 @@ async function updateProduct(req, res) {
     }
 
     // Update product
-    const product = await prisma.product.update({
+    const product = await prisma.products.update({
       where: { id },
       data: {
         ...(title && { title }),
@@ -210,7 +210,7 @@ async function deleteProduct(req, res) {
     const { id } = req.params;
 
     // Check if product exists and belongs to user
-    const product = await prisma.product.findUnique({
+    const product = await prisma.products.findUnique({
       where: { id },
       include: { files: true },
     });
@@ -234,7 +234,7 @@ async function deleteProduct(req, res) {
     }
 
     // Delete product (cascade will delete files)
-    await prisma.product.delete({
+    await prisma.products.delete({
       where: { id },
     });
 
@@ -253,7 +253,7 @@ async function uploadProductFiles(req, res) {
     const { id } = req.params;
 
     // Check if product exists and belongs to user
-    const product = await prisma.product.findUnique({
+    const product = await prisma.products.findUnique({
       where: { id },
     });
 
@@ -312,7 +312,7 @@ async function uploadThumbnail(req, res) {
   try {
     const { id } = req.params;
 
-    const product = await prisma.product.findUnique({
+    const product = await prisma.products.findUnique({
       where: { id },
     });
 
@@ -332,7 +332,7 @@ async function uploadThumbnail(req, res) {
     const result = await uploadFile(req.file.path, 'eduplay/thumbnails');
 
     // Update product
-    const updatedProduct = await prisma.product.update({
+    const updatedProduct = await prisma.products.update({
       where: { id },
       data: { thumbnail: result.secure_url },
     });
@@ -356,7 +356,7 @@ async function uploadThumbnail(req, res) {
  */
 async function getMyProducts(req, res) {
   try {
-    const products = await prisma.product.findMany({
+    const products = await prisma.products.findMany({
       where: { producerId: req.user.id },
       include: {
         files: true,

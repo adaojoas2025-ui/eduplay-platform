@@ -34,7 +34,7 @@ router.get('/products', authenticate, async (req, res, next) => {
       where.status = status;
     }
 
-    const products = await prisma.product.findMany({
+    const products = await prisma.products.findMany({
       where,
       orderBy: { createdAt: 'desc' }
     });
@@ -58,7 +58,7 @@ router.get('/sales', authenticate, async (req, res, next) => {
     const { limit = 10 } = req.query;
 
     // Get orders for products from this seller
-    const orders = await prisma.order.findMany({
+    const orders = await prisma.orders.findMany({
       where: {
         product: {
           producerId: sellerId

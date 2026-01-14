@@ -9,7 +9,7 @@ async function createOrder(req, res) {
     const { productId, payerInfo } = req.body;
 
     // Get product
-    const product = await prisma.product.findUnique({
+    const product = await prisma.products.findUnique({
       where: { id: productId },
       include: {
         producer: true,
@@ -25,7 +25,7 @@ async function createOrder(req, res) {
     }
 
     // Check if user already purchased
-    const existingPurchase = await prisma.order.findFirst({
+    const existingPurchase = await prisma.orders.findFirst({
       where: {
         productId,
         buyerId: req.user.id,
@@ -45,7 +45,7 @@ async function createOrder(req, res) {
     // Create order in database
     const platformFee = product.price * 0.10;
 
-    const order = await prisma.order.create({
+    const order = await prisma.orders.create({
       data: {
         productId: product.id,
         buyerId: req.user.id,
@@ -101,7 +101,7 @@ async function webhook(req, res) {
  */
 async function getMyPurchases(req, res) {
   try {
-    const purchases = await prisma.order.findMany({
+    const purchases = await prisma.orders.findMany({
       where: {
         buyerId: req.user.id,
         paymentStatus: 'APPROVED',
@@ -134,7 +134,7 @@ async function getMyPurchases(req, res) {
  */
 async function getMySales(req, res) {
   try {
-    const sales = await prisma.order.findMany({
+    const sales = await prisma.orders.findMany({
       where: {
         sellerId: req.user.id,
         paymentStatus: 'APPROVED',
@@ -184,7 +184,7 @@ async function getOrderById(req, res) {
   try {
     const { id } = req.params;
 
-    const order = await prisma.order.findUnique({
+    const order = await prisma.orders.findUnique({
       where: { id },
       include: {
         product: {

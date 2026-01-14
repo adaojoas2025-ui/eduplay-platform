@@ -30,7 +30,7 @@ class ComboController {
         whereCondition.producerId = producerId;
       }
 
-      const products = await prisma.product.findMany({
+      const products = await prisma.products.findMany({
         where: whereCondition
       });
 
@@ -85,7 +85,7 @@ class ComboController {
       const combosWithDetails = await Promise.all(
         combos.map(async (combo) => {
           const productIds = combo.products.map(p => p.productId);
-          const products = await prisma.product.findMany({
+          const products = await prisma.products.findMany({
             where: { id: { in: productIds } },
             select: {
               id: true,
@@ -206,7 +206,7 @@ class ComboController {
       const producerId = req.user.id;
 
       // Check if combo exists and belongs to producer (unless ADMIN)
-      const existingCombo = await prisma.combo.findUnique({
+      const existingCombo = await prisma.combos.findUnique({
         where: { id }
       });
 
@@ -236,7 +236,7 @@ class ComboController {
           whereCondition.producerId = producerId;
         }
 
-        const products = await prisma.product.findMany({
+        const products = await prisma.products.findMany({
           where: whereCondition
         });
 
@@ -290,7 +290,7 @@ class ComboController {
       const producerId = req.user.id;
 
       // Check if combo exists and belongs to producer (unless ADMIN)
-      const existingCombo = await prisma.combo.findUnique({
+      const existingCombo = await prisma.combos.findUnique({
         where: { id }
       });
 
@@ -329,7 +329,7 @@ class ComboController {
     try {
       const producerId = req.user.id;
 
-      const combos = await prisma.combo.findMany({
+      const combos = await prisma.combos.findMany({
         where: {
           producerId,
           isActive: true
@@ -348,7 +348,7 @@ class ComboController {
       const combosWithDetails = await Promise.all(
         combos.map(async (combo) => {
           const productIds = combo.products.map(p => p.productId);
-          const products = await prisma.product.findMany({
+          const products = await prisma.products.findMany({
             where: { id: { in: productIds } },
             select: {
               id: true,

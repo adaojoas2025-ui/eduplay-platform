@@ -15,20 +15,20 @@ async function getDashboard(req, res) {
       pendingProducts,
       recentOrders,
     ] = await Promise.all([
-      prisma.user.count(),
-      prisma.product.count({ where: { approved: true } }),
-      prisma.order.count({ where: { paymentStatus: 'APPROVED' } }),
-      prisma.order.aggregate({
+      prisma.users.count(),
+      prisma.products.count({ where: { approved: true } }),
+      prisma.orders.count({ where: { paymentStatus: 'APPROVED' } }),
+      prisma.orders.aggregate({
         where: { paymentStatus: 'APPROVED' },
         _sum: { platformFee: true },
       }),
-      prisma.user.count({
+      prisma.users.count({
         where: { role: 'PRODUCER', status: 'PENDING' },
       }),
-      prisma.product.count({
+      prisma.products.count({
         where: { status: 'PENDING' },
       }),
-      prisma.order.findMany({
+      prisma.orders.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -72,7 +72,7 @@ async function getAllUsers(req, res) {
     if (status) where.status = status;
 
     const [users, total] = await Promise.all([
-      prisma.user.findMany({
+      prisma.users.findMany({
         where,
         skip: parseInt(skip),
         take: parseInt(limit),
@@ -93,7 +93,7 @@ async function getAllUsers(req, res) {
         },
         orderBy: { createdAt: 'desc' },
       }),
-      prisma.user.count({ where }),
+      prisma.users.count({ where }),
     ]);
 
     res.json({
@@ -118,7 +118,7 @@ async function approveProducer(req, res) {
   try {
     const { id } = req.params;
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { id },
     });
 
@@ -130,7 +130,7 @@ async function approveProducer(req, res) {
       return res.status(400).json({ error: 'Usuário não é um produtor' });
     }
 
-    const updatedUser = await prisma.user.update({
+    const updatedUser = await prisma.users.update({
       where: { id },
       data: { status: 'APPROVED' },
       select: {
@@ -166,7 +166,7 @@ async function rejectProducer(req, res) {
   try {
     const { id } = req.params;
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { id },
     });
 
@@ -174,7 +174,7 @@ async function rejectProducer(req, res) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    const updatedUser = await prisma.user.update({
+    const updatedUser = await prisma.users.update({
       where: { id },
       data: { status: 'REJECTED' },
       select: {
@@ -203,7 +203,7 @@ async function suspendUser(req, res) {
   try {
     const { id } = req.params;
 
-    const user = await prisma.user.update({
+    const user = await prisma.users.update({
       where: { id },
       data: { status: 'SUSPENDED' },
       select: {
@@ -230,7 +230,7 @@ async function suspendUser(req, res) {
  */
 async function getPendingProducts(req, res) {
   try {
-    const products = await prisma.product.findMany({
+    const products = await prisma.products.findMany({
       where: { status: 'PENDING' },
       include: {
         producer: {
@@ -259,7 +259,7 @@ async function approveProduct(req, res) {
   try {
     const { id } = req.params;
 
-    const product = await prisma.product.update({
+    const product = await prisma.products.update({
       where: { id },
       data: {
         status: 'APPROVED',
@@ -293,7 +293,7 @@ async function rejectProduct(req, res) {
     const { id } = req.params;
     const { reason } = req.body;
 
-    const product = await prisma.product.update({
+    const product = await prisma.products.update({
       where: { id },
       data: {
         status: 'REJECTED',
@@ -331,7 +331,7 @@ async function getAllOrders(req, res) {
     if (status) where.paymentStatus = status;
 
     const [orders, total] = await Promise.all([
-      prisma.order.findMany({
+      prisma.orders.findMany({
         where,
         skip: parseInt(skip),
         take: parseInt(limit),
@@ -359,7 +359,7 @@ async function getAllOrders(req, res) {
         },
         orderBy: { createdAt: 'desc' },
       }),
-      prisma.order.count({ where }),
+      prisma.orders.count({ where }),
     ]);
 
     res.json({
