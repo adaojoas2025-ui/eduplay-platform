@@ -1,0 +1,652 @@
+// Prisma Schema for EducaplayJA Platform
+// Professional marketplace for digital courses
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// ENUMS
+// ========================================
+
+enum UserRole {
+  ADMIN
+  PRODUCER
+  BUYER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING_APPROVAL
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum AppStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AppVersion {
+  FREE_WITH_ADS
+  PAID_NO_ADS
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum CommissionStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+// ========================================
+// MODELS
+// ========================================
+
+model User {
+  id                      String      @id @default(uuid())
+  name                    String
+  email                   String      @unique
+  password                String
+  role                    UserRole    @default(BUYER)
+  status                  UserStatus  @default(ACTIVE)
+  avatar                  String?
+  bio                     String?     @db.Text
+  phone                   String?
+  cpf                     String?     @unique
+  pixKey                  String?
+
+  // Producer/Seller specific fields
+  producerApproved        Boolean     @default(false)
+  producerApprovedAt      DateTime?
+  businessName            String?     // Nome da empresa/negócio
+  businessDocument        String?     // CNPJ ou CPF para vendas
+  businessPhone           String?     // Telefone comercial
+  businessAddress         String?     @db.Text // Endereço completo
+  bankName                String?     // Nome do banco
+  bankAgency              String?     // Agência
+  bankAccount             String?     // Conta
+  bankAccountType         String?     // Tipo de conta (corrente/poupança)
+
+  // OAuth
+  googleId                String?     @unique
+
+  // Email verification
+  emailVerified           Boolean     @default(false)
+  emailVerifiedAt         DateTime?
+  emailVerificationToken  String?
+
+  // Password reset
+  resetPasswordToken      String?
+  resetPasswordExpires    DateTime?
+
+  // Suspension/Ban info
+  suspensionReason        String?
+  suspendedUntil          DateTime?
+  banReason               String?
+  bannedAt                DateTime?
+  permanentBan            Boolean     @default(false)
+
+  // Timestamps
+  lastLoginAt             DateTime?
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+
+  // Relations
+  products                Product[]
+  ordersBuyer             Order[]     @relation("BuyerOrders")
+  commissions             Commission[]
+  reviews                 Review[]
+  cartItems               CartItem[]
+  gamification            UserGamification?
+  combos                  Combo[]     @relation("ProducerCombos")
+
+  @@map("users")
+}
+
+model Product {
+  id                String        @id @default(uuid())
+  title             String
+  slug              String        @unique
+  description       String        @db.Text
+  price             Float
+  category          String
+  thumbnailUrl      String?
+  videoUrl          String?
+  filesUrl          String[]      @default([])
+
+  // Product details
+  features          String[]      @default([])
+  requirements      String?       @db.Text
+  targetAudience    String?
+  duration          String?
+  level             String        @default("BEGINNER")
+  language          String        @default("Portuguese")
+  certificateIncluded Boolean     @default(false)
+  hasSupport        Boolean       @default(false)
+  supportDuration   Int?
+
+  // Producer relation
+  producerId        String
+  producer          User          @relation(fields: [producerId], references: [id], onDelete: Cascade)
+
+  // Status and metrics
+  status            ProductStatus @default(DRAFT)
+  featured          Boolean       @default(false)
+  views             Int           @default(0)
+  sales             Int           @default(0)
+
+  // Admin approval
+  approvedBy        String?
+  approvedAt        DateTime?
+  rejectedBy        String?
+  rejectedAt        DateTime?
+  rejectionReason   String?       @db.Text
+
+  // Timestamps
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  orders            Order[]
+  reviews           Review[]
+  cartItems         CartItem[]
+
+  @@index([producerId])
+  @@index([status])
+  @@index([category])
+  @@map("products")
+}
+
+model Order {
+  id              String        @id @default(uuid())
+
+  // Product and buyer (productId is optional for app purchases)
+  productId       String?
+  product         Product?      @relation(fields: [productId], references: [id])
+  buyerId         String
+  buyer           User          @relation("BuyerOrders", fields: [buyerId], references: [id])
+
+  // Amounts
+  amount          Float
+  platformFee     Float
+  producerAmount  Float
+
+  // Payment info
+  paymentMethod   String        @default("PIX")
+  paymentId       String?
+  paymentStatus   String?
+  paymentDetails  Json?
+  paidAt          DateTime?
+
+  // Order status
+  status          OrderStatus   @default(PENDING)
+
+  // Metadata for additional info (e.g., app purchases)
+  metadata        Json?
+
+  // Cancellation/Refund
+  cancelReason    String?
+  cancelledAt     DateTime?
+  refundReason    String?
+  refundAmount    Float?
+  refundedAt      DateTime?
+
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  commission      Commission?
+
+  @@index([buyerId])
+  @@index([productId])
+  @@index([status])
+  @@map("orders")
+}
+
+model Commission {
+  id              String            @id @default(uuid())
+
+  // Order relation
+  orderId         String            @unique
+  order           Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // Producer relation
+  producerId      String
+  producer        User              @relation(fields: [producerId], references: [id])
+
+  // Amount and status
+  amount          Float
+  status          CommissionStatus  @default(PENDING)
+
+  // Payment info
+  transferId      String?
+  paidAt          DateTime?
+  processingAt    DateTime?
+
+  // Failure info
+  failureReason   String?
+  failedAt        DateTime?
+
+  // Timestamps
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([producerId])
+  @@index([status])
+  @@map("commissions")
+}
+
+model Review {
+  id          String    @id @default(uuid())
+
+  // Product and user
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Review content
+  rating      Int       // 1-5
+  comment     String    @db.Text
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([productId, userId])
+  @@index([productId])
+  @@map("reviews")
+}
+
+model CartItem {
+  id          String    @id @default(uuid())
+
+  // User relation
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Product relation
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Item details
+  quantity    Int       @default(1)
+  price       Float     // Price at the time of adding to cart
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("cart_items")
+}
+
+// ========================================
+// COMBO/BUNDLE MODELS
+// ========================================
+
+model Combo {
+  id              String    @id @default(uuid())
+  title           String    // Ex: "Kit Educação Infantil"
+  description     String    @db.Text
+  discountPrice   Float     // Preço com desconto (ex: 25.00)
+
+  // Producer relation (creator of combo)
+  producerId      String
+  producer        User      @relation("ProducerCombos", fields: [producerId], references: [id], onDelete: Cascade)
+
+  // Status
+  isActive        Boolean   @default(true)
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  products        ComboProduct[]
+
+  @@index([producerId])
+  @@map("combos")
+}
+
+model ComboProduct {
+  id          String    @id @default(uuid())
+
+  // Combo relation
+  comboId     String
+  combo       Combo     @relation(fields: [comboId], references: [id], onDelete: Cascade)
+
+  // Product relation
+  productId   String
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+
+  @@unique([comboId, productId])
+  @@index([comboId])
+  @@map("combo_products")
+}
+
+// ========================================
+// GAMIFICATION MODELS
+// ========================================
+
+enum BadgeType {
+  FIRST_PURCHASE
+  FIRST_SALE
+  COURSES_COMPLETED
+  REVIEWS_MADE
+  STREAK_ACHIEVEMENT
+  SALES_MILESTONE
+  ENGAGEMENT
+  SPECIAL
+}
+
+enum MissionType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  SPECIAL
+}
+
+enum MissionStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  CLAIMED
+}
+
+model UserGamification {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Points and level
+  totalPoints       Int       @default(0)
+  currentLevel      Int       @default(1)
+  levelProgress     Int       @default(0) // Points needed for next level
+
+  // Streaks
+  currentStreak     Int       @default(0)
+  longestStreak     Int       @default(0)
+  lastActivityDate  DateTime?
+
+  // Statistics
+  coursesCompleted  Int       @default(0)
+  totalPurchases    Int       @default(0)
+  totalSales        Int       @default(0)
+  reviewsMade       Int       @default(0)
+
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  badges            UserBadge[]
+  missions          UserMission[]
+  pointsHistory     PointsHistory[]
+
+  @@map("user_gamification")
+}
+
+model Badge {
+  id              String      @id @default(uuid())
+  name            String
+  description     String
+  type            BadgeType
+  icon            String      // Icon URL or emoji
+  requiredValue   Int         // Required amount to unlock (e.g., 5 purchases, 10 sales)
+  points          Int         @default(0) // Points awarded when earned
+  rarity          String      @default("COMMON") // COMMON, RARE, EPIC, LEGENDARY
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  userBadges      UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id                String    @id @default(uuid())
+
+  userId            String
+  userGamification  UserGamification @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  badgeId           String
+  badge             Badge     @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  earnedAt          DateTime  @default(now())
+  progress          Int       @default(0) // Current progress towards badge
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@map("user_badges")
+}
+
+model Mission {
+  id              String        @id @default(uuid())
+  title           String
+  description     String
+  type            MissionType
+  targetValue     Int           // Target to complete mission
+  pointsReward    Int           // Points awarded on completion
+  icon            String?
+
+  // Validity period
+  startDate       DateTime?
+  endDate         DateTime?
+
+  // Conditions
+  isActive        Boolean       @default(true)
+  maxCompletions  Int           @default(1) // How many times can be completed
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  userMissions    UserMission[]
+
+  @@map("missions")
+}
+
+model UserMission {
+  id                String        @id @default(uuid())
+
+  userId            String
+  userGamification  UserGamification @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  missionId         String
+  mission           Mission       @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  status            MissionStatus @default(ACTIVE)
+  progress          Int           @default(0)
+  completedAt       DateTime?
+  claimedAt         DateTime?
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@unique([userId, missionId])
+  @@index([userId])
+  @@index([status])
+  @@map("user_missions")
+}
+
+model PointsHistory {
+  id                String    @id @default(uuid())
+
+  userId            String
+  userGamification  UserGamification @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  points            Int       // Can be negative for deductions
+  reason            String
+  description       String?
+  referenceId       String?   // ID of related entity (order, product, etc.)
+  referenceType     String?   // Type of reference (ORDER, PRODUCT, REVIEW, etc.)
+
+  createdAt         DateTime  @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("points_history")
+}
+
+model Leaderboard {
+  id              String    @id @default(uuid())
+  period          String    // DAILY, WEEKLY, MONTHLY, ALL_TIME
+  category        String    // SALES, PURCHASES, POINTS, REVIEWS
+
+  userId          String
+  userName        String
+  userAvatar      String?
+
+  value           Int       // The metric value
+  rank            Int
+
+  periodStart     DateTime
+  periodEnd       DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([period, category, userId, periodStart])
+  @@index([period, category, rank])
+  @@map("leaderboards")
+}
+
+// ========================================
+// APPS/GAMES MODELS
+// ========================================
+
+model App {
+  id                String      @id @default(uuid())
+  title             String
+  slug              String      @unique
+  developer         String      // Nome do desenvolvedor (Supersonic Studios LTD)
+  description       String      @db.Text
+  shortDescription  String?     // Descrição curta para listagem
+
+  // Imagens e mídia (estilo Play Store)
+  iconUrl           String      // Ícone do app (quadrado)
+  coverImages       String[]    @default([]) // Screenshots/imagens de capa
+  videoUrl          String?     // Vídeo de demonstração
+
+  // Classificação e métricas
+  rating            Float       @default(0) // 0-5 estrelas
+  totalRatings      Int         @default(0) // Total de avaliações
+  downloads         Int         @default(0)
+  fileSize          String      // Ex: "121 MB"
+  version           String      @default("1.0.0")
+  lastUpdate        DateTime    @default(now())
+
+  // Classificação etária
+  ageRating         String      @default("Livre") // Livre, 10+, 12+, 14+, 16+, 18+
+
+  // Categoria
+  category          String      // Games, Education, Tools, etc.
+  tags              String[]    @default([]) // casual, puzzle, action, etc.
+
+  // Versões do app
+  freeWithAdsUrl    String?     // URL do APK com propaganda
+  freeWithAdsActive Boolean     @default(true)
+
+  paidNoAdsUrl      String?     // URL do APK sem propaganda
+  paidNoAdsPrice    Float       @default(0)
+  paidNoAdsActive   Boolean     @default(false)
+
+  // AdSense
+  adsenseEnabled    Boolean     @default(false)
+  adsenseSlot       String?     // Slot ID do AdSense
+
+  // Informações adicionais
+  whatsNew          String?     @db.Text // O que há de novo nesta versão
+  permissions       String[]    @default([]) // Permissões necessárias
+  requiresInternet  Boolean     @default(false)
+  inAppPurchases    Boolean     @default(false)
+
+  // Status
+  status            AppStatus   @default(DRAFT)
+  featured          Boolean     @default(false)
+
+  // Timestamps
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relations
+  reviews           AppReview[]
+  downloads_history AppDownload[]
+
+  @@index([status])
+  @@index([category])
+  @@index([featured])
+  @@map("apps")
+}
+
+model AppReview {
+  id          String    @id @default(uuid())
+
+  appId       String
+  app         App       @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  userId      String
+  userName    String
+  userAvatar  String?
+
+  rating      Int       // 1-5
+  comment     String    @db.Text
+  helpful     Int       @default(0) // Quantas pessoas acharam útil
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([appId])
+  @@map("app_reviews")
+}
+
+model AppDownload {
+  id          String    @id @default(uuid())
+
+  appId       String
+  app         App       @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  userId      String?   // Null se for download sem login
+  version     AppVersion // FREE_WITH_ADS ou PAID_NO_ADS
+
+  // Informações de pagamento (se for versão paga)
+  orderId     String?
+  amount      Float     @default(0)
+
+  downloadedAt DateTime  @default(now())
+
+  @@index([appId])
+  @@index([userId])
+  @@map("app_downloads")
+}

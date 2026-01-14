@@ -21,13 +21,13 @@
   - A partir de $7/mês
 
 #### Frontend (React/Vite):
-- ✅ **Vercel** (Recomendado - Gratuito)
+- ✅ **Render** (Recomendado - Gratuito)
   - Deploy automático
   - CDN global
   - SSL gratuito
 
 - ⭐ **Netlify** (Alternativa)
-  - Similar ao Vercel
+  - Similar ao Render
   - Gratuito para projetos pequenos
 
 ---
@@ -113,7 +113,7 @@ EMAIL_PASS=SUA_APP_PASSWORD_DO_GMAIL
 EMAIL_FROM="EDUPLAY <ja.eduplay@gmail.com>"
 
 # URLs (ATUALIZAR APÓS DEPLOY)
-FRONTEND_URL=https://eduplay.vercel.app
+FRONTEND_URL=https://eduplay.eduplay-frontend.onrender.com
 BACKEND_URL=https://eduplay-backend.onrender.com
 
 # Rate Limiting
@@ -146,7 +146,7 @@ GOOGLE_CALLBACK_URL=https://eduplay-backend.onrender.com/api/v1/auth/google/call
 
 ---
 
-## 🎨 Passo 2: Preparar Frontend (Vercel)
+## 🎨 Passo 2: Preparar Frontend (Render)
 
 ### 2.1. Criar arquivo .env.production no frontend
 
@@ -166,7 +166,7 @@ VITE_API_URL=https://eduplay-backend.onrender.com/api/v1
 npm run build
 ```
 
-### 2.3. Deploy no Vercel
+### 2.3. Deploy no Render
 
 1. Acesse https://vercel.com
 2. Faça login com GitHub
@@ -218,7 +218,7 @@ console.log('JWT_REFRESH_SECRET:', crypto.randomBytes(32).toString('hex'));
    ```
 5. Adicione em "Origens JavaScript autorizadas":
    ```
-   https://eduplay.vercel.app
+   https://eduplay.eduplay-frontend.onrender.com
    https://eduplay-backend.onrender.com
    ```
 
@@ -271,7 +271,7 @@ npx prisma studio
 
 ## 🔄 Passo 7: Configurar Deploy Contínuo
 
-Ambos Render e Vercel fazem deploy automático quando você faz push para o repositório GitHub:
+Ambos Render e Render fazem deploy automático quando você faz push para o repositório GitHub:
 
 ```bash
 git add .
@@ -287,7 +287,7 @@ git push origin main
 - Logs: Dashboard → Service → Logs
 - Metrics: Dashboard → Service → Metrics
 
-### Vercel
+### Render
 - Analytics: Dashboard → Project → Analytics
 - Logs: Dashboard → Project → Deployments → View Function Logs
 
@@ -317,7 +317,7 @@ git push origin main
 
 ### Gratuito (Início):
 - Render Free Tier: Grátis (dorme após 15min de inatividade)
-- Vercel Free: Grátis (100GB bandwidth/mês)
+- Render Free: Grátis (100GB bandwidth/mês)
 - PostgreSQL Free: Grátis (256MB)
 - Cloudinary Free: Grátis (25 créditos/mês)
 
@@ -331,7 +331,7 @@ git push origin main
 ## 📞 Suporte
 
 - Render Docs: https://render.com/docs
-- Vercel Docs: https://vercel.com/docs
+- Render Docs: https://vercel.com/docs
 - Prisma Docs: https://www.prisma.io/docs
 
 ---

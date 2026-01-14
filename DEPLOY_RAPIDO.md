@@ -40,7 +40,7 @@ EMAIL_FROM=EDUPLAY <adao.joas2025@gmail.com>
 PLATFORM_NAME=EDUPLAY
 GOOGLE_CLIENT_ID=763826185307-f8utvlugc36q9hvd4enokig6ic6l9ddh.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=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
-FRONTEND_URL=https://frontend-alpha-pied-73.vercel.app
+FRONTEND_URL=https://frontend-alpha-pied-73.eduplay-frontend.onrender.com
 ```
 
 8. Copie a **URL gerada pelo Railway** (ex: `https://backend-production-xxxx.railway.app`)

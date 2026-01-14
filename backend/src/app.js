@@ -39,11 +39,6 @@ const allowedOrigins = [
   'https://eduplay.com',
   'http://localhost:5173',
   'http://localhost:5174',
-  'https://projetos-topaz-seven.vercel.app',
-  'https://projetos-1infpi8r6-eduplays-projects.vercel.app',
-  'https://eduplay-platform.vercel.app',
-  'https://frontend-2h5frv0c5-eduplays-projects.vercel.app',
-  'https://frontend-alpha-pied-73.vercel.app',
   'http://localhost:5175',
 ];
 

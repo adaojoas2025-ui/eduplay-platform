@@ -1,0 +1,62 @@
+=== EDUPLAYJA - PÁGINAS PARA DEMONSTRAÇÃO ===
+
+🏠 PÁGINAS PÚBLICAS:
+1. Home: https://eduplayja.vercel.app
+2. Marketplace: https://eduplayja.vercel.app/marketplace
+3. Login: https://eduplayja.vercel.app/login
+4. Registro: https://eduplayja.vercel.app/register
+5. Store de Apps: https://eduplayja.vercel.app/apps
+
+👤 PÁGINAS DO COMPRADOR (BUYER):
+1. Meu Perfil: https://eduplayja.vercel.app/profile
+2. Meus Produtos: https://eduplayja.vercel.app/my-products
+3. Carrinho: https://eduplayja.vercel.app/cart
+4. Checkout: https://eduplayja.vercel.app/checkout
+5. Gamificação: https://eduplayja.vercel.app/gamification
+
+🎨 PÁGINAS DO PRODUTOR (PRODUCER):
+1. Dashboard: https://eduplayja.vercel.app/producer/dashboard
+2. Meus Produtos: https://eduplayja.vercel.app/producer/products
+3. Criar Produto: https://eduplayja.vercel.app/producer/products/new
+4. Vendas: https://eduplayja.vercel.app/producer/sales
+5. Comissões: https://eduplayja.vercel.app/producer/commissions
+6. Order Bumps: https://eduplayja.vercel.app/producer/order-bumps (NOVO - A IMPLEMENTAR)
+
+⚡ PÁGINAS DO ADMIN:
+1. Dashboard Admin: https://eduplayja.vercel.app/admin/dashboard
+2. Produtos Pendentes: https://eduplayja.vercel.app/admin/products
+3. Gerenciar Usuários: https://eduplayja.vercel.app/admin/users
+4. Todas as Vendas: https://eduplayja.vercel.app/admin/orders
+
+🔧 API BACKEND:
+Base URL: https://eduplayja-backend.onrender.com/api/v1
+
+Endpoints Principais:
+- POST /auth/login
+- POST /auth/register
+- GET /products
+- GET /products/:id
+- POST /orders
+- GET /orders/my-orders
+- POST /order-bumps (NOVO - A IMPLEMENTAR)
+- GET /order-bumps/suggestions (NOVO - A IMPLEMENTAR)
+
+📊 FUNCIONALIDADES IMPLEMENTADAS:
+✅ Autenticação (JWT + Google OAuth)
+✅ Sistema de Produtos (CRUD + Aprovação)
+✅ Marketplace com filtros
+✅ Carrinho de Compras
+✅ Checkout e Pagamentos (Mercado Pago)
+✅ Sistema de Comissões (97% / 3%)
+✅ Gamificação (XP, níveis, badges, missões)
+✅ Reviews e Avaliações
+✅ Combos de Produtos
+✅ Store de Apps/Jogos
+✅ Dashboard por Role (Buyer/Producer/Admin)
+✅ Sistema de Order Bump (Fase 1 - Database)
+
+🚧 EM DESENVOLVIMENTO:
+🔄 Order Bump - Fase 2: Backend API
+🔄 Order Bump - Fase 3: Frontend Component
+🔄 Order Bump - Fase 4: Dashboard Producer
+

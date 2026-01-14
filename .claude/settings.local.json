@@ -159,7 +159,16 @@
       "Bash(timeout:*)",
       "Bash(npx vercel:*)",
       "Bash(if exist node_modules/.vite rd /s /q node_modules/.vite)",
-      "Bash(if exist .vite rd /s /q .vite)"
+      "Bash(if exist .vite rd /s /q .vite)",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_5rjn_user:nIbDLtzPaXGnieArVz4TbRvowJcb0e7J@dpg-d5a4te1r0fns7385cop0-a.oregon-postgres.render.com/eduplay_5rjn?sslmode=require\" node -e \"const { PrismaClient } = require\\(''@prisma/client''\\); const prisma = new PrismaClient\\(\\); prisma.user.findMany\\({ where: { role: ''ADMIN'' }, select: { id: true, name: true, email: true, role: true } }\\).then\\(users => { console.log\\(''Todos os ADMINs no banco:''\\); console.log\\(JSON.stringify\\(users, null, 2\\)\\); prisma.$disconnect\\(\\); }\\);\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhY2MxZTA1YS1lZTU1LTRkYjktOGQzMS1hMzQ3ZjVlZjY3ODgiLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzY4MjI2NjU2LCJleHAiOjE3Njg4MzE0NTZ9.sY_k_PF1oytFyUuZ5zMBlzrvOryEsMS4LRyvZmb7eeM\")",
+      "Bash(DATABASE_URL=\"postgresql://eduplay_5rjn_user:nIbDLtzPaXGnieArVz4TbRvowJcb0e7J@dpg-d5a4te1r0fns7385cop0-a.oregon-postgres.render.com/eduplay_5rjn?sslmode=require\" node -e:*)",
+      "Bash(npx prisma format:*)",
+      "Bash(python:*)",
+      "Bash(npx prisma db pull:*)",
+      "Bash(where:*)",
+      "Bash(for i in {1..6})",
+      "Bash(do echo \"Tentativa $i de 6...\")"
     ],
     "deny": [],
     "ask": []

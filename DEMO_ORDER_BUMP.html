@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo - Order Bump EduPlay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+
+        .status-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .status-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .status-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .status-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .order-bump-demo {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+
+        .bump-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .bump-header h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .bump-header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .bump-card {
+            background: linear-gradient(135deg, #FFA726 0%, #FB8C00 100%);
+            border-radius: 15px;
+            padding: 30px;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(255, 167, 38, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bump-card::before {
+            content: '⚡';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 150px;
+            opacity: 0.1;
+        }
+
+        .bump-badge {
+            background: rgba(255,255,255,0.3);
+            padding: 8px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .bump-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .bump-description {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .bump-product {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .product-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            object-fit: cover;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .product-info h4 {
+            font-size: 1.3em;
+            margin-bottom: 8px;
+        }
+
+        .product-price {
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            opacity: 0.7;
+            font-size: 1.1em;
+        }
+
+        .discount-price {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .discount-badge {
+            background: #FF5252;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .bump-analytics {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .analytics-item {
+            text-align: center;
+        }
+
+        .analytics-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .analytics-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .bump-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #FB8C00;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .api-test {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .api-test h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .test-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .test-btn {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .test-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .response-box {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            color: #FFA726;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #4CAF50;
+        }
+
+        .error {
+            color: #FF5252;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading::after {
+            content: '...';
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Order Bump - EduPlay Platform</h1>
+
+        <div class="status-grid">
+            <div class="status-card">
+                <h3>🎓 Produtos</h3>
+                <div class="status-value">6</div>
+                <div class="status-label">Produtos cadastrados</div>
+            </div>
+            <div class="status-card">
+                <h3>👥 Usuários</h3>
+                <div class="status-value">3</div>
+                <div class="status-label">Usuários ativos</div>
+            </div>
+            <div class="status-card">
+                <h3>🚀 Order Bumps</h3>
+                <div class="status-value">1</div>
+                <div class="status-label">Campanhas ativas</div>
+            </div>
+            <div class="status-card">
+                <h3>📊 Conversão</h3>
+                <div class="status-value">0%</div>
+                <div class="status-label">Taxa de conversão</div>
+            </div>
+        </div>
+
+        <div class="order-bump-demo">
+            <div class="bump-header">
+                <h2>✨ Exemplo de Order Bump no Checkout</h2>
+                <p>Assim é como o Order Bump aparece durante a compra</p>
+            </div>
+
+            <div class="bump-card">
+                <div class="bump-badge">🔥 OFERTA ESPECIAL</div>
+                <div class="bump-title">Oferta Especial - Artes</div>
+                <div class="bump-description">
+                    Aproveite 30% de desconto neste produto complementar!
+                    Esta é uma oferta exclusiva disponível apenas durante o checkout.
+                </div>
+
+                <div class="bump-product">
+                    <img src="https://res.cloudinary.com/dexlzykqm/image/upload/v1767126248/eduplay/images/g2djdronmjz4mbovq2no.png"
+                         alt="Produto" class="product-image">
+                    <div class="product-info">
+                        <h4>Artes</h4>
+                        <div class="product-price">
+                            <span class="original-price">R$ 25,00</span>
+                            <span class="discount-price">R$ 17,50</span>
+                            <span class="discount-badge">-30%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bump-analytics">
+                    <div class="analytics-item">
+                        <div class="analytics-value">1</div>
+                        <div class="analytics-label">👁️ Visualizações</div>
+                    </div>
+                    <div class="analytics-item">
+                        <div class="analytics-value">1</div>
+                        <div class="analytics-label">👆 Cliques</div>
+                    </div>
+                    <div class="analytics-item">
+                        <div class="analytics-value">0</div>
+                        <div class="analytics-label">✅ Conversões</div>
+                    </div>
+                </div>
+
+                <div class="bump-actions">
+                    <button class="btn btn-primary" onclick="testTrack('conversion')">
+                        ✅ SIM, EU QUERO ESTE DESCONTO!
+                    </button>
+                    <button class="btn btn-secondary">
+                        ❌ Não, obrigado
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-test">
+            <h3>🔧 Teste da API - Order Bump</h3>
+            <div class="test-buttons">
+                <button class="test-btn" onclick="testAPI('health')">✅ Health Check</button>
+                <button class="test-btn" onclick="testAPI('suggestions')">📦 Buscar Sugestões</button>
+                <button class="test-btn" onclick="testTrack('impression')">👁️ Registrar View</button>
+                <button class="test-btn" onclick="testTrack('click')">👆 Registrar Click</button>
+                <button class="test-btn" onclick="testTrack('conversion')">✅ Registrar Conversão</button>
+            </div>
+            <div id="response" class="response-box">
+Aguardando teste...
+
+Clique nos botões acima para testar os endpoints da API.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/v1';
+        const BUMP_ID = 'd30677bf-f973-4a11-a299-55868dff24c5';
+
+        async function testAPI(endpoint) {
+            const responseBox = document.getElementById('response');
+            responseBox.innerHTML = '<span class="loading">Testando endpoint</span>';
+
+            try {
+                let url;
+                switch(endpoint) {
+                    case 'health':
+                        url = `${API_BASE}/health`;
+                        break;
+                    case 'suggestions':
+                        url = `${API_BASE}/order-bumps/suggestions`;
+                        break;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                responseBox.innerHTML = `<span class="success">✅ Sucesso!</span>\n\n` +
+                    `URL: ${url}\n` +
+                    `Status: ${response.status}\n\n` +
+                    `Response:\n${JSON.stringify(data, null, 2)}`;
+
+                if (endpoint === 'suggestions' && data.success) {
+                    updateAnalytics();
+                }
+            } catch (error) {
+                responseBox.innerHTML = `<span class="error">❌ Erro!</span>\n\n${error.message}`;
+            }
+        }
+
+        async function testTrack(event) {
+            const responseBox = document.getElementById('response');
+            responseBox.innerHTML = `<span class="loading">Registrando evento: ${event}</span>`;
+
+            try {
+                const url = `${API_BASE}/order-bumps/${BUMP_ID}/track`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ event })
+                });
+
+                const data = await response.json();
+
+                responseBox.innerHTML = `<span class="success">✅ Evento registrado!</span>\n\n` +
+                    `URL: ${url}\n` +
+                    `Evento: ${event}\n` +
+                    `Status: ${response.status}\n\n` +
+                    `Response:\n${JSON.stringify(data, null, 2)}`;
+
+                setTimeout(updateAnalytics, 500);
+            } catch (error) {
+                responseBox.innerHTML = `<span class="error">❌ Erro!</span>\n\n${error.message}`;
+            }
+        }
+
+        async function updateAnalytics() {
+            try {
+                const response = await fetch(`${API_BASE}/order-bumps/suggestions`);
+                const data = await response.json();
+
+                if (data.success && data.data.length > 0) {
+                    const bump = data.data[0];
+                    document.querySelector('.bump-analytics').innerHTML = `
+                        <div class="analytics-item">
+                            <div class="analytics-value">${bump.impressions}</div>
+                            <div class="analytics-label">👁️ Visualizações</div>
+                        </div>
+                        <div class="analytics-item">
+                            <div class="analytics-value">${bump.clicks}</div>
+                            <div class="analytics-label">👆 Cliques</div>
+                        </div>
+                        <div class="analytics-item">
+                            <div class="analytics-value">${bump.conversions}</div>
+                            <div class="analytics-label">✅ Conversões</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar analytics:', error);
+            }
+        }
+
+        // Atualizar analytics a cada 5 segundos
+        setInterval(updateAnalytics, 5000);
+    </script>
+</body>
+</html>

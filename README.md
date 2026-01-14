@@ -140,7 +140,7 @@ npm run dev
 
 **Stack de Deploy:**
 - **Backend:** Render.com (gratuito)
-- **Frontend:** Vercel.com (gratuito)
+- **Frontend:** Render.com (gratuito)
 - **Banco:** PostgreSQL no Render (gratuito)
 
 ---
