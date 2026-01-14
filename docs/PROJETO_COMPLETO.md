@@ -37,8 +37,8 @@
 
 ### 🌐 URLs
 
-- **Backend API**: https://eduplayja-backend.onrender.com
-- **Frontend**: https://eduplayja-frontend.onrender.com
+- **Backend API**: https://eduplay-backend-yw7z.onrender.com/api/v1
+- **Frontend**: https://eduplay-frontend.onrender.com
 - **Repositório**: GitHub (privado)
 
 ### 🎯 Propósito
@@ -1057,7 +1057,7 @@ For each OrderItem:
 
 ### 🔌 Base URL
 ```
-Production: https://eduplayja-backend.onrender.com/api/v1
+Production: https://eduplay-backend-yw7z.onrender.com/api/v1/api/v1
 ```
 
 ### 🔐 Authentication Endpoints
@@ -2097,8 +2097,8 @@ module.exports = mercadopago;
 ```env
 MERCADOPAGO_ACCESS_TOKEN=APP_USR-xxxx-xxxxxxxx
 MERCADOPAGO_PUBLIC_KEY=APP_USR-xxxx-xxxxxxxx
-FRONTEND_URL=https://eduplayja-frontend.onrender.com
-BACKEND_URL=https://eduplayja-backend.onrender.com
+FRONTEND_URL=https://eduplay-frontend.onrender.com
+BACKEND_URL=https://eduplay-backend-yw7z.onrender.com/api/v1
 ```
 
 ### 🛒 Checkout Flow
@@ -3977,7 +3977,7 @@ Este documento representa o estado atual completo do projeto **EduplayJA**, um m
 
 ### 📞 Contato
 
-- **Website**: https://eduplayja-frontend.onrender.com
+- **Website**: https://eduplay-frontend.onrender.com
 - **Email**: ja.eduplay@gmail.com
 - **GitHub**: [Repositório Privado]
 
