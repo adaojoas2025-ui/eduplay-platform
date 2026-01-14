@@ -26,9 +26,8 @@ services:
       - key: GOOGLE_CALLBACK_URL
         sync: false
 
-  - type: web
+  - type: static
     name: eduplay-frontend
-    env: static
     region: oregon
     plan: free
     rootDir: frontend
