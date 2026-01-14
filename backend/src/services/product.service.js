@@ -4,6 +4,7 @@
  * @module services/product
  */
 
+const crypto = require('crypto');
 const productRepository = require('../repositories/product.repository');
 const userRepository = require('../repositories/user.repository');
 const emailService = require('./email.service');
@@ -31,6 +32,7 @@ const createProduct = async (producerId, productData) => {
 
     // Add producer ID and initial status - sempre PENDING_APPROVAL
     const product = await productRepository.createProduct({
+      id: crypto.randomUUID(),
       ...productData,
       producerId,
       status: PRODUCT_STATUS.PENDING_APPROVAL,
