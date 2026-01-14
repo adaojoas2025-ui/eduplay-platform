@@ -17,9 +17,9 @@
 - **Apps**: https://eduplay-frontend.onrender.com/apps
 
 ### Backend (Render.com - Web Service)
-- **API Base**: https://eduplay-backend-yw7z.onrender.com/api/v1
-- **Health Check**: https://eduplay-backend-yw7z.onrender.com/api/v1/health
-- **Order Bumps**: https://eduplay-backend-yw7z.onrender.com/api/v1/order-bumps
+- **API Base**: https://eduplay-platform.onrender.com/api/v1
+- **Health Check**: https://eduplay-platform.onrender.com/api/v1/health
+- **Order Bumps**: https://eduplay-platform.onrender.com/api/v1/order-bumps
 
 ### Database
 - **Tipo**: PostgreSQL
@@ -44,7 +44,7 @@ auto-deploy: On Commit
 ```
 
 **Variáveis de Ambiente**:
-- `VITE_API_URL`: https://eduplay-backend-yw7z.onrender.com/api/v1
+- `VITE_API_URL`: https://eduplay-platform.onrender.com/api/v1
 - `VITE_CLOUDINARY_CLOUD_NAME`: dexlzykqm
 - `VITE_CLOUDINARY_UPLOAD_PRESET`: eduplay_apps
 - `VITE_CLOUDINARY_RAW_UPLOAD_PRESET`: eduplay_raw_files
