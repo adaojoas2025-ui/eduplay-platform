@@ -31,7 +31,7 @@ model app_reviews {
   comment    String
   helpful    Int      @default(0)
   createdAt  DateTime @default(now())
-  updatedAt  DateTime
+  updatedAt  DateTime @updatedAt
   apps       apps     @relation(fields: [appId], references: [id], onDelete: Cascade)
 
   @@index([appId])
@@ -70,7 +70,7 @@ model apps {
   status            AppStatus       @default(DRAFT)
   featured          Boolean         @default(false)
   createdAt         DateTime        @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime        @updatedAt
   app_downloads     app_downloads[]
   app_reviews       app_reviews[]
 
@@ -89,7 +89,7 @@ model badges {
   points        Int           @default(0)
   rarity        String        @default("COMMON")
   createdAt     DateTime      @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime      @updatedAt
   user_badges   user_badges[]
 }
 
@@ -100,7 +100,7 @@ model cart_items {
   quantity  Int      @default(1)
   price     Float
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
   products  products @relation(fields: [productId], references: [id], onDelete: Cascade)
   users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -126,7 +126,7 @@ model combos {
   discountPrice  Float
   isActive       Boolean          @default(true)
   createdAt      DateTime         @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime         @updatedAt
   producerId     String
   combo_products combo_products[]
   users          users            @relation(fields: [producerId], references: [id], onDelete: Cascade)
@@ -146,7 +146,7 @@ model commissions {
   failureReason String?
   failedAt      DateTime?
   createdAt     DateTime         @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime         @updatedAt
   orders        orders           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   users         users            @relation(fields: [producerId], references: [id])
 
@@ -166,7 +166,7 @@ model leaderboards {
   periodStart DateTime
   periodEnd   DateTime?
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime  @updatedAt
 
   @@unique([period, category, userId, periodStart])
   @@index([period, category, rank])
@@ -185,7 +185,7 @@ model missions {
   isActive       Boolean         @default(true)
   maxCompletions Int             @default(1)
   createdAt      DateTime        @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime        @updatedAt
   user_missions  user_missions[]
 }
 
@@ -205,7 +205,7 @@ model order_bumps {
   conversions     Int              @default(0)
   revenue         Float            @default(0)
   createdAt       DateTime         @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime         @updatedAt
   users           users            @relation(fields: [producerId], references: [id], onDelete: Cascade)
   products        products         @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -233,7 +233,7 @@ model orders {
   refundAmount   Float?
   refundedAt     DateTime?
   createdAt      DateTime     @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime     @updatedAt
   metadata       Json?
   commissions    commissions?
   users          users        @relation(fields: [buyerId], references: [id])
@@ -284,7 +284,7 @@ model products {
   views               Int           @default(0)
   sales               Int           @default(0)
   createdAt           DateTime      @default(now())
-  updatedAt           DateTime
+  updatedAt           DateTime      @updatedAt
   approvedAt          DateTime?
   approvedBy          String?
   rejectedAt          DateTime?
@@ -308,7 +308,7 @@ model reviews {
   rating    Int
   comment   String
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
   products  products @relation(fields: [productId], references: [id], onDelete: Cascade)
   users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -343,7 +343,7 @@ model user_gamification {
   totalSales       Int              @default(0)
   reviewsMade      Int              @default(0)
   createdAt        DateTime         @default(now())
-  updatedAt        DateTime
+  updatedAt        DateTime         @updatedAt
   points_history   points_history[]
   user_badges      user_badges[]
   users            users            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -359,7 +359,7 @@ model user_missions {
   completedAt       DateTime?
   claimedAt         DateTime?
   createdAt         DateTime          @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime          @updatedAt
   missions          missions          @relation(fields: [missionId], references: [id], onDelete: Cascade)
   user_gamification user_gamification @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
@@ -392,7 +392,7 @@ model users {
   permanentBan           Boolean            @default(false)
   lastLoginAt            DateTime?
   createdAt              DateTime           @default(now())
-  updatedAt              DateTime
+  updatedAt              DateTime           @updatedAt
   googleId               String?            @unique
   bankAccount            String?
   bankAccountType        String?
