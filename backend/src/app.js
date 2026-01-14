@@ -48,9 +48,15 @@ app.use(
       // Allow requests with no origin (like mobile apps or Postman)
       if (!origin) return callback(null, true);
 
+      // Allow all Render.com origins (they use subdomains like *.onrender.com)
+      if (origin && origin.includes('.onrender.com')) {
+        return callback(null, true);
+      }
+
       if (config.env === 'development' || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        logger.warn(`CORS blocked origin: ${origin}`);
         callback(new Error('Not allowed by CORS'));
       }
     },
