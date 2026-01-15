@@ -293,7 +293,7 @@ model products {
   cart_items          cart_items[]
   order_bumps         order_bumps[]
   orders              orders[]
-  users               users         @relation(fields: [producerId], references: [id], onDelete: Cascade)
+  producer            users         @relation(fields: [producerId], references: [id], onDelete: Cascade)
   reviews             reviews[]
 
   @@index([category])
