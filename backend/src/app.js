@@ -48,8 +48,8 @@ app.use(
       // Allow requests with no origin (like mobile apps or Postman)
       if (!origin) return callback(null, true);
 
-      // Allow all Render.com origins (they use subdomains like *.onrender.com)
-      if (origin && origin.includes('.onrender.com')) {
+      // Allow all Render.com and Vercel origins
+      if (origin && (origin.includes('.onrender.com') || origin.includes('.vercel.app'))) {
         return callback(null, true);
       }
 

@@ -9,7 +9,7 @@ services:
       - key: NODE_VERSION
         value: 18
       - key: VITE_API_URL
-        value: https://eduplay-backend-yw7z.onrender.com/api/v1
+        value: https://eduplay-platform.onrender.com/api/v1
     headers:
       - path: /*
         name: Cache-Control
