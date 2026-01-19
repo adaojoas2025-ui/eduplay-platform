@@ -4,6 +4,7 @@
  * @module services/order
  */
 
+const crypto = require('crypto');
 const orderRepository = require('../repositories/order.repository');
 const productRepository = require('../repositories/product.repository');
 const userRepository = require('../repositories/user.repository');
@@ -69,6 +70,7 @@ const createOrder = async (buyerId, orderData) => {
 
     // Create order
     const order = await orderRepository.createOrder({
+      id: crypto.randomUUID(),
       buyerId,
       productId,
       amount: amounts.amount,

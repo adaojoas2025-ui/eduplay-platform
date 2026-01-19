@@ -236,8 +236,8 @@ model orders {
   updatedAt      DateTime     @updatedAt
   metadata       Json?
   commissions    commissions?
-  users          users        @relation(fields: [buyerId], references: [id])
-  products       products?    @relation(fields: [productId], references: [id])
+  buyer          users        @relation(fields: [buyerId], references: [id])
+  product        products?    @relation(fields: [productId], references: [id])
 
   @@index([buyerId])
   @@index([productId])
