@@ -17,11 +17,14 @@ const asyncHandler = require('../../utils/asyncHandler');
 router.post(
   '/',
   asyncHandler(async (req, res) => {
-    const { email } = req.body;
+    const { email, role } = req.body;
 
     if (!email) {
       return ApiResponse.error(res, 400, 'Email is required');
     }
+
+    // Determine target role (default to PRODUCER, allow ADMIN)
+    const targetRole = role === 'ADMIN' ? 'ADMIN' : 'PRODUCER';
 
     // Find user
     const user = await prisma.users.findUnique({
@@ -32,18 +35,14 @@ router.post(
       return ApiResponse.error(res, 404, 'User not found');
     }
 
-    if (user.role === 'PRODUCER') {
-      return ApiResponse.success(res, 200, user, 'User is already a PRODUCER');
+    if (user.role === targetRole) {
+      return ApiResponse.success(res, 200, user, `User is already a ${targetRole}`);
     }
 
-    if (user.role === 'ADMIN') {
-      return ApiResponse.error(res, 403, 'Cannot change admin role');
-    }
-
-    // Update user to PRODUCER
+    // Update user to target role
     const updatedUser = await prisma.users.update({
       where: { email },
-      data: { role: 'PRODUCER' },
+      data: { role: targetRole },
     });
 
     // Remove password from response
@@ -53,7 +52,7 @@ router.post(
       res,
       200,
       updatedUser,
-      'User upgraded to PRODUCER successfully'
+      `User upgraded to ${targetRole} successfully`
     );
   })
 );
