@@ -53,7 +53,14 @@ const addToCart = async (userId, productId, quantity = 1) => {
  */
 const getCart = async (userId) => {
   try {
-    const items = await cartRepository.getUserCart(userId);
+    const rawItems = await cartRepository.getUserCart(userId);
+
+    // Map 'products' to 'product' for frontend compatibility
+    const items = rawItems.map(item => ({
+      ...item,
+      product: item.products,
+      products: undefined
+    }));
 
     // Calculate total
     const total = items.reduce((sum, item) => {

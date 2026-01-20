@@ -225,4 +225,53 @@ O token expira em 7 dias. Faça login novamente ou use o refresh token.
 
 ---
 
+## Histórico de Problemas Resolvidos
+
+### Problema: Upload de imagem retornando 404
+**Causa:** Frontend estava apontando para `eduplay-backend` (serviço incorreto) ao invés de `eduplay-platform`.
+
+**Solução:**
+1. Alterar `VITE_API_URL` no Render Dashboard do `eduplay-frontend` para:
+   ```
+   https://eduplay-platform.onrender.com/api/v1
+   ```
+
+### Problema: Erro 500 no endpoint /combos
+**Causa:** Nome da relação no repository não correspondia ao schema Prisma.
+
+**Solução:** Em `backend/src/repositories/combo.repository.js`, alterar:
+```javascript
+// De:
+products: { create: ... }
+
+// Para:
+combo_products: { create: ... }
+```
+
+### Problema: CORS bloqueando requisições
+**Causa:** Origens do Vercel e Render não estavam na lista de permitidos.
+
+**Solução:** Em `backend/src/app.js`, adicionar origens:
+```javascript
+const allowedOrigins = [
+  // ... outras origens
+  /\.vercel\.app$/,
+  /\.onrender\.com$/
+];
+```
+
+---
+
+## Serviços no Render
+
+| Serviço | Tipo | URL |
+|---------|------|-----|
+| eduplay-frontend | Static Site | https://eduplay-frontend.onrender.com |
+| eduplay-platform | Web Service | https://eduplay-platform.onrender.com |
+| eduplay_db_yhu2 | PostgreSQL | (internal) |
+
+**IMPORTANTE:** Existe um serviço `eduplay-backend` no Render que NÃO é o correto. Use sempre `eduplay-platform`.
+
+---
+
 *Última atualização: 2026-01-20*

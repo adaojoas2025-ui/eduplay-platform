@@ -84,7 +84,7 @@ class ComboController {
       // Get product details for each combo
       const combosWithDetails = await Promise.all(
         combos.map(async (combo) => {
-          const productIds = combo.products.map(p => p.productId);
+          const productIds = combo.combo_products.map(p => p.productId);
           const products = await prisma.products.findMany({
             where: { id: { in: productIds } },
             select: {
@@ -335,7 +335,7 @@ class ComboController {
           isActive: true
         },
         include: {
-          products: {
+          combo_products: {
             select: {
               productId: true
             }
@@ -347,7 +347,7 @@ class ComboController {
       // Get product details for each combo
       const combosWithDetails = await Promise.all(
         combos.map(async (combo) => {
-          const productIds = combo.products.map(p => p.productId);
+          const productIds = combo.combo_products.map(p => p.productId);
           const products = await prisma.products.findMany({
             where: { id: { in: productIds } },
             select: {

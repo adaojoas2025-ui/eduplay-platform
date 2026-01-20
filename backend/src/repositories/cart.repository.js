@@ -16,7 +16,7 @@ const prisma = new PrismaClient();
  * @returns {Promise<Object>} Cart item
  */
 const addItem = async (userId, productId, quantity, price) => {
-  return await prisma.cartItem.upsert({
+  return await prisma.cart_items.upsert({
     where: {
       userId_productId: {
         userId,
@@ -28,13 +28,14 @@ const addItem = async (userId, productId, quantity, price) => {
       price,
     },
     create: {
+      id: require('crypto').randomUUID(),
       userId,
       productId,
       quantity,
       price,
     },
     include: {
-      product: {
+      products: {
         select: {
           id: true,
           title: true,
@@ -54,10 +55,10 @@ const addItem = async (userId, productId, quantity, price) => {
  * @returns {Promise<Array>} Cart items
  */
 const getUserCart = async (userId) => {
-  return await prisma.cartItem.findMany({
+  return await prisma.cart_items.findMany({
     where: { userId },
     include: {
-      product: {
+      products: {
         select: {
           id: true,
           title: true,
@@ -82,7 +83,7 @@ const getUserCart = async (userId) => {
  * @returns {Promise<Object>} Deleted cart item
  */
 const removeItem = async (userId, productId) => {
-  return await prisma.cartItem.delete({
+  return await prisma.cart_items.delete({
     where: {
       userId_productId: {
         userId,
@@ -100,7 +101,7 @@ const removeItem = async (userId, productId) => {
  * @returns {Promise<Object>} Updated cart item
  */
 const updateQuantity = async (userId, productId, quantity) => {
-  return await prisma.cartItem.update({
+  return await prisma.cart_items.update({
     where: {
       userId_productId: {
         userId,
@@ -109,7 +110,7 @@ const updateQuantity = async (userId, productId, quantity) => {
     },
     data: { quantity },
     include: {
-      product: {
+      products: {
         select: {
           id: true,
           title: true,
@@ -129,7 +130,7 @@ const updateQuantity = async (userId, productId, quantity) => {
  * @returns {Promise<Object>} Delete count
  */
 const clearCart = async (userId) => {
-  return await prisma.cartItem.deleteMany({
+  return await prisma.cart_items.deleteMany({
     where: { userId },
   });
 };
@@ -140,7 +141,7 @@ const clearCart = async (userId) => {
  * @returns {Promise<number>} Item count
  */
 const getCartCount = async (userId) => {
-  return await prisma.cartItem.count({
+  return await prisma.cart_items.count({
     where: { userId },
   });
 };
