@@ -12,14 +12,15 @@ class ComboRepository {
         description,
         discountPrice,
         producerId,
-        products: {
+        combo_products: {
           create: productIds.map(productId => ({
+            id: require('crypto').randomUUID(),
             productId
           }))
         }
       },
       include: {
-        products: true
+        combo_products: true
       }
     });
   }
@@ -29,7 +30,7 @@ class ComboRepository {
     return await prisma.combos.findMany({
       where: { isActive: true },
       include: {
-        products: {
+        combo_products: {
           select: {
             productId: true
           }
@@ -44,7 +45,7 @@ class ComboRepository {
     return await prisma.combos.findUnique({
       where: { id },
       include: {
-        products: {
+        combo_products: {
           select: {
             productId: true
           }
@@ -59,7 +60,7 @@ class ComboRepository {
     const combos = await prisma.combos.findMany({
       where: { isActive: true },
       include: {
-        products: {
+        combo_products: {
           select: {
             productId: true
           }
@@ -69,7 +70,7 @@ class ComboRepository {
 
     // Filter combos that match the product IDs
     return combos.filter(combo => {
-      const comboProductIds = combo.products.map(p => p.productId).sort();
+      const comboProductIds = combo.combo_products.map(p => p.productId).sort();
       const sortedProductIds = [...productIds].sort();
 
       // Check if arrays are equal
@@ -85,7 +86,7 @@ class ComboRepository {
     // If productIds are provided, update the combo products
     if (productIds) {
       // Delete existing combo products
-      await prisma.comboProduct.deleteMany({
+      await prisma.combo_products.deleteMany({
         where: { comboId: id }
       });
     }
@@ -98,15 +99,16 @@ class ComboRepository {
         ...(discountPrice !== undefined && { discountPrice }),
         ...(isActive !== undefined && { isActive }),
         ...(productIds && {
-          products: {
+          combo_products: {
             create: productIds.map(productId => ({
+              id: require('crypto').randomUUID(),
               productId
             }))
           }
         })
       },
       include: {
-        products: {
+        combo_products: {
           select: {
             productId: true
           }
@@ -135,14 +137,14 @@ class ComboRepository {
     const combo = await prisma.combos.findUnique({
       where: { id: comboId },
       include: {
-        products: true
+        combo_products: true
       }
     });
 
     if (!combo) return null;
 
     // Get full product details
-    const productIds = combo.products.map(p => p.productId);
+    const productIds = combo.combo_products.map(p => p.productId);
     const products = await prisma.products.findMany({
       where: {
         id: { in: productIds }
