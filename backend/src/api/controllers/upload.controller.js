@@ -71,6 +71,13 @@ const uploadFile = async (req, res) => {
       });
     } else {
       // For images, continue using Cloudinary
+      console.log('📤 Starting Cloudinary upload...', {
+        type,
+        resourceType,
+        fileSize: req.file.size,
+        mimeType: req.file.mimetype,
+      });
+
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: `eduplay/${type}s`,
@@ -78,7 +85,8 @@ const uploadFile = async (req, res) => {
         },
         (error, result) => {
           if (error) {
-            console.error('Cloudinary upload error:', error);
+            console.error('❌ Cloudinary upload error:', error);
+            console.error('❌ Error details:', JSON.stringify(error, null, 2));
             return res.status(500).json({
               success: false,
               message: 'Upload failed',
@@ -86,6 +94,7 @@ const uploadFile = async (req, res) => {
             });
           }
 
+          console.log('✅ Cloudinary upload success:', result.secure_url);
           res.json({
             success: true,
             data: {
