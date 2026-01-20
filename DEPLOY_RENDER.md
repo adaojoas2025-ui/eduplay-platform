@@ -3,8 +3,8 @@
 ## URLs de Produção
 
 - **Frontend:** https://eduplay-frontend.onrender.com
-- **Backend:** https://eduplay-backend.onrender.com
-- **API Base:** https://eduplay-backend.onrender.com/api/v1
+- **Backend:** https://eduplay-platform.onrender.com
+- **API Base:** https://eduplay-platform.onrender.com/api/v1
 
 ---
 
@@ -33,7 +33,7 @@ CLOUDINARY_API_SECRET=QkAyuumJD-_EslezBPd2UQVYKew
 
 # URLs
 FRONTEND_URL=https://eduplay-frontend.onrender.com
-BACKEND_URL=https://eduplay-backend.onrender.com
+BACKEND_URL=https://eduplay-platform.onrender.com
 
 # Platform
 PLATFORM_FEE_PERCENT=10
@@ -50,7 +50,7 @@ EMAIL_FROM=EducaplayJA <noreply@educaplayja.com.br>
 ### Frontend (eduplay-frontend)
 
 ```env
-VITE_API_URL=https://eduplay-backend.onrender.com/api/v1
+VITE_API_URL=https://eduplay-platform.onrender.com/api/v1
 VITE_CLOUDINARY_CLOUD_NAME=dexlzykqm
 VITE_CLOUDINARY_UPLOAD_PRESET=eduplay_apps
 ```
@@ -144,21 +144,21 @@ POST /api/v1/temp-upgrade                  - Upgrade para PRODUCER/ADMIN
 
 ### 1. Criar Produtor
 ```bash
-curl -X POST https://eduplay-backend.onrender.com/api/v1/auth/register \
+curl -X POST https://eduplay-platform.onrender.com/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{"name":"Produtor","email":"produtor@teste.com","password":"Teste123@"}'
 ```
 
 ### 2. Upgrade para Producer
 ```bash
-curl -X POST https://eduplay-backend.onrender.com/api/v1/temp-upgrade \
+curl -X POST https://eduplay-platform.onrender.com/api/v1/temp-upgrade \
   -H "Content-Type: application/json" \
   -d '{"email":"produtor@teste.com","role":"PRODUCER"}'
 ```
 
 ### 3. Criar Produto
 ```bash
-curl -X POST https://eduplay-backend.onrender.com/api/v1/products \
+curl -X POST https://eduplay-platform.onrender.com/api/v1/products \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN_DO_PRODUTOR" \
   -d '{
@@ -171,19 +171,19 @@ curl -X POST https://eduplay-backend.onrender.com/api/v1/products \
 
 ### 4. Aprovar Produto (Admin)
 ```bash
-curl -X POST https://eduplay-backend.onrender.com/api/v1/admin/products/PRODUCT_ID/approve \
+curl -X POST https://eduplay-platform.onrender.com/api/v1/admin/products/PRODUCT_ID/approve \
   -H "Authorization: Bearer TOKEN_DO_ADMIN"
 ```
 
 ### 5. Criar Comprador e Comprar
 ```bash
 # Registrar comprador
-curl -X POST https://eduplay-backend.onrender.com/api/v1/auth/register \
+curl -X POST https://eduplay-platform.onrender.com/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{"name":"Comprador","email":"comprador2@teste.com","password":"Teste123@"}'
 
 # Criar pedido
-curl -X POST https://eduplay-backend.onrender.com/api/v1/orders \
+curl -X POST https://eduplay-platform.onrender.com/api/v1/orders \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN_DO_COMPRADOR" \
   -d '{"productId":"PRODUCT_ID"}'
@@ -191,7 +191,7 @@ curl -X POST https://eduplay-backend.onrender.com/api/v1/orders \
 
 ### 6. Simular Pagamento Aprovado
 ```bash
-curl -X POST https://eduplay-backend.onrender.com/api/v1/test/approve-payment/ORDER_ID \
+curl -X POST https://eduplay-platform.onrender.com/api/v1/test/approve-payment/ORDER_ID \
   -H "Authorization: Bearer TOKEN_DO_COMPRADOR"
 ```
 
