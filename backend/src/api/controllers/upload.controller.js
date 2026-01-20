@@ -70,7 +70,7 @@ const uploadFile = async (req, res) => {
         },
       });
     } else {
-      // For images, continue using Cloudinary
+      // For images, use Cloudinary with base64 upload (more reliable)
       console.log('📤 Starting Cloudinary upload...', {
         type,
         resourceType,
@@ -78,35 +78,32 @@ const uploadFile = async (req, res) => {
         mimeType: req.file.mimetype,
       });
 
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
+      try {
+        // Convert buffer to base64 data URI
+        const base64Data = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+
+        const result = await cloudinary.uploader.upload(base64Data, {
           folder: `eduplay/${type}s`,
           resource_type: resourceType,
-        },
-        (error, result) => {
-          if (error) {
-            console.error('❌ Cloudinary upload error:', error);
-            console.error('❌ Error details:', JSON.stringify(error, null, 2));
-            return res.status(500).json({
-              success: false,
-              message: 'Upload failed',
-              error: error.message,
-            });
-          }
+        });
 
-          console.log('✅ Cloudinary upload success:', result.secure_url);
-          res.json({
-            success: true,
-            data: {
-              url: result.secure_url,
-              publicId: result.public_id,
-            },
-          });
-        }
-      );
-
-      // Pipe the file buffer to Cloudinary
-      require('stream').Readable.from(req.file.buffer).pipe(uploadStream);
+        console.log('✅ Cloudinary upload success:', result.secure_url);
+        res.json({
+          success: true,
+          data: {
+            url: result.secure_url,
+            publicId: result.public_id,
+          },
+        });
+      } catch (uploadError) {
+        console.error('❌ Cloudinary upload error:', uploadError);
+        console.error('❌ Error details:', JSON.stringify(uploadError, null, 2));
+        return res.status(500).json({
+          success: false,
+          message: 'Upload failed',
+          error: uploadError.message,
+        });
+      }
     }
   } catch (error) {
     console.error('Upload controller error:', error);
