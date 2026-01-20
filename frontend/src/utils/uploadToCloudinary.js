@@ -1,32 +1,32 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dexlzykqm';
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'eduplay_unsigned';
 
 export const uploadToCloudinary = async (file, type = 'image') => {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('type', type);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  formData.append('folder', `eduplay/${type}s`);
 
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
+    const resourceType = (type === 'apk' || type === 'file') ? 'raw' : 'image';
+    const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`;
 
-    const response = await fetch(`${API_URL}/upload`, {
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
       body: formData,
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Upload error response:', errorData);
-      throw new Error(errorData.message || 'Upload failed');
+      throw new Error(errorData.error?.message || 'Upload failed');
     }
 
     const result = await response.json();
-    return result.data;
+    return {
+      url: result.secure_url,
+      publicId: result.public_id,
+    };
   } catch (error) {
     console.error('Upload error:', error);
     throw error;
