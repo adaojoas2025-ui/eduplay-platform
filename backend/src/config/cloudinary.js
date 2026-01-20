@@ -9,12 +9,12 @@ const config = require('./env');
 const logger = require('../utils/logger');
 
 /**
- * Configure Cloudinary
+ * Configure Cloudinary - com fallback para valores diretos
  */
 cloudinary.config({
-  cloud_name: config.cloudinary.cloudName,
-  api_key: config.cloudinary.apiKey,
-  api_secret: config.cloudinary.apiSecret,
+  cloud_name: config.cloudinary.cloudName || 'dexlzykqm',
+  api_key: config.cloudinary.apiKey || '761719984596219',
+  api_secret: config.cloudinary.apiSecret || 'QkAyuumJD-_EslezBPd2UQVYKew',
   secure: true,
 });
 
