@@ -2,23 +2,13 @@ const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 
-// Configure Cloudinary - usando valores diretos (fallback hardcoded)
-// IMPORTANTE: O secret tem 'l' minúsculo em 'Eslez', NÃO 'I' maiúsculo
-const CLOUDINARY_CONFIG = {
-  cloud_name: 'dexlzykqm',
-  api_key: '761719984596219',
-  api_secret: 'QkAyuumJD-_EslezBPd2UQVYKew',
-};
-
-console.log('🔧 Cloudinary config:', {
-  cloud_name: CLOUDINARY_CONFIG.cloud_name,
-  api_key: CLOUDINARY_CONFIG.api_key ? '***SET***' : '***NOT SET***',
-  api_secret: CLOUDINARY_CONFIG.api_secret ? '***SET***' : '***NOT SET***',
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
-cloudinary.config(CLOUDINARY_CONFIG);
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -70,40 +60,34 @@ const uploadFile = async (req, res) => {
         },
       });
     } else {
-      // For images, use Cloudinary with base64 upload (more reliable)
-      console.log('📤 Starting Cloudinary upload...', {
-        type,
-        resourceType,
-        fileSize: req.file.size,
-        mimeType: req.file.mimetype,
-      });
-
-      try {
-        // Convert buffer to base64 data URI
-        const base64Data = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-
-        const result = await cloudinary.uploader.upload(base64Data, {
+      // For images, continue using Cloudinary
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
           folder: `eduplay/${type}s`,
           resource_type: resourceType,
-        });
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary upload error:', error);
+            return res.status(500).json({
+              success: false,
+              message: 'Upload failed',
+              error: error.message,
+            });
+          }
 
-        console.log('✅ Cloudinary upload success:', result.secure_url);
-        res.json({
-          success: true,
-          data: {
-            url: result.secure_url,
-            publicId: result.public_id,
-          },
-        });
-      } catch (uploadError) {
-        console.error('❌ Cloudinary upload error:', uploadError);
-        console.error('❌ Error details:', JSON.stringify(uploadError, null, 2));
-        return res.status(500).json({
-          success: false,
-          message: 'Upload failed',
-          error: uploadError.message,
-        });
-      }
+          res.json({
+            success: true,
+            data: {
+              url: result.secure_url,
+              publicId: result.public_id,
+            },
+          });
+        }
+      );
+
+      // Pipe the file buffer to Cloudinary
+      require('stream').Readable.from(req.file.buffer).pipe(uploadStream);
     }
   } catch (error) {
     console.error('Upload controller error:', error);
