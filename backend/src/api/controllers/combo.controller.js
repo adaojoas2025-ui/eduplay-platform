@@ -81,10 +81,30 @@ class ComboController {
     try {
       const combos = await comboRepository.findAll();
 
+      // Se não houver combos, retorna array vazio
+      if (!combos || combos.length === 0) {
+        return res.json({
+          success: true,
+          data: []
+        });
+      }
+
       // Get product details for each combo
       const combosWithDetails = await Promise.all(
         combos.map(async (combo) => {
-          const productIds = combo.combo_products.map(p => p.productId);
+          const comboProducts = combo.combo_products || [];
+          const productIds = comboProducts.map(p => p.productId);
+
+          if (productIds.length === 0) {
+            return {
+              ...combo,
+              productDetails: [],
+              totalRegularPrice: 0,
+              savings: 0,
+              discountPercentage: 0
+            };
+          }
+
           const products = await prisma.products.findMany({
             where: { id: { in: productIds } },
             select: {
@@ -103,7 +123,7 @@ class ComboController {
             productDetails: products,
             totalRegularPrice,
             savings: totalRegularPrice - combo.discountPrice,
-            discountPercentage: Math.round(((totalRegularPrice - combo.discountPrice) / totalRegularPrice) * 100)
+            discountPercentage: totalRegularPrice > 0 ? Math.round(((totalRegularPrice - combo.discountPrice) / totalRegularPrice) * 100) : 0
           };
         })
       );
