@@ -79,7 +79,9 @@ class ComboController {
   // Get all combos
   async getAll(req, res) {
     try {
+      console.log('📦 Buscando combos...');
       const combos = await comboRepository.findAll();
+      console.log('📦 Combos encontrados:', combos?.length || 0);
 
       // Se não houver combos, retorna array vazio
       if (!combos || combos.length === 0) {
@@ -133,10 +135,12 @@ class ComboController {
         data: combosWithDetails
       });
     } catch (error) {
-      console.error('Error fetching combos:', error);
+      console.error('❌ Error fetching combos:', error);
+      console.error('❌ Error stack:', error.stack);
       res.status(500).json({
         success: false,
-        message: 'Erro ao buscar combos'
+        message: 'Erro ao buscar combos',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   }

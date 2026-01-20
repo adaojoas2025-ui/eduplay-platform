@@ -8,6 +8,7 @@ class ComboRepository {
 
     return await prisma.combos.create({
       data: {
+        id: require('crypto').randomUUID(),
         title,
         description,
         discountPrice,
