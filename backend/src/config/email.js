@@ -1,10 +1,11 @@
 /**
  * Email Configuration
- * Email service using Brevo (primary), Resend or SendGrid (fallback)
+ * Email service using Brevo SMTP (primary), Resend or SendGrid (fallback)
  * @module config/email
- * @updated 2026-01-21T19:50:00Z
+ * @updated 2026-01-21T20:00:00Z
  */
 
+const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 
 logger.info('📧 Initializing email service...');
@@ -21,13 +22,28 @@ let useResend = false;
 let useSendGrid = false;
 
 // Service instances
+let brevoTransporter = null;
 let resend = null;
 let sgMail = null;
 
-// Try Brevo first (primary) - using direct API calls
+// Try Brevo first (primary) - using SMTP with nodemailer
 if (process.env.BREVO_API_KEY) {
-  useBrevo = true;
-  logger.info('✅ Using Brevo for email service (direct API)');
+  try {
+    brevoTransporter = nodemailer.createTransport({
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.BREVO_SMTP_USER || 'ja.eduplay@gmail.com',
+        pass: process.env.BREVO_API_KEY,
+      },
+    });
+
+    useBrevo = true;
+    logger.info('✅ Using Brevo SMTP for email service');
+  } catch (error) {
+    logger.error('❌ Failed to initialize Brevo SMTP:', error.message);
+  }
 }
 
 // Fallback to Resend
@@ -63,48 +79,21 @@ if (!useBrevo && !useResend && !useSendGrid) {
  */
 const verifyConnection = async () => {
   try {
-    if (useBrevo || useResend || useSendGrid) {
+    if (useBrevo && brevoTransporter) {
+      await brevoTransporter.verify();
+      logger.info('✅ Brevo SMTP connection verified');
+      return true;
+    }
+    if (useResend || useSendGrid) {
       logger.info('✅ Email service ready');
       return true;
-    } else {
-      logger.error('❌ No email service configured');
-      return false;
     }
+    logger.error('❌ No email service configured');
+    return false;
   } catch (error) {
-    logger.error('❌ Email service connection failed:', error);
+    logger.error('❌ Email service connection failed:', error.message);
     return false;
   }
-};
-
-/**
- * Send email via Brevo API directly
- */
-const sendViaBrevo = async ({ to, subject, html, text }) => {
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'accept': 'application/json',
-      'api-key': process.env.BREVO_API_KEY,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      sender: {
-        name: 'EDUPLAY',
-        email: process.env.EMAIL_FROM_ADDRESS || 'ja.eduplay@gmail.com',
-      },
-      to: [{ email: to }],
-      subject: subject,
-      htmlContent: html,
-      textContent: text || subject,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || `Brevo API error: ${response.status}`);
-  }
-
-  return await response.json();
 };
 
 /**
@@ -118,16 +107,22 @@ const sendViaBrevo = async ({ to, subject, html, text }) => {
  */
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
-    // Use Brevo if available (primary)
-    if (useBrevo) {
-      logger.info('📤 Sending email via Brevo...', { to, subject });
+    // Use Brevo SMTP if available (primary)
+    if (useBrevo && brevoTransporter) {
+      logger.info('📤 Sending email via Brevo SMTP...', { to, subject });
 
-      const result = await sendViaBrevo({ to, subject, html, text });
+      const result = await brevoTransporter.sendMail({
+        from: `"EDUPLAY" <${process.env.EMAIL_FROM_ADDRESS || 'ja.eduplay@gmail.com'}>`,
+        to: to,
+        subject: subject,
+        html: html,
+        text: text || subject,
+      });
 
-      logger.info('✅ Email sent successfully via Brevo', {
+      logger.info('✅ Email sent successfully via Brevo SMTP', {
         to,
         subject,
-        messageId: result?.messageId,
+        messageId: result.messageId,
       });
 
       return result;
