@@ -2,6 +2,7 @@
  * Email Configuration
  * Email service using Brevo (primary), Resend or SendGrid (fallback)
  * @module config/email
+ * @updated 2026-01-21T12:25:00Z
  */
 
 const config = require('./env');
