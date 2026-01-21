@@ -1,5 +1,6 @@
 const { prisma } = require('../config/database');
 const { sendApprovalEmail } = require('../services/emailService');
+const emailService = require('../services/email.service');
 
 /**
  * Get dashboard statistics
@@ -264,16 +265,29 @@ async function approveProduct(req, res) {
       data: {
         status: 'APPROVED',
         approved: true,
+        approvedAt: new Date(),
+        approvedBy: req.user?.id,
       },
       include: {
         producer: {
           select: {
             id: true,
             name: true,
+            email: true,
           },
         },
       },
     });
+
+    // Send approval email to producer
+    if (product.producer?.email) {
+      try {
+        await emailService.sendProductApprovedEmail(product, product.producer);
+        console.log('✅ Approval email sent to producer:', product.producer.email);
+      } catch (emailError) {
+        console.error('❌ Failed to send approval email:', emailError.message);
+      }
+    }
 
     res.json({
       message: 'Produto aprovado com sucesso',
