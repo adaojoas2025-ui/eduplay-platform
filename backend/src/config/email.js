@@ -1,7 +1,6 @@
 /**
  * Email Configuration
- * Email service using SendGrid (API-based, works on Render)
- * Updated: 2026-01-01 - SendGrid API Key configured
+ * Email service using Resend or SendGrid
  * @module config/email
  */
 
@@ -10,21 +9,38 @@ const logger = require('../utils/logger');
 
 logger.info('📧 Initializing email service...');
 
-// Use SendGrid (API-based, not SMTP - works on Render!)
+// Try Resend first (more reliable), then SendGrid as fallback
+let useResend = false;
 let useSendGrid = false;
+let resend = null;
 let sgMail = null;
 
-if (process.env.SENDGRID_API_KEY) {
+// Try Resend first
+if (process.env.RESEND_API_KEY) {
+  try {
+    const { Resend } = require('resend');
+    resend = new Resend(process.env.RESEND_API_KEY);
+    useResend = true;
+    logger.info('✅ Using Resend for email service');
+  } catch (error) {
+    logger.error('❌ Failed to initialize Resend:', error.message);
+  }
+}
+
+// Fallback to SendGrid
+if (!useResend && process.env.SENDGRID_API_KEY) {
   try {
     sgMail = require('@sendgrid/mail');
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
     useSendGrid = true;
-    logger.info('✅ Using SendGrid for email service (API-based)');
+    logger.info('✅ Using SendGrid for email service (fallback)');
   } catch (error) {
     logger.error('❌ Failed to initialize SendGrid:', error.message);
   }
-} else {
-  logger.warn('⚠️  SENDGRID_API_KEY not found');
+}
+
+if (!useResend && !useSendGrid) {
+  logger.warn('⚠️  No email service configured (RESEND_API_KEY or SENDGRID_API_KEY not found)');
 }
 
 /**
@@ -32,8 +48,8 @@ if (process.env.SENDGRID_API_KEY) {
  */
 const verifyConnection = async () => {
   try {
-    if (useSendGrid) {
-      logger.info('✅ SendGrid email service ready');
+    if (useResend || useSendGrid) {
+      logger.info('✅ Email service ready');
       return true;
     } else {
       logger.error('❌ No email service configured');
@@ -56,15 +72,38 @@ const verifyConnection = async () => {
  */
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
-    if (useSendGrid && sgMail) {
-      logger.info('📤 Sending email via SendGrid...', {
+    // Use Resend if available
+    if (useResend && resend) {
+      logger.info('📤 Sending email via Resend...', { to, subject });
+
+      const { data, error } = await resend.emails.send({
+        from: process.env.EMAIL_FROM || 'EDUPLAY <onboarding@resend.dev>',
+        to: [to],
+        subject,
+        html,
+        text: text || subject,
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      logger.info('✅ Email sent successfully via Resend', {
         to,
         subject,
+        id: data?.id,
       });
+
+      return data;
+    }
+
+    // Fallback to SendGrid
+    if (useSendGrid && sgMail) {
+      logger.info('📤 Sending email via SendGrid...', { to, subject });
 
       const msg = {
         to,
-        from: process.env.EMAIL_FROM || 'EDUPLAY <ja.eduplay@gmail.com>', // SendGrid verified sender
+        from: process.env.EMAIL_FROM || 'EDUPLAY <ja.eduplay@gmail.com>',
         subject,
         text: text || subject,
         html,
@@ -79,14 +118,13 @@ const sendEmail = async ({ to, subject, html, text }) => {
       });
 
       return response;
-    } else {
-      throw new Error('No email service configured');
     }
+
+    throw new Error('No email service configured');
   } catch (error) {
-    logger.error('❌ Error sending email via SendGrid:', {
+    logger.error('❌ Error sending email:', {
       error: error.message,
       code: error.code,
-      response: error.response?.body,
       to,
       subject,
     });
@@ -97,6 +135,6 @@ const sendEmail = async ({ to, subject, html, text }) => {
 module.exports = {
   verifyConnection,
   sendEmail,
-  usingResend: false,
+  usingResend: useResend,
   usingSendGrid: useSendGrid,
 };
