@@ -2,7 +2,7 @@
  * Email Configuration
  * Email service using Brevo (primary), Resend or SendGrid (fallback)
  * @module config/email
- * @updated 2026-01-21T19:05:00Z
+ * @updated 2026-01-21T19:15:00Z
  */
 
 const logger = require('../utils/logger');
@@ -29,13 +29,13 @@ let sgMail = null;
 if (process.env.BREVO_API_KEY) {
   try {
     const SibApiV3Sdk = require('@getbrevo/brevo');
-    const defaultClient = SibApiV3Sdk.ApiClient.instance;
-
-    // Configure API key authorization
-    const apiKey = defaultClient.authentications['api-key'];
-    apiKey.apiKey = process.env.BREVO_API_KEY;
-
     brevoApiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
+    // Set API key using the correct method
+    brevoApiInstance.setApiKey(
+      SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+      process.env.BREVO_API_KEY
+    );
 
     useBrevo = true;
     logger.info('✅ Using Brevo for email service');
@@ -105,17 +105,16 @@ const sendEmail = async ({ to, subject, html, text }) => {
     if (useBrevo && brevoApiInstance) {
       logger.info('📤 Sending email via Brevo...', { to, subject });
 
-      const SibApiV3Sdk = require('@getbrevo/brevo');
-      const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-
-      sendSmtpEmail.sender = {
-        name: 'EDUPLAY',
-        email: process.env.EMAIL_FROM_ADDRESS || 'ja.eduplay@gmail.com',
+      const sendSmtpEmail = {
+        sender: {
+          name: 'EDUPLAY',
+          email: process.env.EMAIL_FROM_ADDRESS || 'ja.eduplay@gmail.com',
+        },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: html,
+        textContent: text || subject,
       };
-      sendSmtpEmail.to = [{ email: to }];
-      sendSmtpEmail.subject = subject;
-      sendSmtpEmail.htmlContent = html;
-      sendSmtpEmail.textContent = text || subject;
 
       const result = await brevoApiInstance.sendTransacEmail(sendSmtpEmail);
 
@@ -181,7 +180,6 @@ const sendEmail = async ({ to, subject, html, text }) => {
     logger.error('❌ Error sending email:', {
       error: error.message,
       code: error.code,
-      stack: error.stack,
       to,
       subject,
     });
