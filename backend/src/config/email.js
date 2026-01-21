@@ -2,7 +2,7 @@
  * Email Configuration
  * Email service using Brevo (primary), Resend or SendGrid (fallback)
  * @module config/email
- * @updated 2026-01-21T19:15:00Z
+ * @updated 2026-01-21T19:50:00Z
  */
 
 const logger = require('../utils/logger');
@@ -21,27 +21,13 @@ let useResend = false;
 let useSendGrid = false;
 
 // Service instances
-let brevoApiInstance = null;
 let resend = null;
 let sgMail = null;
 
-// Try Brevo first (primary)
+// Try Brevo first (primary) - using direct API calls
 if (process.env.BREVO_API_KEY) {
-  try {
-    const SibApiV3Sdk = require('@getbrevo/brevo');
-    brevoApiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-
-    // Set API key using the correct method
-    brevoApiInstance.setApiKey(
-      SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
-      process.env.BREVO_API_KEY
-    );
-
-    useBrevo = true;
-    logger.info('✅ Using Brevo for email service');
-  } catch (error) {
-    logger.error('❌ Failed to initialize Brevo:', error.message);
-  }
+  useBrevo = true;
+  logger.info('✅ Using Brevo for email service (direct API)');
 }
 
 // Fallback to Resend
@@ -91,6 +77,37 @@ const verifyConnection = async () => {
 };
 
 /**
+ * Send email via Brevo API directly
+ */
+const sendViaBrevo = async ({ to, subject, html, text }) => {
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: {
+        name: 'EDUPLAY',
+        email: process.env.EMAIL_FROM_ADDRESS || 'ja.eduplay@gmail.com',
+      },
+      to: [{ email: to }],
+      subject: subject,
+      htmlContent: html,
+      textContent: text || subject,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || `Brevo API error: ${response.status}`);
+  }
+
+  return await response.json();
+};
+
+/**
  * Send email
  * @param {Object} options - Email options
  * @param {string} options.to - Recipient email
@@ -102,26 +119,15 @@ const verifyConnection = async () => {
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
     // Use Brevo if available (primary)
-    if (useBrevo && brevoApiInstance) {
+    if (useBrevo) {
       logger.info('📤 Sending email via Brevo...', { to, subject });
 
-      const sendSmtpEmail = {
-        sender: {
-          name: 'EDUPLAY',
-          email: process.env.EMAIL_FROM_ADDRESS || 'ja.eduplay@gmail.com',
-        },
-        to: [{ email: to }],
-        subject: subject,
-        htmlContent: html,
-        textContent: text || subject,
-      };
-
-      const result = await brevoApiInstance.sendTransacEmail(sendSmtpEmail);
+      const result = await sendViaBrevo({ to, subject, html, text });
 
       logger.info('✅ Email sent successfully via Brevo', {
         to,
         subject,
-        messageId: result?.body?.messageId || result?.messageId,
+        messageId: result?.messageId,
       });
 
       return result;
@@ -179,7 +185,6 @@ const sendEmail = async ({ to, subject, html, text }) => {
   } catch (error) {
     logger.error('❌ Error sending email:', {
       error: error.message,
-      code: error.code,
       to,
       subject,
     });
