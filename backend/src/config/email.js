@@ -9,6 +9,12 @@ const config = require('./env');
 const logger = require('../utils/logger');
 
 logger.info('📧 Initializing email service...');
+logger.info('🔍 Checking environment variables...', {
+  hasBrevoKey: !!process.env.BREVO_API_KEY,
+  hasResendKey: !!process.env.RESEND_API_KEY,
+  hasSendGridKey: !!process.env.SENDGRID_API_KEY,
+  brevoKeyLength: process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.length : 0,
+});
 
 // Service flags
 let useBrevo = false;
