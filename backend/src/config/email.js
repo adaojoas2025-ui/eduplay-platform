@@ -1,6 +1,6 @@
 /**
  * Email Configuration
- * Email service using Resend or SendGrid
+ * Email service using Brevo (primary), Resend or SendGrid (fallback)
  * @module config/email
  */
 
@@ -9,26 +9,46 @@ const logger = require('../utils/logger');
 
 logger.info('📧 Initializing email service...');
 
-// Try Resend first (more reliable), then SendGrid as fallback
+// Service flags
+let useBrevo = false;
 let useResend = false;
 let useSendGrid = false;
+
+// Service instances
+let brevoClient = null;
 let resend = null;
 let sgMail = null;
 
-// Try Resend first
-if (process.env.RESEND_API_KEY) {
+// Try Brevo first (primary)
+if (process.env.BREVO_API_KEY) {
+  try {
+    const Brevo = require('@getbrevo/brevo');
+    brevoClient = new Brevo.TransactionalEmailsApi();
+
+    const apiKey = brevoClient.authentications['apiKey'];
+    apiKey.apiKey = process.env.BREVO_API_KEY;
+
+    useBrevo = true;
+    logger.info('✅ Using Brevo for email service');
+  } catch (error) {
+    logger.error('❌ Failed to initialize Brevo:', error.message);
+  }
+}
+
+// Fallback to Resend
+if (!useBrevo && process.env.RESEND_API_KEY) {
   try {
     const { Resend } = require('resend');
     resend = new Resend(process.env.RESEND_API_KEY);
     useResend = true;
-    logger.info('✅ Using Resend for email service');
+    logger.info('✅ Using Resend for email service (fallback)');
   } catch (error) {
     logger.error('❌ Failed to initialize Resend:', error.message);
   }
 }
 
 // Fallback to SendGrid
-if (!useResend && process.env.SENDGRID_API_KEY) {
+if (!useBrevo && !useResend && process.env.SENDGRID_API_KEY) {
   try {
     sgMail = require('@sendgrid/mail');
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -39,8 +59,8 @@ if (!useResend && process.env.SENDGRID_API_KEY) {
   }
 }
 
-if (!useResend && !useSendGrid) {
-  logger.warn('⚠️  No email service configured (RESEND_API_KEY or SENDGRID_API_KEY not found)');
+if (!useBrevo && !useResend && !useSendGrid) {
+  logger.warn('⚠️  No email service configured (BREVO_API_KEY, RESEND_API_KEY or SENDGRID_API_KEY not found)');
 }
 
 /**
@@ -48,7 +68,7 @@ if (!useResend && !useSendGrid) {
  */
 const verifyConnection = async () => {
   try {
-    if (useResend || useSendGrid) {
+    if (useBrevo || useResend || useSendGrid) {
       logger.info('✅ Email service ready');
       return true;
     } else {
@@ -72,7 +92,33 @@ const verifyConnection = async () => {
  */
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
-    // Use Resend if available
+    // Use Brevo if available (primary)
+    if (useBrevo && brevoClient) {
+      logger.info('📤 Sending email via Brevo...', { to, subject });
+
+      const sendSmtpEmail = {
+        sender: {
+          name: 'EDUPLAY',
+          email: process.env.EMAIL_FROM_ADDRESS || 'ja.eduplay@gmail.com',
+        },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        textContent: text || subject,
+      };
+
+      const result = await brevoClient.sendTransacEmail(sendSmtpEmail);
+
+      logger.info('✅ Email sent successfully via Brevo', {
+        to,
+        subject,
+        messageId: result?.messageId,
+      });
+
+      return result;
+    }
+
+    // Fallback to Resend
     if (useResend && resend) {
       logger.info('📤 Sending email via Resend...', { to, subject });
 
@@ -135,6 +181,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
 module.exports = {
   verifyConnection,
   sendEmail,
+  usingBrevo: useBrevo,
   usingResend: useResend,
   usingSendGrid: useSendGrid,
 };

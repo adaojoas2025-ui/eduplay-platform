@@ -28,6 +28,7 @@
   "author": "EDUPLAY Team",
   "license": "MIT",
   "dependencies": {
+    "@getbrevo/brevo": "^3.0.1",
     "@prisma/client": "^5.22.0",
     "@sendgrid/mail": "^8.1.6",
     "bcryptjs": "^2.4.3",
