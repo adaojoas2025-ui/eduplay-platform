@@ -1,8 +1,9 @@
 /**
  * Email Configuration
  * Email service using Brevo SMTP (primary), Resend or SendGrid (fallback)
+ * Emails are sent asynchronously to avoid blocking operations
  * @module config/email
- * @updated 2026-01-22T13:00:00Z
+ * @updated 2026-01-22T13:15:00Z
  */
 
 const nodemailer = require('nodemailer');
@@ -31,15 +32,18 @@ if (process.env.BREVO_API_KEY) {
   try {
     brevoTransporter = nodemailer.createTransport({
       host: 'smtp-relay.brevo.com',
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.BREVO_SMTP_USER || 'a089a0001@smtp-brevo.com',
         pass: process.env.BREVO_API_KEY,
       },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
+      tls: {
+        rejectUnauthorized: false,
+      },
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 60000,
     });
 
     useBrevo = true;
@@ -100,7 +104,7 @@ const verifyConnection = async () => {
 };
 
 /**
- * Send email
+ * Send email (async - does not block)
  * @param {Object} options - Email options
  * @param {string} options.to - Recipient email
  * @param {string} options.subject - Email subject
@@ -109,6 +113,26 @@ const verifyConnection = async () => {
  * @returns {Promise<Object>} Send result
  */
 const sendEmail = async ({ to, subject, html, text }) => {
+  // Fire and forget - don't await, just return immediately
+  const sendPromise = sendEmailInternal({ to, subject, html, text });
+
+  // Log any errors but don't throw
+  sendPromise.catch(error => {
+    logger.error('❌ Background email send failed:', {
+      error: error.message,
+      to,
+      subject,
+    });
+  });
+
+  // Return immediately without waiting
+  return { queued: true, to, subject };
+};
+
+/**
+ * Internal send email function
+ */
+const sendEmailInternal = async ({ to, subject, html, text }) => {
   try {
     // Use Brevo SMTP if available (primary)
     if (useBrevo && brevoTransporter) {
@@ -194,7 +218,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
  * Get active email service name
  */
 const getActiveService = () => {
-  if (useBrevo) return 'brevo';
+  if (useBrevo) return 'brevo-smtp';
   if (useResend) return 'resend';
   if (useSendGrid) return 'sendgrid';
   return 'none';
