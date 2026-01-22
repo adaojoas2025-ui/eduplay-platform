@@ -334,6 +334,35 @@ async function rejectProduct(req, res) {
 }
 
 /**
+ * Clean all commissions and orders (ADMIN ONLY)
+ */
+async function cleanCommissionsAndOrders(req, res) {
+  try {
+    console.log('🧹 Admin requested cleanup of commissions and orders...');
+
+    // Delete commissions first (foreign key)
+    const deletedCommissions = await prisma.commissions.deleteMany({});
+    console.log(`✅ Commissions deleted: ${deletedCommissions.count}`);
+
+    // Delete orders
+    const deletedOrders = await prisma.orders.deleteMany({});
+    console.log(`✅ Orders deleted: ${deletedOrders.count}`);
+
+    res.json({
+      success: true,
+      message: 'Comissões e pedidos removidos com sucesso',
+      deleted: {
+        commissions: deletedCommissions.count,
+        orders: deletedOrders.count,
+      },
+    });
+  } catch (error) {
+    console.error('Clean commissions error:', error);
+    res.status(500).json({ error: 'Erro ao limpar comissões' });
+  }
+}
+
+/**
  * Get all orders
  */
 async function getAllOrders(req, res) {
@@ -401,4 +430,5 @@ module.exports = {
   approveProduct,
   rejectProduct,
   getAllOrders,
+  cleanCommissionsAndOrders,
 };

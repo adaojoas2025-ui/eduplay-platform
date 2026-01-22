@@ -10,6 +10,7 @@ const {
   approveProduct,
   rejectProduct,
   getAllOrders,
+  cleanCommissionsAndOrders,
 } = require('../controllers/adminController');
 const { authenticateToken, authorizeRole } = require('../middleware/auth');
 
@@ -33,5 +34,8 @@ router.put('/products/:id/reject', rejectProduct);
 
 // Orders
 router.get('/orders', getAllOrders);
+
+// Cleanup
+router.delete('/cleanup/commissions', cleanCommissionsAndOrders);
 
 module.exports = router;
