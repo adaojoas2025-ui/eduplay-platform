@@ -28,6 +28,9 @@ import AppDetails from './pages/AppDetails';
 import ManageApps from './pages/admin/ManageApps';
 import AppForm from './pages/admin/AppForm';
 import ManageCombos from './pages/admin/ManageCombos';
+import ProducerDashboard from './pages/producer/Dashboard';
+import ProducerAddProduct from './pages/producer/AddProduct';
+import ProducerMyProducts from './pages/producer/MyProducts';
 import { AchievementQueueManager } from './components/AchievementNotification';
 import Navbar from './components/Navbar';
 import { API_URL } from './config/api.config';
@@ -907,6 +910,12 @@ function App() {
         <Route path="/seller/products/new" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
         <Route path="/seller/products/:id/edit" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
         <Route path="/seller/combos" element={<ProtectedRoute><SellerCombos /></ProtectedRoute>} />
+
+        {/* Producer Routes */}
+        <Route path="/producer/dashboard" element={<ProtectedRoute><ProducerDashboard /></ProtectedRoute>} />
+        <Route path="/producer/products" element={<ProtectedRoute><ProducerMyProducts /></ProtectedRoute>} />
+        <Route path="/producer/products/add" element={<ProtectedRoute><ProducerAddProduct /></ProtectedRoute>} />
+
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
         <Route path="/admin/commissions" element={<ProtectedRoute><AdminCommissions /></ProtectedRoute>} />
