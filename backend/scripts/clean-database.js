@@ -26,7 +26,7 @@ async function cleanDatabase() {
     console.log(`✅ ${deletedReviews.count} reviews de produtos removidas`);
 
     // 6. Deletar todas as comissões
-    const deletedCommissions = await prisma.commission.deleteMany();
+    const deletedCommissions = await prisma.commissions.deleteMany();
     console.log(`✅ ${deletedCommissions.count} comissões removidas`);
 
     // 7. Deletar todos os pedidos

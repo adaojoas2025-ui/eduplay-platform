@@ -22,7 +22,7 @@ async function resetDatabase() {
 
     // 3. Deletar todas as comissões
     console.log('🗑️  Deletando comissões...');
-    const deletedCommissions = await prisma.commission.deleteMany({});
+    const deletedCommissions = await prisma.commissions.deleteMany({});
     console.log(`   ✅ ${deletedCommissions.count} comissões deletadas`);
 
     // 4. Deletar todos os pedidos

@@ -40,7 +40,7 @@ async function fixApprovedOrders() {
       const platformFeeAmount = order.amount * 0.03; // 3% platform fee
 
       // Criar comissão
-      await prisma.commission.create({
+      await prisma.commissions.create({
         data: {
           orderId: order.id,
           producerId: order.product.producerId,

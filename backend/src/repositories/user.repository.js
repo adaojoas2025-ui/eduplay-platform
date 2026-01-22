@@ -319,7 +319,7 @@ const getProducerStats = async (producerId) => {
           amount: true,
         },
       }),
-      prisma.commission.aggregate({
+      prisma.commissions.aggregate({
         where: {
           producerId,
           status: 'PENDING',
@@ -328,7 +328,7 @@ const getProducerStats = async (producerId) => {
           amount: true,
         },
       }),
-      prisma.commission.aggregate({
+      prisma.commissions.aggregate({
         where: {
           producerId,
           status: 'PAID',

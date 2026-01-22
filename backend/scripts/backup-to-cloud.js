@@ -54,7 +54,7 @@ const path = require('path');
         products: await prisma.product.findMany(),
         apps: await prisma.app.findMany(),
         orders: await prisma.order.findMany(),
-        commissions: await prisma.commission.findMany(),
+        commissions: await prisma.commissions.findMany(),
         appDownloads: await prisma.appDownload.findMany(),
         appReviews: await prisma.appReview.findMany(),
         combos: await prisma.combo.findMany({

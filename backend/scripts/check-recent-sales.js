@@ -46,7 +46,7 @@ async function checkRecentSales() {
       console.log(`Status: ${order.status}`);
 
       // Verificar se tem comissão
-      const commission = await prisma.commission.findUnique({
+      const commission = await prisma.commissions.findUnique({
         where: { orderId: order.id }
       });
 
@@ -61,7 +61,7 @@ async function checkRecentSales() {
 
         // Tentar criar a comissão agora
         try {
-          const newCommission = await prisma.commission.create({
+          const newCommission = await prisma.commissions.create({
             data: {
               orderId: order.id,
               producerId: order.product.producerId,
@@ -78,11 +78,11 @@ async function checkRecentSales() {
     }
 
     // Resumo de comissões
-    const totalCommissions = await prisma.commission.count();
-    const pendingCommissions = await prisma.commission.count({
+    const totalCommissions = await prisma.commissions.count();
+    const pendingCommissions = await prisma.commissions.count({
       where: { status: 'PENDING' }
     });
-    const paidCommissions = await prisma.commission.count({
+    const paidCommissions = await prisma.commissions.count({
       where: { status: 'PAID' }
     });
 

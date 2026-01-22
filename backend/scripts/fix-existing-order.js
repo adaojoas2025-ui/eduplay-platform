@@ -52,7 +52,7 @@ async function fixExistingOrder() {
     console.log(`   Valor da comissão: R$ ${commissionAmount.toFixed(2)}`);
 
     // 4. Criar comissão
-    const commission = await prisma.commission.create({
+    const commission = await prisma.commissions.create({
       data: {
         orderId: order.id,
         producerId: order.product.producerId,

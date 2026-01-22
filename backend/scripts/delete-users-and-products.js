@@ -25,7 +25,7 @@ const prisma = new PrismaClient();
     });
     const productsCount = await prisma.product.count();
     const ordersCount = await prisma.order.count();
-    const commissionsCount = await prisma.commission.count();
+    const commissionsCount = await prisma.commissions.count();
 
     console.log('📊 Dados que serão deletados:');
     console.log(`   👥 Usuários (exceto admin): ${usersCount}`);
@@ -41,7 +41,7 @@ const prisma = new PrismaClient();
 
     // 3. Deletar na ordem correta (respeitando foreign keys)
     console.log('🗑️  Deletando comissões...');
-    const deletedCommissions = await prisma.commission.deleteMany({});
+    const deletedCommissions = await prisma.commissions.deleteMany({});
     console.log(`   ✅ ${deletedCommissions.count} comissões deletadas\n`);
 
     console.log('🗑️  Deletando pedidos...');

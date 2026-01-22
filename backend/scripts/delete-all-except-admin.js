@@ -26,7 +26,7 @@ const prisma = new PrismaClient();
     const productsCount = await prisma.product.count();
     const appsCount = await prisma.app.count();
     const ordersCount = await prisma.order.count();
-    const commissionsCount = await prisma.commission.count();
+    const commissionsCount = await prisma.commissions.count();
     const appDownloadsCount = await prisma.appDownload.count();
     const appReviewsCount = await prisma.appReview.count();
 
@@ -49,7 +49,7 @@ const prisma = new PrismaClient();
     console.log(`   ✅ ${deletedAppDownloads.count} downloads deletados\n`);
 
     console.log('🗑️  Deletando comissões...');
-    const deletedCommissions = await prisma.commission.deleteMany({});
+    const deletedCommissions = await prisma.commissions.deleteMany({});
     console.log(`   ✅ ${deletedCommissions.count} comissões deletadas\n`);
 
     console.log('🗑️  Deletando pedidos...');

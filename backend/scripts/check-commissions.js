@@ -40,7 +40,7 @@ async function checkCommissions() {
     console.log(`📦 Total de pedidos: ${orders.length}\n`);
 
     // Buscar todas as comissões
-    const commissions = await prisma.commission.findMany({
+    const commissions = await prisma.commissions.findMany({
       include: {
         order: {
           select: {

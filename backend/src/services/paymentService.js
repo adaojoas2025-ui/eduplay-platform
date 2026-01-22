@@ -143,7 +143,7 @@ async function processPaymentWebhook(paymentId) {
     // If payment approved, process commission and send emails
     if (status === 'approved' && order) {
       // Check if commission already exists
-      const existingCommission = await prisma.commission.findUnique({
+      const existingCommission = await prisma.commissions.findUnique({
         where: { orderId: order.id },
       });
 
@@ -159,7 +159,7 @@ async function processPaymentWebhook(paymentId) {
 
         if (product) {
           // Create commission record
-          await prisma.commission.create({
+          await prisma.commissions.create({
             data: {
               orderId: order.id,
               producerId: product.producerId,

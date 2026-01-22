@@ -14,7 +14,7 @@ const logger = require('../utils/logger');
  */
 const createCommission = async (commissionData) => {
   try {
-    const commission = await prisma.commission.create({
+    const commission = await prisma.commissions.create({
       data: commissionData,
       include: {
         order: {
@@ -51,7 +51,7 @@ const createCommission = async (commissionData) => {
  */
 const findCommissionById = async (commissionId) => {
   try {
-    return await prisma.commission.findUnique({
+    return await prisma.commissions.findUnique({
       where: { id: commissionId },
       include: {
         order: {
@@ -82,7 +82,7 @@ const findCommissionById = async (commissionId) => {
  */
 const findCommissionByOrderId = async (orderId) => {
   try {
-    return await prisma.commission.findUnique({
+    return await prisma.commissions.findUnique({
       where: { orderId },
       include: {
         producer: {
@@ -108,7 +108,7 @@ const findCommissionByOrderId = async (orderId) => {
  */
 const updateCommission = async (commissionId, updateData) => {
   try {
-    const commission = await prisma.commission.update({
+    const commission = await prisma.commissions.update({
       where: { id: commissionId },
       data: updateData,
       include: {
@@ -165,7 +165,7 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
 
     // Execute query with pagination
     const [commissions, total, appOrders, totalAppOrders] = await Promise.all([
-      prisma.commission.findMany({
+      prisma.commissions.findMany({
         where,
         skip,
         take: limit,
@@ -197,7 +197,7 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
           },
         },
       }),
-      prisma.commission.count({ where }),
+      prisma.commissions.count({ where }),
       // Buscar também orders de apps (sem comissão)
       prisma.orders.findMany({
         where: {
@@ -307,20 +307,20 @@ const getProducerCommissions = async (producerId, filters = {}) => {
     }
 
     const [totalCommissions, totalAmount, pendingAmount, paidAmount] = await Promise.all([
-      prisma.commission.count({ where }),
-      prisma.commission.aggregate({
+      prisma.commissions.count({ where }),
+      prisma.commissions.aggregate({
         where,
         _sum: {
           amount: true,
         },
       }),
-      prisma.commission.aggregate({
+      prisma.commissions.aggregate({
         where: { ...where, status: 'PENDING' },
         _sum: {
           amount: true,
         },
       }),
-      prisma.commission.aggregate({
+      prisma.commissions.aggregate({
         where: { ...where, status: 'PAID' },
         _sum: {
           amount: true,
@@ -347,7 +347,7 @@ const getProducerCommissions = async (producerId, filters = {}) => {
  */
 const getPendingCommissions = async (producerId) => {
   try {
-    return await prisma.commission.findMany({
+    return await prisma.commissions.findMany({
       where: {
         producerId,
         status: 'PENDING',
@@ -457,7 +457,7 @@ const getCommissionStats = async (filters = {}) => {
     monthEnd.setMonth(monthEnd.getMonth() + 1);
 
     const [statusCounts, totalAmount, monthlyStats, totalSales] = await Promise.all([
-      prisma.commission.groupBy({
+      prisma.commissions.groupBy({
         by: ['status'],
         where,
         _count: {
@@ -467,7 +467,7 @@ const getCommissionStats = async (filters = {}) => {
           amount: true,
         },
       }),
-      prisma.commission.aggregate({
+      prisma.commissions.aggregate({
         where,
         _sum: {
           amount: true,
@@ -476,7 +476,7 @@ const getCommissionStats = async (filters = {}) => {
           id: true,
         },
       }),
-      prisma.commission.aggregate({
+      prisma.commissions.aggregate({
         where: {
           ...where,
           createdAt: {
@@ -492,7 +492,7 @@ const getCommissionStats = async (filters = {}) => {
         },
       }),
       // Get total sales amount from orders
-      prisma.commission.findMany({
+      prisma.commissions.findMany({
         where,
         include: {
           order: {
@@ -585,7 +585,7 @@ const getCommissionStats = async (filters = {}) => {
  */
 const batchUpdateStatus = async (commissionIds, status) => {
   try {
-    const result = await prisma.commission.updateMany({
+    const result = await prisma.commissions.updateMany({
       where: {
         id: {
           in: commissionIds,

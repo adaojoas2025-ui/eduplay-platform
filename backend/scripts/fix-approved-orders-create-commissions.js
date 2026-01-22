@@ -59,7 +59,7 @@ async function fixApprovedOrders() {
       updatedCount++;
 
       // 3. Verificar se já existe comissão
-      const existingCommission = await prisma.commission.findUnique({
+      const existingCommission = await prisma.commissions.findUnique({
         where: { orderId: order.id },
       });
 
@@ -67,7 +67,7 @@ async function fixApprovedOrders() {
         console.log(`  ⚠️  Comissão já existe (ID: ${existingCommission.id.substring(0, 8)})`);
       } else {
         // 4. Criar comissão
-        const commission = await prisma.commission.create({
+        const commission = await prisma.commissions.create({
           data: {
             orderId: order.id,
             producerId: order.product.producerId,
@@ -103,7 +103,7 @@ async function fixApprovedOrders() {
     console.log('='.repeat(60));
 
     // Verificar se todas as comissões foram criadas
-    const totalCommissions = await prisma.commission.count();
+    const totalCommissions = await prisma.commissions.count();
     console.log(`\n💰 Total de comissões no sistema agora: ${totalCommissions}`);
 
     const totalCompletedOrders = await prisma.order.count({

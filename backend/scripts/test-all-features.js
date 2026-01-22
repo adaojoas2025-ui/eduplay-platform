@@ -91,7 +91,7 @@ async function testAllFeatures() {
 
     // ========== TESTE 4: VERIFICAR COMISSÕES ==========
     console.log('\n💰 TESTE 4: Verificar sistema de comissões (3%)');
-    const commissions = await prisma.commission.findMany({
+    const commissions = await prisma.commissions.findMany({
       include: {
         order: {
           include: {
