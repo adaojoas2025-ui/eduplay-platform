@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import ProductCard from '../components/ProductCard';
 import { useCart } from '../contexts/CartContext';
+import { getUser, isAuthenticated } from '../lib/auth';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -14,6 +15,24 @@ export default function Home() {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [user, setUser] = useState(null);
+
+  // Check if user can sell (PRODUCER or ADMIN)
+  const canSell = () => {
+    const currentUser = getUser();
+    return currentUser && (currentUser.role === 'PRODUCER' || currentUser.role === 'ADMIN');
+  };
+
+  // Handle sell button click - redirect based on permission
+  const handleSellClick = (e) => {
+    e.preventDefault();
+    if (!isAuthenticated()) {
+      navigate('/login');
+    } else if (canSell()) {
+      navigate('/seller/products/new');
+    } else {
+      navigate('/upgrade-to-producer');
+    }
+  };
 
   // Banners promocionais - você pode configurar estes banners no futuro via admin
   const banners = [
@@ -158,12 +177,21 @@ export default function Home() {
                       <p className="text-xs md:text-lg lg:text-xl text-white/90 mb-2 md:mb-6 max-w-2xl">
                         {banner.description}
                       </p>
-                      <Link
-                        to={banner.buttonLink}
-                        className="inline-block bg-white text-gray-900 px-4 py-2 md:px-8 md:py-4 rounded-lg font-bold text-sm md:text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
-                      >
-                        {banner.buttonText} →
-                      </Link>
+                      {banner.buttonLink === '/seller/products/new' ? (
+                        <button
+                          onClick={handleSellClick}
+                          className="inline-block bg-white text-gray-900 px-4 py-2 md:px-8 md:py-4 rounded-lg font-bold text-sm md:text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                        >
+                          {banner.buttonText} →
+                        </button>
+                      ) : (
+                        <Link
+                          to={banner.buttonLink}
+                          className="inline-block bg-white text-gray-900 px-4 py-2 md:px-8 md:py-4 rounded-lg font-bold text-sm md:text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                        >
+                          {banner.buttonText} →
+                        </Link>
+                      )}
                     </div>
 
                     {/* Image/Icon */}
@@ -230,9 +258,9 @@ export default function Home() {
               <Link to="/marketplace" className="bg-white text-primary-500 px-4 py-2 md:px-8 md:py-4 rounded-lg font-bold text-sm md:text-lg hover:shadow-xl transition-all duration-200">
                 Explorar Produtos
               </Link>
-              <Link to="/seller/products/new" className="bg-transparent border-2 border-white text-white px-4 py-2 md:px-8 md:py-4 rounded-lg font-bold text-sm md:text-lg hover:bg-white hover:text-primary-500 transition-all duration-200">
+              <button onClick={handleSellClick} className="bg-transparent border-2 border-white text-white px-4 py-2 md:px-8 md:py-4 rounded-lg font-bold text-sm md:text-lg hover:bg-white hover:text-primary-500 transition-all duration-200">
                 Começar a Vender
-              </Link>
+              </button>
             </div>
           </div>
         </div>
