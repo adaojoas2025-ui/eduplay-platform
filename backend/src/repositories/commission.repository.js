@@ -16,25 +16,6 @@ const createCommission = async (commissionData) => {
   try {
     const commission = await prisma.commissions.create({
       data: commissionData,
-      include: {
-        orders: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                title: true,
-              },
-            },
-          },
-        },
-        users: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
     });
     logger.info('Commission created', { commissionId: commission.id });
     return commission;
