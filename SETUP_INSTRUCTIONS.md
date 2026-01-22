@@ -1,8 +1,8 @@
-# 🚀 Instruções de Configuração - EDUPLAY
+# Instruções de Configuração - EDUPLAY
 
 ## Passo a Passo para Rodar o Projeto
 
-### 📋 Pré-requisitos
+### Pré-requisitos
 
 Antes de começar, certifique-se de ter instalado:
 
@@ -10,7 +10,11 @@ Antes de começar, certifique-se de ter instalado:
 2. **PostgreSQL** - [Download aqui](https://www.postgresql.org/download/)
 3. **Git** (opcional) - [Download aqui](https://git-scm.com/)
 
-### 🗄️ 1. Configurar o Banco de Dados PostgreSQL
+---
+
+## Ambiente de Desenvolvimento (Local)
+
+### 1. Configurar o Banco de Dados PostgreSQL
 
 #### Windows:
 1. Abra o pgAdmin ou use o terminal
@@ -28,7 +32,7 @@ Substitua:
 - `usuario` - seu usuário do PostgreSQL (padrão: `postgres`)
 - `senha` - sua senha do PostgreSQL
 
-### 🔧 2. Configurar o Backend
+### 2. Configurar o Backend
 
 Abra o terminal na pasta `backend`:
 
@@ -51,25 +55,23 @@ DATABASE_URL="postgresql://postgres:sua_senha@localhost:5432/eduplay?schema=publ
 
 # JWT Secret - OBRIGATÓRIO
 JWT_SECRET="eduplay_secret_key_2024_change_in_production"
+JWT_REFRESH_SECRET="eduplay_refresh_secret_key_2024"
 
-# Mercado Pago - JÁ CONFIGURADO
-MP_ACCESS_TOKEN="APP_USR-4893843815915945-120117-beb0db31f37c04eaf6ecb8f4a9037bcb-145851665"
-MP_PUBLIC_KEY="APP_USR-a9edbf1a-d1e3-4c35-9a68-0d890e6bef51"
+# Mercado Pago
+MP_ACCESS_TOKEN="seu_access_token"
 
 # Cloudinary - CONFIGURE SUAS CREDENCIAIS
-# Cadastre-se grátis em: https://cloudinary.com/
-CLOUDINARY_CLOUD_NAME="seu_cloud_name"
-CLOUDINARY_API_KEY="sua_api_key"
+CLOUDINARY_CLOUD_NAME="dexlzykqm"
+CLOUDINARY_API_KEY="761719984596219"
 CLOUDINARY_API_SECRET="seu_api_secret"
 
-# Email - OPCIONAL (para envio de emails)
-# Use App Password do Gmail
-EMAIL_USER="seu_email@gmail.com"
-EMAIL_PASS="sua_senha_de_app"
+# Email (SendGrid) - OBRIGATÓRIO PARA PRODUÇÃO
+SENDGRID_API_KEY="SG.xxxxx..."
 
 # Server
 PORT=3000
 FRONTEND_URL="http://localhost:5173"
+BACKEND_URL="http://localhost:3000"
 ```
 
 #### Executar migrations do Prisma:
@@ -79,29 +81,15 @@ npx prisma generate
 npx prisma migrate dev --name init
 ```
 
-#### (Opcional) Criar usuário admin inicial:
-
-Abra o Prisma Studio:
-```bash
-npx prisma studio
-```
-
-Navegue para a tabela `User` e crie um usuário:
-- name: Admin
-- email: admin@eduplay.com
-- password: `$2a$10$X7QWQoQKZz9QKqQzQqQzQeX7QWQoQKZz9QKqQzQqQzQeX7QWQoQ` (senha: "admin123")
-- role: ADMIN
-- status: APPROVED
-
 #### Iniciar o servidor backend:
 
 ```bash
 npm run dev
 ```
 
-✅ Backend rodando em: `http://localhost:3000`
+Backend rodando em: `http://localhost:3000`
 
-### 🎨 3. Configurar o Frontend
+### 3. Configurar o Frontend
 
 Abra um NOVO terminal na pasta `frontend`:
 
@@ -116,9 +104,11 @@ npm install
 
 #### Configurar variável de ambiente:
 
-O arquivo `frontend/.env` já está configurado:
+Edite o arquivo `frontend/.env`:
 ```env
-VITE_API_URL=http://localhost:3000/api
+VITE_API_URL=http://localhost:3000/api/v1
+VITE_CLOUDINARY_CLOUD_NAME=dexlzykqm
+VITE_CLOUDINARY_UPLOAD_PRESET=eduplay_apps
 ```
 
 #### Iniciar o servidor frontend:
@@ -127,11 +117,75 @@ VITE_API_URL=http://localhost:3000/api
 npm run dev
 ```
 
-✅ Frontend rodando em: `http://localhost:5173`
+Frontend rodando em: `http://localhost:5173`
 
-### 🎯 4. Testar o Sistema
+---
 
-1. **Abra o navegador**: http://localhost:5173
+## Ambiente de Produção (Render)
+
+### URLs de Produção
+
+- **Frontend:** https://eduplay-frontend.onrender.com
+- **Backend:** https://eduplay-platform.onrender.com
+- **API:** https://eduplay-platform.onrender.com/api/v1
+
+### Variáveis de Ambiente no Render (Backend)
+
+```env
+# Database
+DATABASE_URL=postgresql://eduplay_user:xxx@xxx/eduplay_db
+
+# JWT
+JWT_SECRET=xxx
+JWT_REFRESH_SECRET=xxx
+
+# Email (SendGrid - FUNCIONA NO RENDER)
+SENDGRID_API_KEY=SG.xxxxx...
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=dexlzykqm
+CLOUDINARY_API_KEY=761719984596219
+CLOUDINARY_API_SECRET=xxx
+
+# Google OAuth
+GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=xxx
+GOOGLE_CALLBACK_URL=https://eduplay-platform.onrender.com/api/v1/auth/google/callback
+
+# Mercado Pago
+MP_ACCESS_TOKEN=APP_USR-xxx
+
+# URLs
+NODE_ENV=production
+BACKEND_URL=https://eduplay-platform.onrender.com
+FRONTEND_URL=https://eduplay-frontend.onrender.com
+```
+
+### IMPORTANTE: Email no Render
+
+**Render bloqueia portas SMTP (587, 465)**. Sempre use serviços de email via API HTTP:
+
+- **SendGrid API** (recomendado)
+- Resend API
+- Brevo API (chave `xkeysib-`, NÃO `xsmtpsib-`)
+
+**NÃO FUNCIONA no Render:**
+- Brevo SMTP
+- Gmail SMTP
+- Qualquer serviço SMTP
+
+### Endpoint de Diagnóstico
+
+Para verificar configuração de email:
+```
+GET https://eduplay-platform.onrender.com/api/v1/email-status
+```
+
+---
+
+## Testar o Sistema
+
+1. **Abra o navegador**: http://localhost:5173 (local) ou https://eduplay-frontend.onrender.com (produção)
 
 2. **Criar conta de comprador**:
    - Clique em "Criar conta"
@@ -144,16 +198,15 @@ npm run dev
    - Escolha tipo: "Produtor (vender produtos)"
    - Aguardará aprovação do admin
 
-4. **Login como admin** (se criou):
-   - Email: admin@eduplay.com
-   - Senha: admin123
+4. **Login como admin**:
+   - Email: ja.eduplay@gmail.com
    - Aprove produtores pendentes
 
 5. **Criar produto** (como produtor aprovado):
    - Vá para "Dashboard"
    - Clique em "Novo Produto"
    - Preencha os dados e envie arquivos
-   - Aguarde aprovação do admin
+   - Aguarde aprovação do admin (email será enviado)
 
 6. **Comprar produto** (como comprador):
    - Navegue pelos produtos
@@ -161,9 +214,11 @@ npm run dev
    - Clique em "Comprar Agora"
    - Será redirecionado para o Mercado Pago
 
-### 🐛 Solução de Problemas
+---
 
-#### Backend não inicia:
+## Solução de Problemas
+
+### Backend não inicia:
 
 1. **Erro de conexão com banco de dados**:
    - Verifique se PostgreSQL está rodando
@@ -183,7 +238,7 @@ npm run dev
    npx prisma migrate reset
    ```
 
-#### Frontend não inicia:
+### Frontend não inicia:
 
 1. **Erro de dependências**:
    ```bash
@@ -196,47 +251,30 @@ npm run dev
    - Verifique se backend está rodando
    - Confirme `VITE_API_URL` no frontend/.env
 
-#### Upload de arquivos não funciona:
+### Upload de arquivos não funciona:
 
 - Configure credenciais do Cloudinary no backend/.env
-- Cadastre-se grátis em: https://cloudinary.com/
+- Verifique se o preset `eduplay_apps` está configurado como **unsigned** no Cloudinary
 
-#### Emails não são enviados:
+### Emails não são enviados:
 
-1. Use App Password do Gmail:
-   - Acesse: https://myaccount.google.com/apppasswords
-   - Gere uma senha de app
-   - Use no EMAIL_PASS
+**Em produção (Render):**
+- Use SendGrid com `SENDGRID_API_KEY`
+- NÃO use SMTP (portas bloqueadas no Render)
 
-### 📚 Recursos Úteis
-
-- **Documentação Prisma**: https://www.prisma.io/docs
-- **Documentação Mercado Pago**: https://www.mercadopago.com.br/developers
-- **Documentação React**: https://react.dev/
-- **Documentação TailwindCSS**: https://tailwindcss.com/docs
-
-### 🎓 Próximos Passos
-
-1. Configure o Cloudinary para upload de arquivos
-2. Configure o email para envio automático
-3. Teste o fluxo completo de compra
-4. Personalize cores e textos
-5. Adicione mais produtos
-
-### 🚀 Deploy (Produção)
-
-#### Backend (Render, Railway, Heroku):
-1. Faça push do código
-2. Configure variáveis de ambiente
-3. Execute: `npx prisma migrate deploy`
-
-#### Frontend (Vercel, Netlify):
-1. Faça push do código
-2. Configure `VITE_API_URL` para URL do backend
-3. Build automático
+**Local:**
+- Use App Password do Gmail ou SendGrid
 
 ---
 
-**Precisa de ajuda?** Consulte o README.md ou abra uma issue no repositório.
+## Recursos Úteis
 
-**Boa sorte com seu marketplace! 🎉**
+- **Documentação Prisma**: https://www.prisma.io/docs
+- **Documentação Mercado Pago**: https://www.mercadopago.com.br/developers
+- **Documentação SendGrid**: https://docs.sendgrid.com/
+- **Documentação React**: https://react.dev/
+- **Documentação TailwindCSS**: https://tailwindcss.com/docs
+
+---
+
+**Última Atualização:** 22 de Janeiro de 2025
