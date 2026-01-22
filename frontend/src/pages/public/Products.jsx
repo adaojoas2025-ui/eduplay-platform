@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { productAPI } from '../../services/api';
 import ProductCard from '../../components/ProductCard';
-import { Search } from 'lucide-react';
+import { FiSearch } from 'react-icons/fi';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -47,7 +47,7 @@ export default function Products() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
         </div>
       </form>
 

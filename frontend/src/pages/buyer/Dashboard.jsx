@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShoppingBag } from 'lucide-react';
+import { FiShoppingBag } from 'react-icons/fi';
 
 export default function BuyerDashboard() {
   return (
@@ -10,7 +10,7 @@ export default function BuyerDashboard() {
         <Link to="/buyer/purchases" className="card hover:shadow-xl transition group">
           <div className="flex items-center space-x-4">
             <div className="bg-primary-100 p-4 rounded-lg group-hover:bg-primary group-hover:text-white transition">
-              <ShoppingBag className="h-8 w-8 text-primary group-hover:text-white" />
+              <FiShoppingBag className="h-8 w-8 text-primary group-hover:text-white" />
             </div>
             <div>
               <h2 className="text-xl font-semibold">Minhas Compras</h2>
@@ -22,7 +22,7 @@ export default function BuyerDashboard() {
         <Link to="/products" className="card hover:shadow-xl transition group">
           <div className="flex items-center space-x-4">
             <div className="bg-secondary-100 p-4 rounded-lg group-hover:bg-secondary group-hover:text-white transition">
-              <ShoppingBag className="h-8 w-8 text-secondary group-hover:text-white" />
+              <FiShoppingBag className="h-8 w-8 text-secondary group-hover:text-white" />
             </div>
             <div>
               <h2 className="text-xl font-semibold">Explorar Produtos</h2>

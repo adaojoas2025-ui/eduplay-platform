@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productAPI } from '../../services/api';
-import { Upload, Image as ImageIcon } from 'lucide-react';
+import { FiUpload, FiImage } from 'react-icons/fi';
 
 export default function AddProduct() {
   const navigate = useNavigate();
@@ -91,7 +91,7 @@ export default function AddProduct() {
 
             <div>
               <label className="label flex items-center">
-                <ImageIcon className="h-5 w-5 mr-2" />
+                <FiImage className="h-5 w-5 mr-2" />
                 Imagem de Capa (Thumbnail)
               </label>
               <input
@@ -104,7 +104,7 @@ export default function AddProduct() {
 
             <div>
               <label className="label flex items-center">
-                <Upload className="h-5 w-5 mr-2" />
+                <FiUpload className="h-5 w-5 mr-2" />
                 Arquivos do Produto (PDFs, vídeos, etc.)
               </label>
               <input

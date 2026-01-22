@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api';
-import { Check, X, ExternalLink } from 'lucide-react';
+import { FiCheck, FiX, FiExternalLink } from 'react-icons/fi';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -104,7 +104,7 @@ export default function AdminProducts() {
                             className="text-xs bg-gray-100 px-2 py-1 rounded flex items-center hover:bg-gray-200"
                           >
                             {file.name}
-                            <ExternalLink className="h-3 w-3 ml-1" />
+                            <FiExternalLink className="h-3 w-3 ml-1" />
                           </a>
                         ))}
                       </div>
@@ -116,14 +116,14 @@ export default function AdminProducts() {
                       onClick={() => handleApprove(product.id)}
                       className="btn btn-success flex items-center"
                     >
-                      <Check className="h-5 w-5 mr-2" />
+                      <FiCheck className="h-5 w-5 mr-2" />
                       Aprovar Produto
                     </button>
                     <button
                       onClick={() => handleReject(product.id)}
                       className="btn bg-red-600 text-white hover:bg-red-700 flex items-center"
                     >
-                      <X className="h-5 w-5 mr-2" />
+                      <FiX className="h-5 w-5 mr-2" />
                       Rejeitar
                     </button>
                   </div>

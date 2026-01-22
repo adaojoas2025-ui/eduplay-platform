@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { orderAPI } from '../../services/api';
-import { Download, Calendar } from 'lucide-react';
+import { FiDownload, FiCalendar } from 'react-icons/fi';
 
 export default function MyPurchases() {
   const [purchases, setPurchases] = useState([]);
@@ -64,7 +64,7 @@ export default function MyPurchases() {
 
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
+                        <FiCalendar className="h-4 w-4 mr-1" />
                         {new Date(purchase.createdAt).toLocaleDateString('pt-BR')}
                       </div>
                       <span className="font-semibold text-primary">
@@ -80,7 +80,7 @@ export default function MyPurchases() {
 
                   <div className="lg:w-80">
                     <h4 className="font-semibold mb-3 flex items-center">
-                      <Download className="h-5 w-5 mr-2" />
+                      <FiDownload className="h-5 w-5 mr-2" />
                       Downloads Disponíveis
                     </h4>
 
@@ -92,7 +92,7 @@ export default function MyPurchases() {
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium">Baixar App (Sem Propaganda)</span>
-                            <Download className="h-4 w-4 flex-shrink-0 ml-2" />
+                            <FiDownload className="h-4 w-4 flex-shrink-0 ml-2" />
                           </div>
                         </a>
                       </div>
@@ -108,7 +108,7 @@ export default function MyPurchases() {
                           >
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-medium truncate">{file.name}</span>
-                              <Download className="h-4 w-4 flex-shrink-0 ml-2" />
+                              <FiDownload className="h-4 w-4 flex-shrink-0 ml-2" />
                             </div>
                             <span className="text-xs opacity-75">
                               {(file.size / 1024 / 1024).toFixed(2)} MB

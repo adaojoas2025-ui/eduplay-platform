@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { orderAPI, productAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { DollarSign, Package, TrendingUp, Plus } from 'lucide-react';
+import { FiDollarSign, FiPackage, FiTrendingUp, FiPlus } from 'react-icons/fi';
 
 export default function ProducerDashboard() {
   const { user } = useAuth();
@@ -57,7 +57,7 @@ export default function ProducerDashboard() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Dashboard do Produtor</h1>
         <Link to="/producer/products/add" className="btn btn-primary flex items-center">
-          <Plus className="h-5 w-5 mr-2" />
+          <FiPlus className="h-5 w-5 mr-2" />
           Novo Produto
         </Link>
       </div>
@@ -70,7 +70,7 @@ export default function ProducerDashboard() {
               <p className="text-primary-100 text-sm">Total de Vendas</p>
               <p className="text-3xl font-bold">{stats?.totalSales || 0}</p>
             </div>
-            <TrendingUp className="h-12 w-12 text-primary-200" />
+            <FiTrendingUp className="h-12 w-12 text-primary-200" />
           </div>
         </div>
 
@@ -80,7 +80,7 @@ export default function ProducerDashboard() {
               <p className="text-success-100 text-sm">Receita Total</p>
               <p className="text-3xl font-bold">R$ {stats?.totalRevenue?.toFixed(2) || '0.00'}</p>
             </div>
-            <DollarSign className="h-12 w-12 text-success-200" />
+            <FiDollarSign className="h-12 w-12 text-success-200" />
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export default function ProducerDashboard() {
               <p className="text-secondary-100 text-sm">Produtos</p>
               <p className="text-3xl font-bold">{products.length}</p>
             </div>
-            <Package className="h-12 w-12 text-secondary-200" />
+            <FiPackage className="h-12 w-12 text-secondary-200" />
           </div>
         </div>
       </div>

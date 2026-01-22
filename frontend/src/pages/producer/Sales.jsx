@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { orderAPI } from '../../services/api';
-import { DollarSign, Package } from 'lucide-react';
+import { FiDollarSign, FiPackage } from 'react-icons/fi';
 
 export default function Sales() {
   const [sales, setSales] = useState([]);
@@ -43,7 +43,7 @@ export default function Sales() {
               <p className="text-success-100 text-sm">Total de Vendas</p>
               <p className="text-3xl font-bold">{stats?.totalSales || 0}</p>
             </div>
-            <Package className="h-12 w-12 text-success-200" />
+            <FiPackage className="h-12 w-12 text-success-200" />
           </div>
         </div>
 
@@ -53,7 +53,7 @@ export default function Sales() {
               <p className="text-primary-100 text-sm">Receita Total</p>
               <p className="text-3xl font-bold">R$ {stats?.totalRevenue?.toFixed(2) || '0.00'}</p>
             </div>
-            <DollarSign className="h-12 w-12 text-primary-200" />
+            <FiDollarSign className="h-12 w-12 text-primary-200" />
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export default function Sales() {
               <p className="text-secondary-100 text-sm">Minha Comissão (90%)</p>
               <p className="text-3xl font-bold">R$ {stats?.totalCommission?.toFixed(2) || '0.00'}</p>
             </div>
-            <DollarSign className="h-12 w-12 text-secondary-200" />
+            <FiDollarSign className="h-12 w-12 text-secondary-200" />
           </div>
         </div>
       </div>

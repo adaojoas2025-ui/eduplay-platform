@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { productAPI } from '../../services/api';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi';
 
 export default function MyProducts() {
   const [products, setProducts] = useState([]);
@@ -46,7 +46,7 @@ export default function MyProducts() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Meus Produtos</h1>
         <Link to="/producer/products/add" className="btn btn-primary flex items-center">
-          <Plus className="h-5 w-5 mr-2" />
+          <FiPlus className="h-5 w-5 mr-2" />
           Novo Produto
         </Link>
       </div>
@@ -75,14 +75,14 @@ export default function MyProducts() {
 
               <div className="flex gap-2">
                 <Link to={`/producer/products/edit/${product.id}`} className="btn btn-outline flex items-center">
-                  <Edit className="h-4 w-4 mr-1" />
+                  <FiEdit className="h-4 w-4 mr-1" />
                   Editar
                 </Link>
                 <button
                   onClick={() => handleDelete(product.id)}
                   className="btn bg-red-600 text-white hover:bg-red-700 flex items-center"
                 >
-                  <Trash2 className="h-4 w-4 mr-1" />
+                  <FiTrash2 className="h-4 w-4 mr-1" />
                   Deletar
                 </button>
               </div>
@@ -93,7 +93,7 @@ export default function MyProducts() {
         <div className="card text-center py-12">
           <p className="text-gray-600 mb-4">Você ainda não tem produtos</p>
           <Link to="/producer/products/add" className="btn btn-primary inline-flex items-center">
-            <Plus className="h-5 w-5 mr-2" />
+            <FiPlus className="h-5 w-5 mr-2" />
             Criar Primeiro Produto
           </Link>
         </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api';
-import { Check, X, Ban } from 'lucide-react';
+import { FiCheck, FiX, FiSlash } from 'react-icons/fi';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -127,14 +127,14 @@ export default function AdminUsers() {
                           onClick={() => handleApprove(user.id)}
                           className="btn bg-success text-white hover:bg-success-700 flex items-center text-sm px-2 py-1"
                         >
-                          <Check className="h-4 w-4 mr-1" />
+                          <FiCheck className="h-4 w-4 mr-1" />
                           Aprovar
                         </button>
                         <button
                           onClick={() => handleReject(user.id)}
                           className="btn bg-red-600 text-white hover:bg-red-700 flex items-center text-sm px-2 py-1"
                         >
-                          <X className="h-4 w-4 mr-1" />
+                          <FiX className="h-4 w-4 mr-1" />
                           Rejeitar
                         </button>
                       </>
@@ -144,7 +144,7 @@ export default function AdminUsers() {
                         onClick={() => handleSuspend(user.id)}
                         className="btn bg-gray-600 text-white hover:bg-gray-700 flex items-center text-sm px-2 py-1"
                       >
-                        <Ban className="h-4 w-4 mr-1" />
+                        <FiSlash className="h-4 w-4 mr-1" />
                         Suspender
                       </button>
                     )}

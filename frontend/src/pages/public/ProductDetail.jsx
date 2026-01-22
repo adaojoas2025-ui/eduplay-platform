@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { productAPI, orderAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { User, ShoppingCart, FileText } from 'lucide-react';
+import { FiUser, FiShoppingCart, FiFileText } from 'react-icons/fi';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -72,7 +72,7 @@ export default function ProductDetail() {
           {product.thumbnail ? (
             <img src={product.thumbnail} alt={product.title} className="w-full h-full object-cover" />
           ) : (
-            <ShoppingCart className="h-32 w-32 text-primary-300" />
+            <FiShoppingCart className="h-32 w-32 text-primary-300" />
           )}
         </div>
 
@@ -82,7 +82,7 @@ export default function ProductDetail() {
 
           {product.producer && (
             <div className="flex items-center space-x-2 text-gray-600 mb-4">
-              <User className="h-5 w-5" />
+              <FiUser className="h-5 w-5" />
               <span>Por {product.producer.name}</span>
             </div>
           )}
@@ -99,7 +99,7 @@ export default function ProductDetail() {
           {product.files && product.files.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold mb-2 flex items-center">
-                <FileText className="h-5 w-5 mr-2" />
+                <FiFileText className="h-5 w-5 mr-2" />
                 Arquivos inclusos ({product.files.length})
               </h3>
               <ul className="list-disc list-inside text-gray-700">
