@@ -80,7 +80,7 @@ export default function Navbar() {
                 📱 Apps
               </Link>
               {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
-                <Link to="/producer/dashboard" className="text-xs font-semibold text-primary-600 hover:text-primary-700 px-3 py-1.5 whitespace-nowrap flex items-center gap-1">
+                <Link to="/seller/products/new" className="text-xs font-semibold text-primary-600 hover:text-primary-700 px-3 py-1.5 whitespace-nowrap flex items-center gap-1">
                   💰 Vender
                   <FiChevronDown className="w-3 h-3 -rotate-90" />
                 </Link>
@@ -206,8 +206,8 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  {user?.role === 'PRODUCER' && (
-                    <Link to="/producer/dashboard" className="flex items-center space-x-1 text-primary-600 hover:text-primary-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                  {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
+                    <Link to="/seller/products/new" className="flex items-center space-x-1 text-primary-600 hover:text-primary-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
                       <FiDollarSign className="w-4 h-4" />
                       <span>Vender</span>
                       <FiChevronDown className="w-4 h-4 -rotate-90" />
