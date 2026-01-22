@@ -17,7 +17,7 @@ const createCommission = async (commissionData) => {
     const commission = await prisma.commissions.create({
       data: commissionData,
       include: {
-        order: {
+        orders: {
           include: {
             product: {
               select: {
@@ -27,7 +27,7 @@ const createCommission = async (commissionData) => {
             },
           },
         },
-        producer: {
+        users: {
           select: {
             id: true,
             name: true,
@@ -54,12 +54,12 @@ const findCommissionById = async (commissionId) => {
     return await prisma.commissions.findUnique({
       where: { id: commissionId },
       include: {
-        order: {
+        orders: {
           include: {
             product: true,
           },
         },
-        producer: {
+        users: {
           select: {
             id: true,
             name: true,
@@ -85,7 +85,7 @@ const findCommissionByOrderId = async (orderId) => {
     return await prisma.commissions.findUnique({
       where: { orderId },
       include: {
-        producer: {
+        users: {
           select: {
             id: true,
             name: true,
@@ -112,7 +112,7 @@ const updateCommission = async (commissionId, updateData) => {
       where: { id: commissionId },
       data: updateData,
       include: {
-        producer: {
+        users: {
           select: {
             id: true,
             name: true,
@@ -139,7 +139,7 @@ const updateCommission = async (commissionId, updateData) => {
 const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
   try {
     const { page = 1, limit = 10 } = pagination;
-    const { sortBy = 'createdAt', order = 'desc' } = sorting;
+    const { sortBy = 'createdAt', order: sortOrder = 'desc' } = sorting;
     const skip = (page - 1) * limit;
 
     const where = {};
@@ -169,9 +169,9 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
         where,
         skip,
         take: limit,
-        orderBy: { [sortBy]: order },
+        orderBy: { [sortBy]: sortOrder },
         include: {
-          order: {
+          orders: {
             include: {
               product: {
                 select: {
@@ -188,7 +188,7 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
               },
             },
           },
-          producer: {
+          users: {
             select: {
               id: true,
               name: true,
@@ -212,7 +212,7 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
         },
         skip,
         take: limit,
-        orderBy: { [sortBy]: order },
+        orderBy: { [sortBy]: sortOrder },
         include: {
           buyer: {
             select: {
@@ -238,20 +238,20 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
     ]);
 
     // Transformar app orders em formato de comissão para o frontend
-    const appCommissions = appOrders.map(order => ({
-      id: `app-${order.id}`,
-      orderId: order.id,
+    const appCommissions = appOrders.map(appOrder => ({
+      id: `app-${appOrder.id}`,
+      orderId: appOrder.id,
       producerId: null,
-      producer: null,
-      amount: order.amount, // 100% vai para a plataforma
+      users: null,
+      amount: appOrder.amount, // 100% vai para a plataforma
       status: 'PAID', // Apps são considerados como já pagos (receita da plataforma)
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt,
-      order: {
-        ...order,
+      createdAt: appOrder.createdAt,
+      updatedAt: appOrder.updatedAt,
+      orders: {
+        ...appOrder,
         product: {
-          id: order.metadata?.appId || null,
-          title: order.metadata?.appTitle || 'App',
+          id: appOrder.metadata?.appId || null,
+          title: appOrder.metadata?.appTitle || 'App',
         },
       },
       isAppSale: true, // Flag para identificar vendas de apps
@@ -259,7 +259,7 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
 
     // Mesclar comissões e vendas de apps
     const allItems = [...commissions, ...appCommissions].sort((a, b) => {
-      if (order === 'desc') {
+      if (sortOrder === 'desc') {
         return new Date(b.createdAt) - new Date(a.createdAt);
       }
       return new Date(a.createdAt) - new Date(b.createdAt);
@@ -353,7 +353,7 @@ const getPendingCommissions = async (producerId) => {
         status: 'PENDING',
       },
       include: {
-        order: {
+        orders: {
           include: {
             product: {
               select: {
@@ -495,7 +495,7 @@ const getCommissionStats = async (filters = {}) => {
       prisma.commissions.findMany({
         where,
         include: {
-          order: {
+          orders: {
             select: {
               amount: true,
             },
@@ -517,7 +517,7 @@ const getCommissionStats = async (filters = {}) => {
 
     // Calculate total sales revenue from products (sum of all order amounts with commissions)
     const totalSalesRevenue = totalSales.reduce((sum, commission) => {
-      return sum + (commission.order?.amount || 0);
+      return sum + (commission.orders?.amount || 0);
     }, 0);
 
     // Get app sales (orders without commissions - 100% goes to platform)
