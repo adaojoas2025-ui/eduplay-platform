@@ -34,7 +34,7 @@ if (process.env.BREVO_API_KEY) {
       port: 587,
       secure: false,
       auth: {
-        user: process.env.BREVO_SMTP_USER || 'ja.eduplay@gmail.com',
+        user: process.env.BREVO_SMTP_USER || 'a089a0001@smtp-brevo.com',
         pass: process.env.BREVO_API_KEY,
       },
     });
