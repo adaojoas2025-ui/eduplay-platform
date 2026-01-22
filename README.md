@@ -63,6 +63,8 @@ Sistema 100% funcional com pagamentos via Mercado Pago, gamificação, comissõe
 - ✅ Publicação de apps (admin only)
 - ✅ Sistema de gamificação visível
 - ✅ Upgrade Comprador → Produtor
+- ✅ Botão "Vender" visível para todos usuários logados
+- ✅ Formulário de criação de produto acessível a todos
 
 ---
 
@@ -213,6 +215,11 @@ educaplayja/
 - Receber 97% das vendas
 - Visualizar comissões
 
+### 👤 Qualquer Usuário Logado
+- Botão "Vender" disponível no Navbar
+- Acesso direto ao formulário de criação de produto
+- Pode criar e vender produtos após login
+
 ### 🛡️ Administradores
 - Dashboard com estatísticas completas
 - Gerenciar usuários
@@ -294,6 +301,6 @@ MIT License
 
 ---
 
-**Versão:** 1.5.0
+**Versão:** 1.6.0
 **Status:** ✅ Produção
-**Última atualização:** Dezembro 2024
+**Última atualização:** Janeiro 2026

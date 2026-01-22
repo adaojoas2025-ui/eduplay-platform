@@ -1,12 +1,60 @@
-# EDUPLAY - Changelog Janeiro 2025
+# EDUPLAY - Changelog Janeiro 2025/2026
 
-## Resumo das Alterações (16-22 Janeiro 2025)
+## Resumo das Alterações (16 Jan 2025 - 22 Jan 2026)
 
 Este documento detalha todas as correções, melhorias e implementações realizadas na plataforma EduplayJA durante o período de deploy e estabilização em produção.
 
 ---
 
-## 📧 Sistema de Email (Resolvido - 22 Jan)
+## 🛒 Botão "Vender" e Navegação (Resolvido - 22 Jan 2026)
+
+### Problema Inicial
+- O botão "Vender" no Navbar não estava visível para todos os usuários
+- Apenas usuários com role PRODUCER ou ADMIN podiam ver o botão
+- Botão "Vender Agora" na Home e "Vender" no Navbar deveriam ter a mesma rota
+
+### Solução Implementada
+
+#### 1. Corrigido erro de build - authAPI não exportado
+**Arquivo:** `frontend/src/services/api.js`
+
+```javascript
+// Adicionados exports nomeados para APIs
+export const authAPI = {
+  login: (data) => api.post('/auth/login', data),
+  register: (data) => api.post('/auth/register', data),
+  me: () => api.get('/auth/me'),
+  // ...
+};
+
+export const productAPI = { /* ... */ };
+export const orderAPI = { /* ... */ };
+```
+
+#### 2. Botão "Vender" agora visível para TODOS os usuários logados
+**Arquivo:** `frontend/src/components/Navbar.jsx`
+
+```javascript
+// ANTES: Apenas PRODUCER/ADMIN
+{(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
+  <Link to="/seller/products/new">Vender</Link>
+)}
+
+// DEPOIS: Todos os usuários logados
+<Link to="/seller/products/new">Vender</Link>
+```
+
+#### 3. Rota unificada
+- Botão "Vender" no Navbar: `/seller/products/new`
+- Botão "Vender Agora" na Home: `/seller/products/new`
+
+### Commits Relacionados
+- `fix: Add authAPI export to api.js to fix build error`
+- `feat: Show Vender button for all logged users`
+
+---
+
+## 📧 Sistema de Email (Resolvido - 22 Jan 2025)
 
 ### Problema Inicial
 - Emails de notificação não estavam sendo enviados
