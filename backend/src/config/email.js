@@ -2,7 +2,7 @@
  * Email Configuration
  * Email service using Brevo SMTP (primary), Resend or SendGrid (fallback)
  * @module config/email
- * @updated 2026-01-21T20:00:00Z
+ * @updated 2026-01-22T13:00:00Z
  */
 
 const nodemailer = require('nodemailer');
