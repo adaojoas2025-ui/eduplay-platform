@@ -1,12 +1,11 @@
 /**
  * Email Configuration
- * Email service using Brevo SMTP (primary), Resend or SendGrid (fallback)
- * Emails are sent asynchronously to avoid blocking operations
+ * Email service using Resend API (works on Render)
+ * Brevo SMTP is blocked on Render, so we use Resend as primary
  * @module config/email
  * @updated 2026-01-22T13:15:00Z
  */
 
-const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 
 logger.info('📧 Initializing email service...');
@@ -14,69 +13,43 @@ logger.info('🔍 Checking environment variables...', {
   hasBrevoKey: !!process.env.BREVO_API_KEY,
   hasResendKey: !!process.env.RESEND_API_KEY,
   hasSendGridKey: !!process.env.SENDGRID_API_KEY,
-  brevoKeyLength: process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.length : 0,
 });
 
 // Service flags
-let useBrevo = false;
 let useResend = false;
 let useSendGrid = false;
 
 // Service instances
-let brevoTransporter = null;
 let resend = null;
 let sgMail = null;
 
-// Try Brevo first (primary) - using SMTP with nodemailer
-// Using port 465 with SSL as port 587 is blocked on Render
-if (process.env.BREVO_API_KEY) {
-  try {
-    brevoTransporter = nodemailer.createTransport({
-      host: 'smtp-relay.brevo.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.BREVO_SMTP_USER || 'a089a0001@smtp-brevo.com',
-        pass: process.env.BREVO_API_KEY,
-      },
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 60000,
-    });
-
-    useBrevo = true;
-    logger.info('✅ Using Brevo SMTP for email service');
-  } catch (error) {
-    logger.error('❌ Failed to initialize Brevo SMTP:', error.message);
-  }
-}
-
-// Fallback to Resend
-if (!useBrevo && process.env.RESEND_API_KEY) {
+// Try Resend first (primary) - HTTP API works on Render
+if (process.env.RESEND_API_KEY) {
   try {
     const { Resend } = require('resend');
     resend = new Resend(process.env.RESEND_API_KEY);
     useResend = true;
-    logger.info('✅ Using Resend for email service (fallback)');
+    logger.info('✅ Using Resend for email service');
   } catch (error) {
     logger.error('❌ Failed to initialize Resend:', error.message);
   }
 }
 
 // Fallback to SendGrid
-if (!useBrevo && !useResend && process.env.SENDGRID_API_KEY) {
+if (!useResend && process.env.SENDGRID_API_KEY) {
   try {
     sgMail = require('@sendgrid/mail');
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
     useSendGrid = true;
-    logger.info('✅ Using SendGrid for email service (fallback)');
+    logger.info('✅ Using SendGrid for email service');
   } catch (error) {
     logger.error('❌ Failed to initialize SendGrid:', error.message);
   }
 }
 
-if (!useBrevo && !useResend && !useSendGrid) {
-  logger.warn('⚠️  No email service configured (BREVO_API_KEY, RESEND_API_KEY or SENDGRID_API_KEY not found)');
+if (!useResend && !useSendGrid) {
+  logger.warn('⚠️  No email service configured (RESEND_API_KEY or SENDGRID_API_KEY not found)');
+  logger.warn('⚠️  Note: Brevo SMTP is blocked on Render. Use Resend or SendGrid instead.');
 }
 
 /**
@@ -84,11 +57,6 @@ if (!useBrevo && !useResend && !useSendGrid) {
  */
 const verifyConnection = async () => {
   try {
-    if (useBrevo && brevoTransporter) {
-      await brevoTransporter.verify();
-      logger.info('✅ Brevo SMTP connection verified');
-      return true;
-    }
     if (useResend || useSendGrid) {
       logger.info('✅ Email service ready');
       return true;
@@ -132,28 +100,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
  */
 const sendEmailInternal = async ({ to, subject, html, text }) => {
   try {
-    // Use Brevo SMTP if available (primary)
-    if (useBrevo && brevoTransporter) {
-      logger.info('📤 Sending email via Brevo SMTP...', { to, subject });
-
-      const result = await brevoTransporter.sendMail({
-        from: `"EDUPLAY" <${process.env.EMAIL_FROM_ADDRESS || 'ja.eduplay@gmail.com'}>`,
-        to: to,
-        subject: subject,
-        html: html,
-        text: text || subject,
-      });
-
-      logger.info('✅ Email sent successfully via Brevo SMTP', {
-        to,
-        subject,
-        messageId: result.messageId,
-      });
-
-      return result;
-    }
-
-    // Fallback to Resend
+    // Use Resend if available (primary)
     if (useResend && resend) {
       logger.info('📤 Sending email via Resend...', { to, subject });
 
@@ -201,7 +148,8 @@ const sendEmailInternal = async ({ to, subject, html, text }) => {
       return response;
     }
 
-    throw new Error('No email service configured');
+    logger.warn('⚠️  No email service available - email not sent', { to, subject });
+    return { skipped: true, reason: 'No email service configured' };
   } catch (error) {
     logger.error('❌ Error sending email:', {
       error: error.message,
@@ -216,7 +164,6 @@ const sendEmailInternal = async ({ to, subject, html, text }) => {
  * Get active email service name
  */
 const getActiveService = () => {
-  if (useBrevo) return 'brevo-smtp';
   if (useResend) return 'resend';
   if (useSendGrid) return 'sendgrid';
   return 'none';
@@ -226,7 +173,7 @@ module.exports = {
   verifyConnection,
   sendEmail,
   getActiveService,
-  usingBrevo: useBrevo,
+  usingBrevo: false,
   usingResend: useResend,
   usingSendGrid: useSendGrid,
 };
