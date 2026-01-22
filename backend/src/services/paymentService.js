@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { preference, payment } = require('../config/mercadopago');
 const { prisma } = require('../config/database');
 const { sendPurchaseEmail, sendSaleNotification } = require('./emailService');
@@ -161,6 +162,7 @@ async function processPaymentWebhook(paymentId) {
           // Create commission record
           await prisma.commissions.create({
             data: {
+              id: crypto.randomUUID(),
               orderId: order.id,
               producerId: product.producerId,
               amount: platformFeeAmount,

@@ -184,6 +184,7 @@ const updateOrderStatus = async (orderId, status, additionalData = {}) => {
 
         // Create commission for producer
         await commissionRepository.createCommission({
+          id: crypto.randomUUID(),
           orderId: order.id,
           producerId: order.product.producerId,
           amount: order.producerAmount,
