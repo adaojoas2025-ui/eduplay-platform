@@ -28,18 +28,16 @@ let resend = null;
 let sgMail = null;
 
 // Try Brevo first (primary) - using SMTP with nodemailer
+// Using port 465 with SSL as port 587 is blocked on Render
 if (process.env.BREVO_API_KEY) {
   try {
     brevoTransporter = nodemailer.createTransport({
       host: 'smtp-relay.brevo.com',
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.BREVO_SMTP_USER || 'a089a0001@smtp-brevo.com',
         pass: process.env.BREVO_API_KEY,
-      },
-      tls: {
-        rejectUnauthorized: false,
       },
       connectionTimeout: 30000,
       greetingTimeout: 30000,
