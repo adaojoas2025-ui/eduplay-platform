@@ -1,49 +1,61 @@
 # EDUPLAY - Changelog Janeiro 2025
 
-## Resumo das Alterações (16-21 Janeiro 2025)
+## Resumo das Alterações (16-22 Janeiro 2025)
 
 Este documento detalha todas as correções, melhorias e implementações realizadas na plataforma EduplayJA durante o período de deploy e estabilização em produção.
 
 ---
 
-## 📧 Sistema de Email (Resolvido)
+## 📧 Sistema de Email (Resolvido - 22 Jan)
 
 ### Problema Inicial
 - Emails de notificação não estavam sendo enviados
 - SendGrid apresentava rate limiting para contas Gmail em trial
 
-### Soluções Implementadas
+### Histórico de Tentativas
 
-#### 1. Configuração SendGrid (17 Jan)
+#### 1. SendGrid (17 Jan) - Funcionava mas tinha rate limiting
 - Adicionado `SENDGRID_API_KEY` nas variáveis de ambiente do Render
-- Configurado sender verificado
+- Problema: Rate limiting para contas trial
 
-#### 2. Migração para Resend (19 Jan)
+#### 2. Resend (19 Jan) - Testado
 - Instalado pacote `resend`
-- Configurado Resend como serviço primário
-- SendGrid mantido como fallback
+- Problema: Restrições de domínio
 
-#### 3. Migração para Brevo (21 Jan) - ATUAL
-- Instalado pacote `@getbrevo/brevo`
-- Brevo configurado como serviço **primário**
-- Resend e SendGrid mantidos como fallback
-- Arquivo modificado: `backend/src/config/email.js`
+#### 3. Brevo SMTP (21-22 Jan) - NÃO FUNCIONA NO RENDER
+- Tentativa com porta 587 (TLS) - **BLOQUEADA NO RENDER**
+- Tentativa com porta 465 (SSL) - **BLOQUEADA NO RENDER**
+- Conclusão: Render bloqueia todas as portas SMTP
 
-**Hierarquia de Email:**
-1. Brevo (primário) - `BREVO_API_KEY`
-2. Resend (fallback) - `RESEND_API_KEY`
-3. SendGrid (fallback) - `SENDGRID_API_KEY`
+### Solução Final (22 Jan) - SendGrid via API HTTP
 
-#### 4. Email de Aprovação de Produto (19 Jan)
-- Implementado envio de email ao produtor quando produto é aprovado
-- Arquivo modificado: `backend/src/controllers/adminController.js`
-- Adicionada chamada para `emailService.sendProductApprovedEmail()`
+**SendGrid configurado como serviço único de email.**
+
+O SendGrid usa API HTTP (não SMTP), portanto funciona perfeitamente no Render.
+
+**Arquivo:** `backend/src/config/email.js`
+
+```javascript
+// Use SendGrid
+if (process.env.SENDGRID_API_KEY) {
+  sgMail = require('@sendgrid/mail');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  useSendGrid = true;
+}
+```
 
 ### Variáveis de Ambiente Necessárias
 ```env
-BREVO_API_KEY=xsmtpsib-...
-EMAIL_FROM_ADDRESS=ja.eduplay@gmail.com
+SENDGRID_API_KEY=SG.xxxxx...
+EMAIL_FROM=EDUPLAY <ja.eduplay@gmail.com>
 ```
+
+### Lição Aprendida
+**Render bloqueia portas SMTP (587, 465).** Sempre usar serviços de email via API HTTP:
+- SendGrid API ✅
+- Resend API ✅
+- Brevo API (requer chave xkeysib-, não xsmtpsib-) ✅
+- Brevo SMTP ❌ (não funciona no Render)
 
 ---
 
@@ -139,6 +151,10 @@ VITE_API_URL=https://eduplay-platform.onrender.com/api/v1
 - Adicionadas rotas para aprovação de produtos
 - Endpoints de teste para verificar permissões
 
+#### 3. Google OAuth Callback URL (22 Jan)
+- Corrigida URL de callback para: `https://eduplay-platform.onrender.com/api/v1/auth/google/callback`
+- URL antiga estava apontando para `eduplay-backend` (não existe mais)
+
 ### Commits Relacionados
 ```
 feat: Add temporary admin upgrade endpoint
@@ -168,12 +184,12 @@ fix: Allow role parameter in temp-upgrade endpoint
 │                      RENDER.COM                          │
 ├─────────────────────────────────────────────────────────┤
 │  Frontend: Static Site (Vercel/Render)                   │
-│  URL: https://eduplay-frontend.vercel.app               │
+│  URL: https://eduplay-frontend.onrender.com             │
 ├─────────────────────────────────────────────────────────┤
 │  Backend: Web Service                                    │
 │  URL: https://eduplay-platform.onrender.com             │
-│  Build: npm install && npm run db:generate              │
-│  Start: npm run start:migrate                            │
+│  Build: npm install && npm run build                     │
+│  Start: npm start                                        │
 ├─────────────────────────────────────────────────────────┤
 │  Database: PostgreSQL                                    │
 │  Plan: Free                                              │
@@ -188,25 +204,29 @@ DATABASE_URL=postgresql://...
 
 # JWT
 JWT_SECRET=...
+JWT_REFRESH_SECRET=...
 JWT_EXPIRES_IN=7d
 
-# Email (Brevo - NOVO)
-BREVO_API_KEY=xsmtpsib-...
-EMAIL_FROM_ADDRESS=ja.eduplay@gmail.com
+# Email (SendGrid - FUNCIONA NO RENDER)
+SENDGRID_API_KEY=SG.xxxxx...
 
 # Cloudinary
 CLOUDINARY_CLOUD_NAME=dexlzykqm
 CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
 
-# Mercado Pago (opcional)
+# Google OAuth
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_CALLBACK_URL=https://eduplay-platform.onrender.com/api/v1/auth/google/callback
+
+# Mercado Pago
 MP_ACCESS_TOKEN=...
-MP_PUBLIC_KEY=...
 
 # App
 NODE_ENV=production
 BACKEND_URL=https://eduplay-platform.onrender.com
-FRONTEND_URL=https://eduplay-frontend.vercel.app
+FRONTEND_URL=https://eduplay-frontend.onrender.com
 ```
 
 ---
@@ -216,12 +236,14 @@ FRONTEND_URL=https://eduplay-frontend.vercel.app
 ### Backend
 | Arquivo | Descrição |
 |---------|-----------|
-| `src/config/email.js` | Suporte Brevo, Resend, SendGrid |
+| `src/config/email.js` | Configurado SendGrid como serviço de email |
 | `src/controllers/adminController.js` | Email de aprovação ao produtor |
 | `src/controllers/upload.controller.js` | Upload com fallback para servidor local |
 | `src/api/routes/upload.routes.js` | Rotas de upload |
+| `src/app.js` | Endpoint diagnóstico `/api/v1/email-status` |
+| `scripts/build.js` | Script de build simplificado |
 | `prisma/schema.prisma` | Correções de relações |
-| `package.json` | Adicionado @getbrevo/brevo, resend |
+| `package.json` | Dependências de email |
 
 ### Frontend
 | Arquivo | Descrição |
@@ -231,18 +253,19 @@ FRONTEND_URL=https://eduplay-frontend.vercel.app
 
 ---
 
-## ✅ Status Final
+## ✅ Status Final (22 Jan 2025)
 
 | Funcionalidade | Status |
 |----------------|--------|
 | Upload de Imagens | ✅ Funcionando |
-| Envio de Emails | ✅ Funcionando (Brevo) |
+| Envio de Emails | ✅ Funcionando (SendGrid) |
 | Banco de Dados | ✅ Funcionando |
 | Autenticação | ✅ Funcionando |
+| Google OAuth | ✅ Funcionando |
 | Aprovação de Produtos | ✅ Funcionando |
 | CORS | ✅ Configurado |
 | Deploy Backend | ✅ Render |
-| Deploy Frontend | ✅ Vercel |
+| Deploy Frontend | ✅ Render |
 
 ---
 
@@ -258,19 +281,26 @@ FRONTEND_URL=https://eduplay-frontend.vercel.app
 
 ## 📝 Notas Importantes
 
+### Email (SendGrid)
+- **Usar SendGrid API**, não SMTP (Render bloqueia portas SMTP)
+- Criar API Key em: https://app.sendgrid.com/settings/api_keys
+- Verificar sender identity para melhor deliverability
+- Plano gratuito: 100 emails/dia
+
 ### Cloudinary
 - Preset `eduplay_apps` deve estar configurado como **unsigned**
 - Upload de APKs (arquivos grandes) salva no servidor local em `/public/uploads/apks`
 
-### Email
-- Brevo tem limite de 300 emails/dia no plano gratuito
-- Verificar domínio de envio para melhor deliverability
-
 ### Render
 - Plano gratuito pode ter "cold starts" após inatividade
+- **IMPORTANTE**: Render bloqueia portas SMTP (587, 465) - sempre usar APIs HTTP
 - Considerar upgrade para plano pago se necessário
+
+### Endpoint de Diagnóstico
+- URL: `https://eduplay-platform.onrender.com/api/v1/email-status`
+- Mostra qual serviço de email está ativo e variáveis configuradas
 
 ---
 
-**Última Atualização:** 21 de Janeiro de 2025
+**Última Atualização:** 22 de Janeiro de 2025
 **Autor:** Claude Code Assistant
