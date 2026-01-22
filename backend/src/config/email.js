@@ -31,12 +31,15 @@ if (process.env.BREVO_API_KEY) {
   try {
     brevoTransporter = nodemailer.createTransport({
       host: 'smtp-relay.brevo.com',
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.BREVO_SMTP_USER || 'a089a0001@smtp-brevo.com',
         pass: process.env.BREVO_API_KEY,
       },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     });
 
     useBrevo = true;
