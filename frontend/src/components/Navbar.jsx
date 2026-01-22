@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import useStore from '../store/useStore';
 import { toast } from 'react-toastify';
 import { getUser, isAuthenticated, clearAuth } from '../lib/auth';
-// v2.1 - Admin menu items reorganized
+// v2.2 - Vender button fixed to /seller/products/new
 
 export default function Navbar() {
   const { cart } = useStore();
