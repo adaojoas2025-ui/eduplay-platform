@@ -68,4 +68,45 @@ api.interceptors.response.use(
   }
 );
 
+// Auth API endpoints
+export const authAPI = {
+  login: (data) => api.post('/auth/login', data),
+  register: (data) => api.post('/auth/register', data),
+  me: () => api.get('/auth/me'),
+  logout: () => api.post('/auth/logout'),
+  refreshToken: (refreshToken) => api.post('/auth/refresh', { refreshToken }),
+};
+
+// Product API endpoints
+export const productAPI = {
+  getAll: (params) => api.get('/products', { params }),
+  getById: (id) => api.get(`/products/${id}`),
+  getMyProducts: () => api.get('/products/my-products'),
+  create: (data) => api.post('/products', data),
+  update: (id, data) => api.put(`/products/${id}`, data),
+  delete: (id) => api.delete(`/products/${id}`),
+  uploadThumbnail: (id, file) => {
+    const formData = new FormData();
+    formData.append('thumbnail', file);
+    return api.post(`/products/${id}/thumbnail`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  uploadFiles: (id, files) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+    return api.post(`/products/${id}/files`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+};
+
+// Order API endpoints
+export const orderAPI = {
+  getAll: (params) => api.get('/orders', { params }),
+  getById: (id) => api.get(`/orders/${id}`),
+  getMySales: () => api.get('/orders/my-sales'),
+  create: (data) => api.post('/orders', data),
+};
+
 export default api;
