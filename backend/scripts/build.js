@@ -1,6 +1,6 @@
 /**
- * Build script that handles Prisma migrations safely
- * Resolves any failed migrations before applying new ones
+ * Build script for Render deployment
+ * Generates Prisma Client and deploys migrations
  */
 
 const { execSync } = require('child_process');
@@ -12,7 +12,7 @@ function run(command, description) {
     console.log(`>>> ${description} - SUCCESS`);
     return true;
   } catch (error) {
-    console.log(`>>> ${description} - FAILED (continuing...)`);
+    console.error(`>>> ${description} - FAILED:`, error.message);
     return false;
   }
 }
@@ -20,27 +20,22 @@ function run(command, description) {
 async function main() {
   console.log('=== Starting build process ===\n');
 
-  // Step 1: Generate Prisma Client
-  run('npx prisma generate', 'Generating Prisma Client');
+  // Step 1: Generate Prisma Client (required)
+  const generateSuccess = run('npx prisma generate', 'Generating Prisma Client');
 
-  // Step 2: Try to resolve any failed migrations
-  // This handles the case where a previous migration failed
-  run(
-    'npx prisma migrate resolve --rolled-back 20260114190000_add_producer_bank_fields 2>/dev/null || true',
-    'Resolving any failed migrations'
-  );
-
-  // Step 3: Deploy migrations
-  const migrateSuccess = run('npx prisma migrate deploy', 'Deploying migrations');
-
-  if (!migrateSuccess) {
-    console.log('\n>>> Migration deploy failed, trying to repair...');
-
-    // Try to mark migrations as applied if schema is already correct
-    run('npx prisma db push --accept-data-loss', 'Pushing schema directly');
+  if (!generateSuccess) {
+    console.error('ERROR: Failed to generate Prisma Client');
+    process.exit(1);
   }
 
+  // Step 2: Deploy migrations (optional - may fail if already applied)
+  run('npx prisma migrate deploy', 'Deploying migrations');
+
   console.log('\n=== Build process complete ===');
+  process.exit(0);
 }
 
-main().catch(console.error);
+main().catch(error => {
+  console.error('Build failed:', error);
+  process.exit(1);
+});
