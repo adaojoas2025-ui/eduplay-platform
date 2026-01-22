@@ -116,6 +116,22 @@ app.get('/', (req, res) => {
 });
 
 /**
+ * Email diagnostic endpoint (temporary)
+ */
+app.get('/api/v1/email-status', (req, res) => {
+  const emailConfig = require('./config/email');
+  res.status(200).json({
+    success: true,
+    emailService: emailConfig.getActiveService ? emailConfig.getActiveService() : 'unknown',
+    hasBrevoKey: !!process.env.BREVO_API_KEY,
+    brevoKeyPrefix: process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.substring(0, 10) + '...' : null,
+    hasResendKey: !!process.env.RESEND_API_KEY,
+    hasSendGridKey: !!process.env.SENDGRID_API_KEY,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+/**
  * API routes (versioned)
  */
 app.use('/api/v1', routes);

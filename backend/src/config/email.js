@@ -190,9 +190,20 @@ const sendEmail = async ({ to, subject, html, text }) => {
   }
 };
 
+/**
+ * Get active email service name
+ */
+const getActiveService = () => {
+  if (useBrevo) return 'brevo';
+  if (useResend) return 'resend';
+  if (useSendGrid) return 'sendgrid';
+  return 'none';
+};
+
 module.exports = {
   verifyConnection,
   sendEmail,
+  getActiveService,
   usingBrevo: useBrevo,
   usingResend: useResend,
   usingSendGrid: useSendGrid,
