@@ -132,6 +132,67 @@ app.get('/api/v1/email-status', (req, res) => {
 });
 
 /**
+ * TEMPORARY: Full cleanup endpoint (remove after use!)
+ * Removes all users except admin, all products, orders, and commissions
+ */
+app.delete('/api/v1/full-cleanup-temp-xyz789', async (req, res) => {
+  const { prisma } = require('./config/database');
+
+  try {
+    console.log('🧹 FULL CLEANUP STARTING...');
+
+    // Find admin user
+    const adminUser = await prisma.users.findFirst({
+      where: { role: 'ADMIN' }
+    });
+
+    if (!adminUser) {
+      return res.status(400).json({ error: 'Admin user not found!' });
+    }
+
+    console.log('👤 Admin found:', adminUser.email);
+
+    // Delete in order (respecting foreign keys)
+    const deletedCommissions = await prisma.commissions.deleteMany({});
+    console.log('✅ Commissions deleted:', deletedCommissions.count);
+
+    const deletedOrders = await prisma.orders.deleteMany({});
+    console.log('✅ Orders deleted:', deletedOrders.count);
+
+    const deletedReviews = await prisma.reviews.deleteMany({});
+    console.log('✅ Reviews deleted:', deletedReviews.count);
+
+    const deletedProductFiles = await prisma.product_files.deleteMany({});
+    console.log('✅ Product files deleted:', deletedProductFiles.count);
+
+    const deletedProducts = await prisma.products.deleteMany({});
+    console.log('✅ Products deleted:', deletedProducts.count);
+
+    const deletedUsers = await prisma.users.deleteMany({
+      where: { id: { not: adminUser.id } }
+    });
+    console.log('✅ Users deleted (except admin):', deletedUsers.count);
+
+    res.json({
+      success: true,
+      message: 'Full cleanup completed!',
+      deleted: {
+        commissions: deletedCommissions.count,
+        orders: deletedOrders.count,
+        reviews: deletedReviews.count,
+        productFiles: deletedProductFiles.count,
+        products: deletedProducts.count,
+        users: deletedUsers.count,
+      },
+      adminPreserved: adminUser.email
+    });
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * API routes (versioned)
  */
 app.use('/api/v1', routes);
