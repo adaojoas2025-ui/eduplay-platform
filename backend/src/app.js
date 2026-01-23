@@ -133,70 +133,59 @@ app.get('/api/v1/email-status', (req, res) => {
 
 /**
  * TEMPORARY: Full cleanup endpoint (remove after use!)
- * Removes all users except admin, all products, orders, and commissions
+ * Uses raw SQL to delete all data except admin
  */
 app.delete('/api/v1/full-cleanup-temp-xyz789', async (req, res) => {
   const { PrismaClient } = require('@prisma/client');
   const prisma = new PrismaClient();
 
   try {
-    console.log('🧹 FULL CLEANUP STARTING...');
+    console.log('🧹 FULL CLEANUP via RAW SQL...');
 
-    // Find admin user
-    const adminUser = await prisma.users.findFirst({
-      where: { role: 'ADMIN' }
-    });
+    // Get admin ID first
+    const adminResult = await prisma.$queryRaw`SELECT id, email FROM users WHERE role = 'ADMIN' LIMIT 1`;
 
-    if (!adminUser) {
+    if (!adminResult || adminResult.length === 0) {
       await prisma.$disconnect();
-      return res.status(400).json({ error: 'Admin user not found!' });
+      return res.status(400).json({ error: 'Admin not found' });
     }
 
-    console.log('👤 Admin found:', adminUser.email);
+    const adminId = adminResult[0].id;
+    const adminEmail = adminResult[0].email;
+    console.log('👤 Admin:', adminEmail);
 
-    // Delete in order (respecting foreign keys)
-    const deletedCommissions = await prisma.commissions.deleteMany({});
-    console.log('✅ Commissions deleted:', deletedCommissions.count);
+    // Delete in order via raw SQL
+    const r1 = await prisma.$executeRaw`DELETE FROM commissions`;
+    console.log('✅ Commissions deleted');
 
-    const deletedOrders = await prisma.orders.deleteMany({});
-    console.log('✅ Orders deleted:', deletedOrders.count);
+    const r2 = await prisma.$executeRaw`DELETE FROM orders`;
+    console.log('✅ Orders deleted');
 
-    const deletedReviews = await prisma.reviews.deleteMany({});
-    console.log('✅ Reviews deleted:', deletedReviews.count);
+    const r3 = await prisma.$executeRaw`DELETE FROM reviews`;
+    console.log('✅ Reviews deleted');
 
-    const deletedCartItems = await prisma.cart_items.deleteMany({});
-    console.log('✅ Cart items deleted:', deletedCartItems.count);
+    const r4 = await prisma.$executeRaw`DELETE FROM cart_items`;
+    console.log('✅ Cart items deleted');
 
-    const deletedOrderBumps = await prisma.order_bumps.deleteMany({});
-    console.log('✅ Order bumps deleted:', deletedOrderBumps.count);
+    const r5 = await prisma.$executeRaw`DELETE FROM order_bumps`;
+    console.log('✅ Order bumps deleted');
 
-    const deletedProducts = await prisma.products.deleteMany({});
-    console.log('✅ Products deleted:', deletedProducts.count);
+    const r6 = await prisma.$executeRaw`DELETE FROM products`;
+    console.log('✅ Products deleted');
 
-    const deletedUsers = await prisma.users.deleteMany({
-      where: { id: { not: adminUser.id } }
-    });
-    console.log('✅ Users deleted (except admin):', deletedUsers.count);
+    const r7 = await prisma.$executeRaw`DELETE FROM users WHERE id != ${adminId}`;
+    console.log('✅ Users deleted (except admin)');
 
     await prisma.$disconnect();
 
     res.json({
       success: true,
-      message: 'Full cleanup completed!',
-      deleted: {
-        commissions: deletedCommissions.count,
-        orders: deletedOrders.count,
-        reviews: deletedReviews.count,
-        cartItems: deletedCartItems.count,
-        orderBumps: deletedOrderBumps.count,
-        products: deletedProducts.count,
-        users: deletedUsers.count,
-      },
-      adminPreserved: adminUser.email
+      message: 'Full cleanup completed via raw SQL!',
+      adminPreserved: adminEmail
     });
   } catch (error) {
     console.error('Cleanup error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 
