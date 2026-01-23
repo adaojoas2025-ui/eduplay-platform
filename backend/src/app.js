@@ -135,6 +135,10 @@ app.get('/api/v1/email-status', (req, res) => {
  * TEMPORARY: Full cleanup endpoint (remove after use!)
  * Uses raw SQL to delete all data except admin
  */
+app.get('/api/v1/cleanup-check', (req, res) => {
+  res.json({ version: 'v5-rawsql', timestamp: new Date().toISOString() });
+});
+
 app.delete('/api/v1/full-cleanup-temp-xyz789', async (req, res) => {
   const { PrismaClient } = require('@prisma/client');
   const prisma = new PrismaClient();
