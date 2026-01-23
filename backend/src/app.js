@@ -162,8 +162,11 @@ app.delete('/api/v1/full-cleanup-temp-xyz789', async (req, res) => {
     const deletedReviews = await prisma.reviews.deleteMany({});
     console.log('✅ Reviews deleted:', deletedReviews.count);
 
-    const deletedProductFiles = await prisma.product_files.deleteMany({});
-    console.log('✅ Product files deleted:', deletedProductFiles.count);
+    const deletedCartItems = await prisma.cart_items.deleteMany({});
+    console.log('✅ Cart items deleted:', deletedCartItems.count);
+
+    const deletedOrderBumps = await prisma.order_bumps.deleteMany({});
+    console.log('✅ Order bumps deleted:', deletedOrderBumps.count);
 
     const deletedProducts = await prisma.products.deleteMany({});
     console.log('✅ Products deleted:', deletedProducts.count);
@@ -180,7 +183,8 @@ app.delete('/api/v1/full-cleanup-temp-xyz789', async (req, res) => {
         commissions: deletedCommissions.count,
         orders: deletedOrders.count,
         reviews: deletedReviews.count,
-        productFiles: deletedProductFiles.count,
+        cartItems: deletedCartItems.count,
+        orderBumps: deletedOrderBumps.count,
         products: deletedProducts.count,
         users: deletedUsers.count,
       },
