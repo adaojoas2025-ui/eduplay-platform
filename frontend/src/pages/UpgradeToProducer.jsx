@@ -78,7 +78,7 @@ export default function UpgradeToProducer() {
 
       // Redirect to seller dashboard
       setTimeout(() => {
-        window.location.href = '/seller/dashboard';
+        window.location.href = '/#/seller/dashboard';
       }, 1500);
     } catch (error) {
       console.error('Upgrade error:', error);
