@@ -132,68 +132,6 @@ app.get('/api/v1/email-status', (req, res) => {
 });
 
 /**
- * TEMPORARY: Full cleanup endpoint (remove after use!)
- * Uses raw SQL to delete all data except admin
- */
-app.get('/api/v1/cleanup-check', (req, res) => {
-  res.json({ version: 'v5-rawsql', timestamp: new Date().toISOString() });
-});
-
-app.delete('/api/v1/full-cleanup-temp-xyz789', async (req, res) => {
-  const { PrismaClient } = require('@prisma/client');
-  const prisma = new PrismaClient();
-
-  try {
-    console.log('🧹 FULL CLEANUP via RAW SQL...');
-
-    // Get admin ID first
-    const adminResult = await prisma.$queryRaw`SELECT id, email FROM users WHERE role = 'ADMIN' LIMIT 1`;
-
-    if (!adminResult || adminResult.length === 0) {
-      await prisma.$disconnect();
-      return res.status(400).json({ error: 'Admin not found' });
-    }
-
-    const adminId = adminResult[0].id;
-    const adminEmail = adminResult[0].email;
-    console.log('👤 Admin:', adminEmail);
-
-    // Delete in order via raw SQL
-    const r1 = await prisma.$executeRaw`DELETE FROM commissions`;
-    console.log('✅ Commissions deleted');
-
-    const r2 = await prisma.$executeRaw`DELETE FROM orders`;
-    console.log('✅ Orders deleted');
-
-    const r3 = await prisma.$executeRaw`DELETE FROM reviews`;
-    console.log('✅ Reviews deleted');
-
-    const r4 = await prisma.$executeRaw`DELETE FROM cart_items`;
-    console.log('✅ Cart items deleted');
-
-    const r5 = await prisma.$executeRaw`DELETE FROM order_bumps`;
-    console.log('✅ Order bumps deleted');
-
-    const r6 = await prisma.$executeRaw`DELETE FROM products`;
-    console.log('✅ Products deleted');
-
-    const r7 = await prisma.$executeRaw`DELETE FROM users WHERE id != ${adminId}`;
-    console.log('✅ Users deleted (except admin)');
-
-    await prisma.$disconnect();
-
-    res.json({
-      success: true,
-      message: 'Full cleanup completed via raw SQL!',
-      adminPreserved: adminEmail
-    });
-  } catch (error) {
-    console.error('Cleanup error:', error);
-    res.status(500).json({ error: error.message, stack: error.stack });
-  }
-});
-
-/**
  * API routes (versioned)
  */
 app.use('/api/v1', routes);
