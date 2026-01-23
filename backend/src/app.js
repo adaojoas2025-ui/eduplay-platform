@@ -132,27 +132,6 @@ app.get('/api/v1/email-status', (req, res) => {
 });
 
 /**
- * One-time cleanup endpoint - DELETE AFTER USE
- */
-app.get('/api/v1/run-cleanup-now', async (req, res) => {
-  const { prisma } = require('./config/database');
-  try {
-    const admin = await prisma.users.findFirst({ where: { role: 'ADMIN' } });
-    if (!admin) return res.status(400).json({ error: 'Admin not found' });
-
-    await prisma.reviews.deleteMany({});
-    await prisma.cart_items.deleteMany({});
-    await prisma.order_bumps.deleteMany({});
-    await prisma.products.deleteMany({});
-    await prisma.users.deleteMany({ where: { id: { not: admin.id } } });
-
-    res.json({ success: true, message: 'Limpeza concluida', admin: admin.email });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-/**
  * API routes (versioned)
  */
 app.use('/api/v1', routes);
