@@ -136,8 +136,8 @@ app.get('/api/v1/email-status', (req, res) => {
  * Removes all users except admin, all products, orders, and commissions
  */
 app.delete('/api/v1/full-cleanup-temp-xyz789', async (req, res) => {
-  const db = require('./config/database');
-  const prisma = db.prisma;
+  const { PrismaClient } = require('@prisma/client');
+  const prisma = new PrismaClient();
 
   try {
     console.log('🧹 FULL CLEANUP STARTING...');
@@ -148,6 +148,7 @@ app.delete('/api/v1/full-cleanup-temp-xyz789', async (req, res) => {
     });
 
     if (!adminUser) {
+      await prisma.$disconnect();
       return res.status(400).json({ error: 'Admin user not found!' });
     }
 
@@ -176,6 +177,8 @@ app.delete('/api/v1/full-cleanup-temp-xyz789', async (req, res) => {
       where: { id: { not: adminUser.id } }
     });
     console.log('✅ Users deleted (except admin):', deletedUsers.count);
+
+    await prisma.$disconnect();
 
     res.json({
       success: true,
