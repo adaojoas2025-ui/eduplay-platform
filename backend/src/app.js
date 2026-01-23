@@ -136,7 +136,8 @@ app.get('/api/v1/email-status', (req, res) => {
  * Removes all users except admin, all products, orders, and commissions
  */
 app.delete('/api/v1/full-cleanup-temp-xyz789', async (req, res) => {
-  const { prisma } = require('./config/database');
+  const db = require('./config/database');
+  const prisma = db.prisma;
 
   try {
     console.log('🧹 FULL CLEANUP STARTING...');
