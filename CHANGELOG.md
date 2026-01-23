@@ -146,3 +146,43 @@ git add -A && git commit -m "feat: Add cleanup endpoint" && git push origin main
 ```bash
 git add -A && git commit -m "chore: Remove cleanup endpoint" && git push origin main
 ```
+
+---
+
+## [2026-01-23] - Correção do SPA Routing no Render
+
+### Problema
+Ao clicar em "Tornar-se Vendedor" ou acessar rotas como `/seller/dashboard` diretamente, o Render retornava "Not Found" (404).
+
+### Causa
+O Render Static Site não estava fazendo rewrite das rotas para `index.html`. Mesmo com `_redirects` e `render.yaml` configurados, o servidor retornava 404 para rotas que não existiam como arquivos.
+
+### Solução
+Mudança de `BrowserRouter` para `HashRouter` no React Router.
+
+#### Arquivo: `frontend/src/main.jsx`
+```javascript
+// Antes
+import { BrowserRouter } from 'react-router-dom';
+<BrowserRouter>
+
+// Depois
+import { HashRouter } from 'react-router-dom';
+<HashRouter>
+```
+
+#### Arquivo: `frontend/src/pages/UpgradeToProducer.jsx`
+```javascript
+// Antes
+window.location.href = '/seller/dashboard';
+
+// Depois
+window.location.href = '/#/seller/dashboard';
+```
+
+### Como funciona
+- **BrowserRouter**: URLs como `site.com/seller/dashboard` - requer configuração do servidor
+- **HashRouter**: URLs como `site.com/#/seller/dashboard` - funciona sem configuração
+
+### Por que HashRouter resolve
+O `#` (hash) na URL é tratado pelo navegador, não pelo servidor. O servidor sempre recebe apenas `site.com/` e o React Router lê a parte após o `#` para fazer a navegação.
