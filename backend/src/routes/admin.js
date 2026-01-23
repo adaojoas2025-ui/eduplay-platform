@@ -11,6 +11,7 @@ const {
   rejectProduct,
   getAllOrders,
   cleanCommissionsAndOrders,
+  cleanProductsAndUsers,
 } = require('../controllers/adminController');
 const { authenticateToken, authorizeRole } = require('../middleware/auth');
 
@@ -37,5 +38,6 @@ router.get('/orders', getAllOrders);
 
 // Cleanup
 router.delete('/cleanup/commissions', cleanCommissionsAndOrders);
+router.delete('/cleanup/products-users', cleanProductsAndUsers);
 
 module.exports = router;

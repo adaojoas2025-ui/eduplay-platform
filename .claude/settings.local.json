@@ -179,7 +179,9 @@
       "Bash(BUYER_TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjYjFkODk2Mi0xM2JiLTQ2YWYtYmFhNC1iOTdiYjQ1YzhhNmIiLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzY4ODY2NzUzLCJleHAiOjE3Njk0NzE1NTN9.g9MuV4JBYcFtSe44OCvOU2ipJlNDU1F4LTQjQcmmni0\")",
       "Bash(for file in *.js)",
       "Bash(do sed -i 's/prisma\\\\.commission\\\\./prisma.commissions./g' \"$file\")",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(for i in 1 2 3 4 5 6)",
+      "Bash(do echo \"Tentativa $i...\")"
     ],
     "deny": [],
     "ask": []

@@ -363,6 +363,60 @@ async function cleanCommissionsAndOrders(req, res) {
 }
 
 /**
+ * Clean products and non-admin users (ADMIN ONLY)
+ */
+async function cleanProductsAndUsers(req, res) {
+  try {
+    console.log('🧹 Admin requested cleanup of products and users...');
+
+    // Get admin user first
+    const adminUser = await prisma.users.findFirst({
+      where: { role: 'ADMIN' }
+    });
+
+    if (!adminUser) {
+      return res.status(400).json({ error: 'Admin não encontrado' });
+    }
+
+    console.log('👤 Admin preservado:', adminUser.email);
+
+    // Delete in correct order (respecting foreign keys)
+    const deletedReviews = await prisma.reviews.deleteMany({});
+    console.log(`✅ Reviews deleted: ${deletedReviews.count}`);
+
+    const deletedCartItems = await prisma.cart_items.deleteMany({});
+    console.log(`✅ Cart items deleted: ${deletedCartItems.count}`);
+
+    const deletedOrderBumps = await prisma.order_bumps.deleteMany({});
+    console.log(`✅ Order bumps deleted: ${deletedOrderBumps.count}`);
+
+    const deletedProducts = await prisma.products.deleteMany({});
+    console.log(`✅ Products deleted: ${deletedProducts.count}`);
+
+    const deletedUsers = await prisma.users.deleteMany({
+      where: { id: { not: adminUser.id } }
+    });
+    console.log(`✅ Users deleted (except admin): ${deletedUsers.count}`);
+
+    res.json({
+      success: true,
+      message: 'Produtos e usuários removidos com sucesso',
+      deleted: {
+        reviews: deletedReviews.count,
+        cartItems: deletedCartItems.count,
+        orderBumps: deletedOrderBumps.count,
+        products: deletedProducts.count,
+        users: deletedUsers.count,
+      },
+      adminPreserved: adminUser.email
+    });
+  } catch (error) {
+    console.error('Clean products/users error:', error);
+    res.status(500).json({ error: 'Erro ao limpar produtos e usuários', details: error.message });
+  }
+}
+
+/**
  * Get all orders
  */
 async function getAllOrders(req, res) {
@@ -431,4 +485,5 @@ module.exports = {
   rejectProduct,
   getAllOrders,
   cleanCommissionsAndOrders,
+  cleanProductsAndUsers,
 };
