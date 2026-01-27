@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FiPlus, FiEdit, FiTrash2, FiTrendingUp, FiEye, FiMousePointer } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import api, { productAPI } from '../../services/api';
+import api from '../../services/api';
 
 export default function OrderBumps() {
   const [bumps, setBumps] = useState([]);
@@ -39,8 +39,8 @@ export default function OrderBumps() {
 
   async function fetchProducts() {
     try {
-      const response = await productAPI.getMyProducts();
-      setProducts(response.data.products || []);
+      const response = await api.get('/seller/products');
+      setProducts(response.data.data?.items || []);
     } catch (error) {
       console.error('Error fetching products:', error);
     }
