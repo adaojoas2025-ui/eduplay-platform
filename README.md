@@ -10,6 +10,7 @@ Sistema 100% funcional com pagamentos via Mercado Pago, gamificação, comissõe
 
 - 🛒 **Marketplace completo** - Venda cursos, produtos digitais e apps
 - 💳 **Pagamentos integrados** - Mercado Pago com webhooks
+- 🎁 **Order Bump** - Ofertas complementares no checkout (+50% ticket médio)
 - 🎮 **Sistema de gamificação** - XP, níveis e conquistas
 - 💰 **Comissões automáticas** - 3% para plataforma, 97% para vendedores
 - 📊 **Dashboard administrativo** - Estatísticas e gerenciamento
@@ -33,6 +34,7 @@ Sistema 100% funcional com pagamentos via Mercado Pago, gamificação, comissõe
 - ✅ Sistema de pedidos (PENDING → APPROVED)
 - ✅ Integração Mercado Pago com webhooks
 - ✅ Sistema de comissões (3% plataforma / 97% vendedor)
+- ✅ **Order Bump API** - Sugestões de produtos no checkout
 - ✅ Upload de arquivos via Cloudinary
 - ✅ Sistema de gamificação (XP e níveis)
 - ✅ Logging profissional (Winston)
@@ -52,9 +54,11 @@ Sistema 100% funcional com pagamentos via Mercado Pago, gamificação, comissõe
 - ✅ Página de detalhes do produto
 - ✅ Carrinho de compras funcional
 - ✅ Checkout via Mercado Pago
+- ✅ **Order Bump no Checkout** - Sugestões de produtos complementares
 - ✅ Confirmação de pedidos
 - ✅ Meus Produtos (comprados)
 - ✅ Dashboard do Vendedor
+- ✅ **Gerenciador de Order Bumps** - CRUD + Analytics
 - ✅ Gerenciar produtos (criar/editar/excluir)
 - ✅ Upload de imagens
 - ✅ Dashboard Administrativo completo
@@ -214,6 +218,8 @@ educaplayja/
 - Upload de imagens (Cloudinary)
 - Receber 97% das vendas
 - Visualizar comissões
+- **Order Bumps** - Criar ofertas no checkout para aumentar vendas
+- **Analytics** - Ver impressões, cliques e conversões dos bumps
 
 ### 👤 Qualquer Usuário Logado
 - Botão "Vender" disponível no Navbar
@@ -277,6 +283,31 @@ educaplayja/
 
 ---
 
+## 🎁 Order Bump (Checkout Sun)
+
+Sistema de ofertas complementares no checkout para aumentar ticket médio:
+
+### Como Funciona
+1. **Produtor** cria Order Bump em `/#/producer/order-bumps`
+2. **Comprador** vê sugestão no checkout
+3. **Um clique** adiciona produto à compra
+4. **Analytics** rastreia impressões, cliques e conversões
+
+### Configurações
+- **Produto**: Qual produto oferecer
+- **Título**: Frase persuasiva (ex: "Adicione com 20% OFF!")
+- **Desconto**: Porcentagem de desconto (0-100%)
+- **Prioridade**: Ordem de exibição
+- **Trigger**: Quando exibir (ANY, CATEGORY, PRODUCT)
+
+### Benefícios
+- ✅ Aumento de até 50% no ticket médio
+- ✅ Interface intuitiva de um clique
+- ✅ Analytics em tempo real
+- ✅ Configurável por produtor
+
+---
+
 ## 📱 Loja de Apps
 
 Marketplace de aplicativos educacionais:
@@ -301,6 +332,7 @@ MIT License
 
 ---
 
-**Versão:** 1.6.0
+**Versão:** 1.7.0
 **Status:** ✅ Produção
 **Última atualização:** Janeiro 2026
+**Novidade:** 🎁 Order Bump - Aumente suas vendas em até 50%!

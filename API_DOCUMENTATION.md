@@ -240,6 +240,120 @@ Obter pedido por ID
 
 ---
 
+## 🎁 Order Bumps
+
+Sistema de ofertas complementares no checkout para aumentar ticket médio.
+
+### GET `/order-bumps/suggestions` (Public)
+Buscar sugestões de Order Bump para o checkout
+
+**Query Params:**
+- `productIds` - IDs dos produtos no carrinho (separados por vírgula)
+- `category` - Categoria do produto principal
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "productId": "uuid",
+      "title": "Adicione com 20% OFF!",
+      "description": "Complemento perfeito para sua compra",
+      "discountPercent": 20,
+      "triggerType": "ANY",
+      "product": {
+        "id": "uuid",
+        "title": "Curso Extra",
+        "price": 50.00,
+        "thumbnailUrl": "https://..."
+      }
+    }
+  ]
+}
+```
+
+### POST `/order-bumps/:id/track` (Public)
+Registrar evento de analytics (impressão ou clique)
+
+**Body:**
+```json
+{
+  "event": "impression" | "click" | "conversion"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
+
+### GET `/order-bumps/producer/my-bumps` 🔒 (Producer)
+Listar Order Bumps do produtor logado
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "title": "Oferta Especial",
+      "description": "...",
+      "discountPercent": 20,
+      "isActive": true,
+      "impressions": 150,
+      "clicks": 30,
+      "conversions": 10,
+      "product": { ... }
+    }
+  ]
+}
+```
+
+### POST `/order-bumps` 🔒 (Producer)
+Criar novo Order Bump
+
+**Body:**
+```json
+{
+  "productId": "uuid",
+  "title": "Adicione com 20% OFF!",
+  "description": "Aproveite esta oferta exclusiva",
+  "discountPercent": 20,
+  "triggerType": "ANY",
+  "triggerValues": [],
+  "priority": 1,
+  "isActive": true
+}
+```
+
+**Trigger Types:**
+- `ANY` - Aparece em qualquer checkout
+- `CATEGORY` - Aparece quando produto é da categoria especificada
+- `PRODUCT` - Aparece quando produto específico está no carrinho
+
+### PUT `/order-bumps/:id` 🔒 (Producer)
+Atualizar Order Bump
+
+**Body:** (campos opcionais)
+```json
+{
+  "title": "Novo título",
+  "description": "Nova descrição",
+  "discountPercent": 15,
+  "isActive": false
+}
+```
+
+### DELETE `/order-bumps/:id` 🔒 (Producer)
+Deletar Order Bump
+
+---
+
 ## 👑 Admin
 
 ### GET `/admin/dashboard` 🔒 (Admin)
@@ -416,6 +530,10 @@ curl -X POST http://localhost:3000/api/products \
 | `/orders/create` | ❌ | ✅ | ✅ | ✅ |
 | `/orders/my-purchases` | ❌ | ✅ | ❌ | ✅ |
 | `/orders/my-sales` | ❌ | ❌ | ✅ | ✅ |
+| `/order-bumps/suggestions` | ✅ | ✅ | ✅ | ✅ |
+| `/order-bumps/:id/track` | ✅ | ✅ | ✅ | ✅ |
+| `/order-bumps/producer/*` | ❌ | ❌ | ✅ | ✅ |
+| `/order-bumps` (POST/PUT/DELETE) | ❌ | ❌ | ✅ | ✅ |
 | `/admin/*` | ❌ | ❌ | ❌ | ✅ |
 
 ---

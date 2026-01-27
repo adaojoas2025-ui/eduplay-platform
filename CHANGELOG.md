@@ -79,56 +79,180 @@ model commissions {
 
 ---
 
-## [2026-01-27] - Implementacao do Sistema Order Bump (Frontend)
+## [2026-01-27] - Sistema Order Bump Completo
 
 ### Objetivo
-Implementar recurso de "Order Bump" no checkout para aumentar ticket medio em ate 50%.
+Implementar recurso de "Order Bump" (similar ao Checkout Sun da Eduzz) para aumentar ticket médio em até 50%.
 
 ### Status
-**IMPLEMENTADO** - Frontend completo
+**IMPLEMENTADO E TESTADO** - Frontend + Backend funcionando
 
-### Arquivos Criados
+---
 
-#### Frontend
-- `frontend/src/components/OrderBumpSuggestion.jsx` - Componente de sugestoes no checkout
-- `frontend/src/pages/producer/OrderBumps.jsx` - Pagina de gerenciamento para produtores
+### O que é Order Bump?
+Order Bump é uma técnica de vendas onde produtos complementares são oferecidos durante o checkout, permitindo que o cliente adicione itens extras com um clique antes de finalizar a compra.
 
-### Arquivos Modificados
+---
 
-#### Frontend
-- `frontend/src/pages/Checkout.jsx` - Integracao do componente Order Bump
-- `frontend/src/App.jsx` - Rota `/producer/order-bumps` adicionada
+### Arquivos Criados/Modificados
 
-### Funcionalidades Implementadas
+#### Frontend - Novos
+| Arquivo | Descrição |
+|---------|-----------|
+| `frontend/src/components/OrderBumpSuggestion.jsx` | Componente que exibe sugestões no checkout |
+| `frontend/src/pages/producer/OrderBumps.jsx` | Dashboard de gerenciamento para produtores |
 
-1. **Componente OrderBumpSuggestion**
-   - Exibe sugestoes de produtos complementares no checkout
-   - Busca sugestoes via API `/order-bumps/suggestions`
-   - Permite adicionar/remover bumps com um clique
-   - Rastreia impressoes e cliques para analytics
+#### Frontend - Modificados
+| Arquivo | Alteração |
+|---------|-----------|
+| `frontend/src/pages/Checkout.jsx` | Integração do componente OrderBumpSuggestion |
+| `frontend/src/App.jsx` | Rota `/producer/order-bumps` adicionada |
+| `frontend/src/components/Navbar.jsx` | Link "🎁 Order Bumps" no menu do usuário |
 
-2. **Integracao no Checkout**
-   - Order bumps aparecem antes do botao de pagamento
-   - Total e atualizado dinamicamente ao adicionar bumps
-   - Bumps sao processados junto com itens do carrinho
+#### Backend - Modificados
+| Arquivo | Alteração |
+|---------|-----------|
+| `backend/src/api/services/order-bump.service.js` | Fix: triggerType 'ANY' sempre incluído no filtro |
 
-3. **Dashboard do Produtor** (`/producer/order-bumps`)
-   - CRUD completo de order bumps
-   - Analytics: impressoes, cliques, conversoes, taxa de conversao
-   - Ativar/desativar bumps
-   - Configurar desconto percentual e prioridade
+---
 
-### Backend (Ja existia)
-- `backend/src/api/controllers/order-bump.controller.js`
-- `backend/src/api/routes/order-bump.routes.js`
-- `backend/src/api/services/order-bump.service.js`
-- Model `order_bumps` no Prisma schema
+### Funcionalidades
+
+#### 1. Componente OrderBumpSuggestion (Checkout)
+- Busca sugestões via `GET /order-bumps/suggestions`
+- Exibe produtos complementares com desconto
+- Permite adicionar/remover com um clique
+- Rastreia impressões e cliques automaticamente
+- Atualiza total do carrinho em tempo real
+
+#### 2. Dashboard do Produtor (`/#/producer/order-bumps`)
+- **CRUD completo**: Criar, editar, excluir Order Bumps
+- **Analytics em tempo real**:
+  - Total de impressões
+  - Total de cliques
+  - Total de conversões
+  - Taxa de conversão (%)
+- **Configurações por bump**:
+  - Produto a oferecer
+  - Título persuasivo
+  - Descrição da oferta
+  - Desconto percentual (0-100%)
+  - Prioridade (maior aparece primeiro)
+  - Ativo/Inativo
+
+#### 3. Tipos de Trigger (quando exibir)
+| Tipo | Comportamento |
+|------|---------------|
+| `ANY` | Aparece em qualquer checkout |
+| `CATEGORY` | Aparece quando produto do carrinho é da mesma categoria |
+| `PRODUCT` | Aparece quando produto específico está no carrinho |
+
+---
+
+### Endpoints da API
+
+| Método | Endpoint | Descrição | Auth |
+|--------|----------|-----------|------|
+| GET | `/order-bumps/suggestions` | Busca sugestões para checkout | Público |
+| POST | `/order-bumps/:id/track` | Registra impressão/clique | Público |
+| GET | `/order-bumps/producer/my-bumps` | Lista bumps do produtor | PRODUCER |
+| POST | `/order-bumps` | Cria novo bump | PRODUCER |
+| PUT | `/order-bumps/:id` | Atualiza bump | PRODUCER |
+| DELETE | `/order-bumps/:id` | Remove bump | PRODUCER |
+
+---
+
+### Bugs Corrigidos
+
+#### 1. triggerType 'ANY' não aparecia
+**Problema**: Order Bumps com `triggerType: 'ANY'` não apareciam quando `productIds` era enviado sem `category`.
+
+**Causa**: O filtro OR só incluía 'ANY' quando category existia.
+
+**Correção** (`order-bump.service.js`):
+```javascript
+// ANTES - Bug
+if (category) {
+  where.OR = [{ triggerType: 'ANY' }, ...];
+}
+
+// DEPOIS - Corrigido
+const orConditions = [{ triggerType: 'ANY' }]; // SEMPRE inclui
+if (category) { orConditions.push(...); }
+where.OR = orConditions;
+```
+
+#### 2. Produtos não carregavam no formulário
+**Problema**: Dropdown de produtos vazio ao criar Order Bump.
+
+**Causa**: Endpoint `/products/my-products` não existia no backend.
+
+**Correção** (`OrderBumps.jsx`):
+```javascript
+// ANTES
+const response = await productAPI.getMyProducts();
+
+// DEPOIS
+const response = await api.get('/seller/products');
+```
+
+#### 3. Link Order Bumps não existia no menu
+**Problema**: Usuário não conseguia acessar a página de Order Bumps.
+
+**Correção**: Adicionado link "🎁 Order Bumps" no Navbar para PRODUCER e ADMIN.
+
+---
 
 ### Como Usar
 
-1. **Produtor**: Acessar `/producer/order-bumps` para criar ofertas
-2. **Comprador**: Ver sugestoes automaticas no checkout
-3. **Analytics**: Acompanhar metricas no dashboard do produtor
+#### Para Produtores
+1. Acesse `/#/producer/order-bumps` (ou clique no menu > Order Bumps)
+2. Clique em "Novo Order Bump"
+3. Selecione um dos seus produtos publicados
+4. Configure título, descrição e desconto
+5. Salve e o bump aparecerá nos checkouts
+
+#### Para Compradores
+1. Adicione um produto ao carrinho
+2. Vá para o checkout
+3. Veja as sugestões de Order Bump (caixa laranja)
+4. Clique "Adicionar" para incluir na compra
+5. Finalize o pagamento
+
+---
+
+### Schema Prisma
+
+```prisma
+model order_bumps {
+  id              String   @id
+  productId       String
+  title           String
+  description     String
+  discountPercent Float    @default(0)
+  triggerType     String   @default("CATEGORY")
+  triggerValues   String[] @default([])
+  producerId      String
+  isActive        Boolean  @default(true)
+  priority        Int      @default(0)
+  impressions     Int      @default(0)
+  clicks          Int      @default(0)
+  conversions     Int      @default(0)
+  revenue         Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  products        products @relation(fields: [productId], references: [id])
+  users           users    @relation(fields: [producerId], references: [id])
+}
+```
+
+---
+
+### Commits Relacionados
+- `feat: Implement Order Bump frontend`
+- `feat: Add Order Bumps link to producer menu`
+- `fix: Always include triggerType ANY in order bump suggestions`
+- `fix: Use correct endpoint for fetching seller products in OrderBumps`
 
 ---
 
