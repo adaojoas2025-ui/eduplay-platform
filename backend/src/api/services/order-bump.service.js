@@ -10,24 +10,29 @@ class OrderBumpService {
         productId: { notIn: productIds }
       };
 
-      // Filtrar por trigger
+      // Construir filtro OR para triggers
+      // SEMPRE inclui 'ANY' pois deve aparecer em qualquer checkout
+      const orConditions = [
+        { triggerType: 'ANY' }
+      ];
+
+      // Adicionar filtro por categoria se fornecida
       if (category) {
-        where.OR = [
-          { triggerType: 'ANY' },
-          {
-            triggerType: 'CATEGORY',
-            triggerValues: { has: category }
-          }
-        ];
+        orConditions.push({
+          triggerType: 'CATEGORY',
+          triggerValues: { has: category }
+        });
       }
 
-      if (productIds.length > 0) {
-        if (!where.OR) where.OR = [];
-        where.OR.push({
+      // Adicionar filtro por produtos específicos
+      if (productIds && productIds.length > 0) {
+        orConditions.push({
           triggerType: 'PRODUCT',
           triggerValues: { hasSome: productIds }
         });
       }
+
+      where.OR = orConditions;
 
       // Buscar bumps ordenados por prioridade e taxa de conversão
       const bumps = await prisma.order_bumps.findMany({
