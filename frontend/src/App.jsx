@@ -31,6 +31,7 @@ import ManageCombos from './pages/admin/ManageCombos';
 import ProducerDashboard from './pages/producer/Dashboard';
 import ProducerAddProduct from './pages/producer/AddProduct';
 import ProducerMyProducts from './pages/producer/MyProducts';
+import ProducerOrderBumps from './pages/producer/OrderBumps';
 import { AchievementQueueManager } from './components/AchievementNotification';
 import Navbar from './components/Navbar';
 import { API_URL } from './config/api.config';
@@ -915,6 +916,7 @@ function App() {
         <Route path="/producer/dashboard" element={<ProtectedRoute><ProducerDashboard /></ProtectedRoute>} />
         <Route path="/producer/products" element={<ProtectedRoute><ProducerMyProducts /></ProtectedRoute>} />
         <Route path="/producer/products/add" element={<ProtectedRoute><ProducerAddProduct /></ProtectedRoute>} />
+        <Route path="/producer/order-bumps" element={<ProtectedRoute><ProducerOrderBumps /></ProtectedRoute>} />
 
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />

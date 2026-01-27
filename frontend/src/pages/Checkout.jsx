@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import axios from 'axios';
 import { API_URL } from '../config/api.config';
+import OrderBumpSuggestion from '../components/OrderBumpSuggestion';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -10,6 +11,8 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  const [orderBumps, setOrderBumps] = useState([]);
+  const [bumpTotal, setBumpTotal] = useState(0);
 
   useEffect(() => {
     const userData = localStorage.getItem('userData');
@@ -20,8 +23,28 @@ export default function Checkout() {
     }
   }, [navigate]);
 
+  // Handler for Order Bump
+  const handleAddBump = (bump, isAdding) => {
+    if (isAdding) {
+      const finalPrice = bump.discountPercent
+        ? bump.product.price * (1 - bump.discountPercent / 100)
+        : bump.product.price;
+
+      setOrderBumps(prev => [...prev, { ...bump, finalPrice }]);
+      setBumpTotal(prev => prev + finalPrice);
+    } else {
+      const bumpToRemove = orderBumps.find(b => b.id === bump.id);
+      setOrderBumps(prev => prev.filter(b => b.id !== bump.id));
+      setBumpTotal(prev => prev - (bumpToRemove?.finalPrice || 0));
+    }
+  };
+
   const calculateTotal = () => {
     return cart?.total || 0;
+  };
+
+  const calculateFinalTotal = () => {
+    return calculateTotal() + bumpTotal;
   };
 
   const handleCheckout = async () => {
@@ -165,6 +188,12 @@ export default function Checkout() {
               </div>
             </div>
 
+            {/* Order Bump Suggestions */}
+            <OrderBumpSuggestion
+              cartItems={cart.items}
+              onAddBump={handleAddBump}
+            />
+
             {/* Informações do Comprador */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
@@ -195,6 +224,12 @@ export default function Checkout() {
                   <span>Subtotal ({cart.count} {cart.count === 1 ? 'item' : 'itens'})</span>
                   <span>R$ {calculateTotal().toFixed(2)}</span>
                 </div>
+                {bumpTotal > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Order Bump ({orderBumps.length} {orderBumps.length === 1 ? 'item' : 'itens'})</span>
+                    <span>+ R$ {bumpTotal.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-gray-600">
                   <span>Desconto</span>
                   <span>R$ 0.00</span>
@@ -202,7 +237,7 @@ export default function Checkout() {
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between text-lg font-bold text-gray-800">
                     <span>Total</span>
-                    <span>R$ {calculateTotal().toFixed(2)}</span>
+                    <span>R$ {calculateFinalTotal().toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -225,16 +260,35 @@ export default function Checkout() {
                     let successfulOrders = [];
                     let skippedItems = [];
 
-                    // Process each item in cart
-                    for (const item of cart.items) {
+                    // Combine cart items with order bumps
+                    const allItems = [
+                      ...cart.items.map(item => ({
+                        productId: item.productId,
+                        price: item.price * item.quantity,
+                        title: item.product?.title,
+                        isBump: false
+                      })),
+                      ...orderBumps.map(bump => ({
+                        productId: bump.productId,
+                        price: bump.finalPrice,
+                        title: bump.product?.title,
+                        isBump: true,
+                        bumpId: bump.id
+                      }))
+                    ];
+
+                    console.log('🛒 Total de itens (carrinho + bumps):', allItems.length);
+
+                    // Process each item
+                    for (const item of allItems) {
                       try {
                         const orderData = {
                           productId: item.productId,
-                          amount: item.price * item.quantity,
+                          amount: item.price,
                           paymentMethod: 'INSTANT_TEST'
                         };
 
-                        console.log('📦 Criando pedido para:', item.product?.title, orderData);
+                        console.log('📦 Criando pedido para:', item.title, item.isBump ? '(Order Bump)' : '', orderData);
                         const orderResponse = await axios.post(
                           `${API_URL}/orders`,
                           orderData,
@@ -252,13 +306,27 @@ export default function Checkout() {
                         );
 
                         console.log('✅ Pagamento aprovado:', paymentResponse.data);
-                        successfulOrders.push({ orderId, product: item.product?.title });
+                        successfulOrders.push({ orderId, product: item.title });
+
+                        // Track conversion for order bumps
+                        if (item.isBump && item.bumpId) {
+                          try {
+                            await axios.post(
+                              `${API_URL}/order-bumps/${item.bumpId}/track`,
+                              { event: 'conversion' },
+                              { headers: { Authorization: `Bearer ${token}` } }
+                            );
+                            console.log('📊 Conversão do Order Bump rastreada');
+                          } catch (trackError) {
+                            console.warn('⚠️ Erro ao rastrear conversão:', trackError);
+                          }
+                        }
                       } catch (itemError) {
-                        console.warn('⚠️ Erro ao processar item:', item.product?.title, itemError.response?.data?.message);
+                        console.warn('⚠️ Erro ao processar item:', item.title, itemError.response?.data?.message);
 
                         // If already purchased, skip and continue
                         if (itemError.response?.data?.message?.includes('already purchased')) {
-                          skippedItems.push(item.product?.title);
+                          skippedItems.push(item.title);
                           console.log('ℹ️ Item já comprado, continuando...');
                           continue;
                         }
@@ -276,6 +344,8 @@ export default function Checkout() {
 
                     if (successfulOrders.length > 0) {
                       clearCart();
+                      setOrderBumps([]);
+                      setBumpTotal(0);
 
                       // Show success message
                       if (skippedItems.length > 0) {

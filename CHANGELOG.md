@@ -79,13 +79,56 @@ model commissions {
 
 ---
 
-## [2026-01-XX] - Implementação do Sistema Order Bump (Planejado)
+## [2026-01-27] - Implementacao do Sistema Order Bump (Frontend)
 
 ### Objetivo
-Implementar recurso de "Order Bump" no checkout para aumentar ticket médio em até 50%.
+Implementar recurso de "Order Bump" no checkout para aumentar ticket medio em ate 50%.
 
 ### Status
-Em planejamento - Ver arquivo `.claude/plans/wobbly-wiggling-metcalfe.md`
+**IMPLEMENTADO** - Frontend completo
+
+### Arquivos Criados
+
+#### Frontend
+- `frontend/src/components/OrderBumpSuggestion.jsx` - Componente de sugestoes no checkout
+- `frontend/src/pages/producer/OrderBumps.jsx` - Pagina de gerenciamento para produtores
+
+### Arquivos Modificados
+
+#### Frontend
+- `frontend/src/pages/Checkout.jsx` - Integracao do componente Order Bump
+- `frontend/src/App.jsx` - Rota `/producer/order-bumps` adicionada
+
+### Funcionalidades Implementadas
+
+1. **Componente OrderBumpSuggestion**
+   - Exibe sugestoes de produtos complementares no checkout
+   - Busca sugestoes via API `/order-bumps/suggestions`
+   - Permite adicionar/remover bumps com um clique
+   - Rastreia impressoes e cliques para analytics
+
+2. **Integracao no Checkout**
+   - Order bumps aparecem antes do botao de pagamento
+   - Total e atualizado dinamicamente ao adicionar bumps
+   - Bumps sao processados junto com itens do carrinho
+
+3. **Dashboard do Produtor** (`/producer/order-bumps`)
+   - CRUD completo de order bumps
+   - Analytics: impressoes, cliques, conversoes, taxa de conversao
+   - Ativar/desativar bumps
+   - Configurar desconto percentual e prioridade
+
+### Backend (Ja existia)
+- `backend/src/api/controllers/order-bump.controller.js`
+- `backend/src/api/routes/order-bump.routes.js`
+- `backend/src/api/services/order-bump.service.js`
+- Model `order_bumps` no Prisma schema
+
+### Como Usar
+
+1. **Produtor**: Acessar `/producer/order-bumps` para criar ofertas
+2. **Comprador**: Ver sugestoes automaticas no checkout
+3. **Analytics**: Acompanhar metricas no dashboard do produtor
 
 ---
 
