@@ -158,6 +158,11 @@ export default function Navbar() {
               </Link>
             )}
             {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
+              <Link to="/producer/order-bumps" className="block px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 font-semibold" onClick={() => setMobileMenuOpen(false)}>
+                🎁 Order Bumps
+              </Link>
+            )}
+            {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
               <Link to="/admin/products" className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-semibold" onClick={() => setMobileMenuOpen(false)}>
                 📋 Produtos Pendentes
               </Link>
@@ -270,6 +275,11 @@ export default function Navbar() {
                         {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
                           <Link to="/seller/combos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
                             📦 Meus Combos
+                          </Link>
+                        )}
+                        {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
+                          <Link to="/producer/order-bumps" className="block px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 font-semibold" onClick={() => setUserMenuOpen(false)}>
+                            🎁 Order Bumps
                           </Link>
                         )}
                         {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
