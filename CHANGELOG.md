@@ -1,5 +1,100 @@
 # CHANGELOG - EDUPLAYJA Platform
 
+## [2026-01-28] - Configuração de Pagamento Real com Mercado Pago
+
+### Resumo
+Configuração completa do sistema de pagamento real utilizando Mercado Pago em produção. Removido o modo de teste e habilitado pagamentos via PIX, Cartão de Crédito e Boleto.
+
+### Configuração do Mercado Pago
+
+#### Credenciais de Produção (Render)
+| Variável | Descrição |
+|----------|-----------|
+| `MP_ACCESS_TOKEN` | Token de acesso privado (APP_USR-...) |
+| `MP_PUBLIC_KEY` | Chave pública (APP_USR-...) |
+
+#### URLs Configuradas
+| Tipo | URL |
+|------|-----|
+| **Webhook** | `https://eduplay-platform.onrender.com/api/v1/payments/webhook` |
+| **Sucesso** | `https://eduplay-frontend.onrender.com/#/order/{id}/success` |
+| **Falha** | `https://eduplay-frontend.onrender.com/#/order/{id}/failure` |
+| **Pendente** | `https://eduplay-frontend.onrender.com/#/order/{id}/pending` |
+
+#### Conta Mercado Pago (Vendedor)
+| Campo | Valor |
+|-------|-------|
+| **Titular** | Adao Aguiar |
+| **Aplicação** | EDUPLAY (ID: 5906862362960927) |
+| **Status** | Ativo (Avaliação de qualidade: 75+ pontos) |
+
+### Métodos de Pagamento Suportados
+| Método | Taxa | Aprovação |
+|--------|------|-----------|
+| PIX | 0,00% | Instantânea |
+| Cartão de Crédito | 4,98% | Instantânea |
+| Cartão de Débito | 1,99% | Instantânea |
+| Boleto | - | 1-3 dias úteis |
+
+### Fluxo de Pagamento
+```
+1. Cliente adiciona produto ao carrinho
+2. Cliente vai para checkout
+3. Backend cria preferência no Mercado Pago
+4. Cliente é redirecionado para página de pagamento do MP
+5. Cliente paga (PIX, Cartão ou Boleto)
+6. Mercado Pago envia webhook para o backend
+7. Backend atualiza status do pedido para COMPLETED
+8. Sistema cria comissão para o produtor
+9. Cliente é redirecionado para página de sucesso
+```
+
+### Arquivos Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `backend/src/services/payment.service.js` | Configuração da preferência de pagamento com dados do comprador |
+| `backend/src/config/mercadopago.js` | SDK do Mercado Pago configurado |
+| `frontend/src/pages/Checkout.jsx` | Removido pagamento de teste, mantido apenas Mercado Pago |
+| `frontend/index.html` | Script de redirecionamento para hash routes |
+| `frontend/public/_redirects` | Configuração SPA para Render |
+
+### Correção de Redirecionamento
+
+O Mercado Pago remove o `#` das URLs de callback. Foi adicionado um script no `index.html` que detecta URLs sem hash e redireciona automaticamente:
+
+```javascript
+// Redirect non-hash routes to hash routes
+if (path !== '/' && !window.location.hash) {
+  window.location.replace('/#' + path + search);
+}
+```
+
+### Configuração no Painel Mercado Pago
+
+1. Acessar: https://www.mercadopago.com.br/developers/panel
+2. Selecionar aplicação EDUPLAY
+3. Configurar webhook em "Notificações"
+4. Usar credenciais de "Produção" (não teste)
+
+### Avaliação de Qualidade da Integração
+| Critério | Pontos |
+|----------|--------|
+| Conciliação financeira | 25 |
+| Escalabilidade | 15 |
+| Experiência de compra | 10 |
+| Segurança | 25 |
+| **Total** | **75+** |
+
+### Importante - Teste de Pagamento
+
+Para testar pagamentos, o comprador deve usar uma conta **diferente** da conta que recebe os pagamentos (Adao Aguiar). Opções:
+1. Usar outro navegador ou janela anônima
+2. Fazer logout do Mercado Pago antes de pagar
+3. Pagar como visitante (sem login no MP)
+
+---
+
 ## [2026-01-27] - Reorganização do Menu e Visibilidade de Produtos
 
 ### Mudanças no Menu de Navegação
