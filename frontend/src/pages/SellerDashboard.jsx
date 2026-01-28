@@ -44,18 +44,23 @@ export default function SellerDashboard() {
         }
       );
 
-      // Buscar receita por produto
-      const revenueResponse = await axios.get(
-        `${API_URL}/seller/revenue-by-product`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-
       setStats(statsResponse.data.data);
       setProducts(productsResponse.data.data.items || []);
       setRecentSales(salesResponse.data.data.items || []);
-      setRevenueByProduct(revenueResponse.data.data || []);
+
+      // Buscar receita por produto (independente - não bloqueia o dashboard)
+      try {
+        const revenueResponse = await axios.get(
+          `${API_URL}/seller/revenue-by-product`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        setRevenueByProduct(revenueResponse.data.data || []);
+      } catch (revenueErr) {
+        console.warn('Revenue by product not available:', revenueErr);
+        setRevenueByProduct([]);
+      }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError(err.response?.data?.message || 'Erro ao carregar dados do dashboard');
