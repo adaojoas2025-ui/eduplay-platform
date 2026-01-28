@@ -92,7 +92,7 @@ PASSO 7: Testar
 
 1. Entre como PRODUTOR: adao1980aguiar@gmail.com / Senha123@
 2. Crie um novo produto
-3. Entre como ADMIN: ja.eduplay@gmail.com / Senha123@
+3. Entre como ADMIN: ja.eduplay@gmail.com / Asa122448
 4. Aprove o produto
 5. Verifique o email de adao1980aguiar@gmail.com
 
