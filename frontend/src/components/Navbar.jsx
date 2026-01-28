@@ -135,11 +135,8 @@ export default function Navbar() {
         <>
           <div className="fixed inset-0 bg-black bg-opacity-25 z-40 md:hidden" onClick={() => setMobileMenuOpen(false)}></div>
           <div className="fixed top-14 right-2 w-56 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-50 md:hidden max-h-96 overflow-y-auto">
-            <Link to="/my-courses" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
-              Meus Cursos
-            </Link>
             <Link to="/my-products" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
-              Meus Produtos
+              Cursos Adquiridos
             </Link>
             <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
               Pedidos
@@ -255,11 +252,8 @@ export default function Navbar() {
                     </button>
                     {userMenuOpen && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                        <Link to="/my-courses" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
-                          Meus Cursos
-                        </Link>
                         <Link to="/my-products" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
-                          Meus Produtos
+                          Cursos Adquiridos
                         </Link>
                         <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
                           Pedidos
