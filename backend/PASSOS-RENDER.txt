@@ -192,3 +192,100 @@ PASSO 4: Avaliar Qualidade da Integração
 ║  ID:          5906862362960927                                    ║
 ║  Status:      Ativo (75+ pontos na avaliação)                     ║
 ╚═══════════════════════════════════════════════════════════════════╝
+
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                    HOSPEDAGEM NO RENDER                           ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+SERVIÇOS ATIVOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Serviço: eduplay-backend (Web Service)                          │
+│ URL: https://eduplay-platform.onrender.com                      │
+│ Tipo: Node.js                                                   │
+│ Plano: Starter ($7/mês) - PAGO                                  │
+│ Função: API backend (login, pagamentos, produtos, etc)          │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Serviço: eduplay-frontend (Static Site)                         │
+│ URL: https://eduplay-frontend.onrender.com                      │
+│ Plano: Free (Grátis)                                            │
+│ Função: Interface do usuário (React)                            │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Serviço: eduplay-db-new (PostgreSQL)                            │
+│ Plano: Free (Grátis até 1GB)                                    │
+│ Função: Banco de dados                                          │
+└─────────────────────────────────────────────────────────────────┘
+
+
+PLANOS DE HOSPEDAGEM (Instance Type)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+╔═══════════════════════════════════════════════════════════════════╗
+║  Plano      │ Preço    │ RAM    │ CPU    │ Observações            ║
+╠═══════════════════════════════════════════════════════════════════╣
+║  Free       │ $0/mês   │ 512MB  │ 0.1    │ Hiberna após 15min     ║
+║  Starter    │ $7/mês   │ 512MB  │ 0.5    │ Sempre ativo (atual)   ║
+║  Standard   │ $25/mês  │ 2GB    │ 1      │ Melhor performance     ║
+║  Pro        │ $85/mês  │ 4GB    │ 2      │ Para apps grandes      ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+
+COMO ALTERAR O PLANO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Acesse: https://dashboard.render.com
+2. Pressione Ctrl+K e busque "eduplay-backend"
+3. Clique no serviço
+4. Vá em "Settings" no menu lateral
+5. Procure "Instance Type"
+6. Selecione o plano desejado
+7. Clique em "Save Changes"
+
+
+CUSTO MENSAL TOTAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Backend (Starter)    │ $7/mês                                  │
+│  Frontend (Free)      │ $0/mês                                  │
+│  Database (Free)      │ $0/mês                                  │
+│  ─────────────────────────────────────────────────────────────  │
+│  TOTAL                │ $7/mês (~R$ 42/mês)                     │
+└─────────────────────────────────────────────────────────────────┘
+
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                      RESUMO DAS CONTAS                            ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+RENDER (Hospedagem)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Site: https://dashboard.render.com
+  Email: adao.joas2025@gmail.com
+  Workspace: EDUPLAY
+
+MERCADO PAGO (Pagamentos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Site: https://www.mercadopago.com.br/developers/panel
+  Titular: Adao Aguiar
+  App ID: 5906862362960927
+
+GMAIL (Emails do Sistema)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Email: adao.joas2025@gmail.com
+  Usado para: Notificações de aprovação de produtos, recuperação de senha
+
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                      URLs DO PROJETO                              ║
+╠═══════════════════════════════════════════════════════════════════╣
+║  Frontend:  https://eduplay-frontend.onrender.com                 ║
+║  Backend:   https://eduplay-platform.onrender.com                 ║
+║  API:       https://eduplay-platform.onrender.com/api/v1          ║
+╚═══════════════════════════════════════════════════════════════════╝
