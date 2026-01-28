@@ -91,14 +91,19 @@ const changePassword = asyncHandler(async (req, res) => {
  */
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const resetToken = await authService.requestPasswordReset(email);
+  const userRepository = require('../../repositories/user.repository');
 
-  // Send reset email if user exists
-  if (resetToken) {
-    const user = { email }; // Minimal user data for email
-    emailService.sendPasswordResetEmail(user, resetToken).catch((err) => {
-      logger.error('Failed to send password reset email:', err);
-    });
+  // Get user data first to include name in email
+  const user = await userRepository.findUserByEmail(email);
+
+  if (user) {
+    const resetToken = await authService.requestPasswordReset(email);
+
+    if (resetToken) {
+      emailService.sendPasswordResetEmail({ name: user.name, email: user.email }, resetToken).catch((err) => {
+        logger.error('Failed to send password reset email:', err);
+      });
+    }
   }
 
   // Always return success to prevent email enumeration

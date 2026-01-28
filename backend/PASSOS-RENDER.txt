@@ -289,3 +289,72 @@ GMAIL (Emails do Sistema)
 ║  Backend:   https://eduplay-platform.onrender.com                 ║
 ║  API:       https://eduplay-platform.onrender.com/api/v1          ║
 ╚═══════════════════════════════════════════════════════════════════╝
+
+
+╔═══════════════════════════════════════════════════════════════════╗
+║            LIMPAR/RESETAR BANCO DE DADOS (PRODUCAO)               ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+Este procedimento DELETA todos os dados do banco, mantendo apenas
+a conta do administrador. USE COM CUIDADO!
+
+DADOS QUE SERAO DELETADOS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - Todos os usuarios (exceto admin)
+  - Todos os produtos
+  - Todos os pedidos
+  - Todas as comissoes
+  - Todos os apps
+  - Todos os downloads de apps
+  - Todas as avaliacoes
+  - Todos os leaderboards
+
+DADOS QUE SERAO MANTIDOS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - Conta admin: ja.eduplay@gmail.com / Asa122448
+  - Configuracoes de badges e missoes
+
+
+PASSO A PASSO PARA LIMPAR O BANCO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Acesse: https://dashboard.render.com
+2. Pressione Ctrl+K e busque "eduplay-backend"
+3. Clique no servico
+4. No menu lateral, clique em "Shell"
+5. Quando o terminal abrir, copie e cole o comando abaixo:
+
+┌─────────────────────────────────────────────────────────────────┐
+│ COMANDO PARA LIMPAR O BANCO (copie tudo):                       │
+└─────────────────────────────────────────────────────────────────┘
+
+node -e "
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+(async () => {
+  const admin = await prisma.users.findUnique({ where: { email: 'ja.eduplay@gmail.com' } });
+  if (!admin) { console.log('Admin nao encontrado!'); return; }
+  console.log('Admin:', admin.email);
+  await prisma.app_reviews.deleteMany({});
+  await prisma.app_downloads.deleteMany({});
+  await prisma.commissions.deleteMany({});
+  await prisma.orders.deleteMany({});
+  await prisma.apps.deleteMany({});
+  await prisma.leaderboards.deleteMany({});
+  await prisma.products.deleteMany({});
+  const del = await prisma.users.deleteMany({ where: { id: { not: admin.id } } });
+  console.log('Usuarios deletados:', del.count);
+  console.log('LIMPEZA COMPLETA!');
+  await prisma.\$disconnect();
+})();
+"
+
+6. Pressione Enter e aguarde a mensagem "LIMPEZA COMPLETA!"
+
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                         ATENCAO!                                  ║
+║                                                                    ║
+║  Esta acao e IRREVERSIVEL! Todos os dados serao perdidos.         ║
+║  Faca backup se necessario antes de executar.                     ║
+╚═══════════════════════════════════════════════════════════════════╝

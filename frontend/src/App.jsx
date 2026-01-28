@@ -41,6 +41,7 @@ import HelpCenter from './pages/HelpCenter';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contact from './pages/Contact';
+import ResetPassword from './pages/ResetPassword';
 
 
 // ============================================
@@ -273,15 +274,15 @@ const Login = () => {
     setResetMessage('');
 
     try {
-      // Simulação de envio de email de recuperação
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setResetMessage('✅ Email de recuperação enviado! Verifique sua caixa de entrada.');
+      await axios.post(`${API_URL}/auth/forgot-password`, { email: resetEmail });
+      setResetMessage('✅ Se o email estiver cadastrado, você receberá um link de recuperação.');
       setTimeout(() => {
         setShowForgotPassword(false);
         setResetMessage('');
-      }, 3000);
+      }, 5000);
     } catch (err) {
-      setResetMessage('❌ Erro ao enviar email de recuperação');
+      console.error('Erro ao solicitar recuperação:', err);
+      setResetMessage('❌ Erro ao enviar email de recuperação. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -887,6 +888,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/auth/google/callback" element={<CallbackGoogle />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/product/:slug" element={<ProductDetails />} />
