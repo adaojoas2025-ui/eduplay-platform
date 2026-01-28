@@ -1,5 +1,80 @@
 # CHANGELOG - EDUPLAYJA Platform
 
+## [2026-01-27] - Reorganização do Menu e Visibilidade de Produtos
+
+### Mudanças no Menu de Navegação
+
+#### Items Removidos
+| Item | Motivo |
+|------|--------|
+| Meus Cursos | Redundante - funcionalidade movida para "Cursos Adquiridos" |
+
+#### Items Renomeados
+| Antes | Depois | Rota | Descrição |
+|-------|--------|------|-----------|
+| Meus Produtos | Cursos Adquiridos | `/my-products` | Cursos/produtos comprados pelo usuário |
+| Pedidos | Meus Produtos | `/seller/products` | Produtos criados pelo vendedor |
+
+#### Permissões de Menu
+| Item | BUYER | PRODUCER | ADMIN |
+|------|-------|----------|-------|
+| Cursos Adquiridos | ✅ | ✅ | ✅ |
+| Meus Produtos | ✅ | ✅ | ✅ |
+| Financeiro | ✅ | ✅ | ✅ |
+| Meus Combos | ❌ | ✅ | ✅ |
+| Order Bumps | ❌ | ✅ | ✅ |
+| Produtos Pendentes | ❌ | ❌ | ✅ |
+
+### Filtros na Página "Meus Produtos" (Vendedor)
+
+Adicionados filtros de status para o produtor visualizar seus produtos:
+
+| Filtro | Status | Cor |
+|--------|--------|-----|
+| Aguardando Aprovação | PENDING_APPROVAL | Amarelo |
+| Publicados | PUBLISHED | Verde |
+| Rejeitados | REJECTED | Vermelho |
+| Rascunhos | DRAFT | Azul |
+| Todos | Todos os status | Cinza escuro |
+
+**Arquivo modificado:** `frontend/src/pages/SellerProducts.jsx`
+
+### Arquivos Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `frontend/src/components/Navbar.jsx` | Menu reorganizado, "Meus Cursos" removido, "Produtos Pendentes" restrito a ADMIN |
+| `frontend/src/pages/SellerProducts.jsx` | Adicionados filtros de status |
+| `frontend/src/pages/MyProducts.jsx` | Título alterado para "Cursos Adquiridos" |
+| `backend/PASSOS-RENDER.txt` | Senha do admin atualizada |
+| `backend/scripts/fix-adao1980-role.js` | Script para corrigir role de usuário |
+
+### Credenciais do Sistema
+
+| Tipo | Email | Senha |
+|------|-------|-------|
+| **ADMIN** | ja.eduplay@gmail.com | Asa122448 |
+| PRODUTOR | adao1980aguiar@gmail.com | Senha123@ |
+| PRODUTOR (teste) | teste@exemplo.com | Senha123 |
+
+### Script de Correção de Role
+
+Para corrigir o role de um usuário de ADMIN para PRODUCER, execute no Render Shell:
+
+```bash
+node scripts/fix-adao1980-role.js
+```
+
+### Commits Relacionados
+- `fix: Change 'Meus Produtos' menu link to /seller/products`
+- `feat: Add status filters to Meus Produtos page`
+- `fix: Remove 'Meus Cursos' from navigation menu`
+- `fix: Restrict 'Produtos Pendentes' menu to ADMIN only`
+- `docs: Update admin password in documentation`
+- `chore: Add script to fix adao1980 user role to PRODUCER`
+
+---
+
 ## [2026-01-22] - Correções do Sistema de Pagamento e Comissões
 
 ### Problema
