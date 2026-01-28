@@ -194,7 +194,9 @@ const deleteProduct = async (productId) => {
  */
 const listProducts = async (filters = {}, pagination = {}, sorting = {}) => {
   try {
-    const { page = 1, limit = 12 } = pagination;
+    // Handle NaN values from parseInt(undefined)
+    const page = Number.isNaN(pagination.page) || !pagination.page ? 1 : pagination.page;
+    const limit = Number.isNaN(pagination.limit) || !pagination.limit ? 12 : pagination.limit;
     const { sortBy = 'createdAt', order = 'desc' } = sorting;
     const skip = (page - 1) * limit;
 
