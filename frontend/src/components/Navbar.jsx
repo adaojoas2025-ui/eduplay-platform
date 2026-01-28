@@ -142,7 +142,7 @@ export default function Navbar() {
               Cursos Adquiridos
             </Link>
             <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
-              Pedidos
+              Meus Produtos
             </Link>
             <Link to="/seller/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>
               💰 Financeiro
@@ -262,7 +262,7 @@ export default function Navbar() {
                           Cursos Adquiridos
                         </Link>
                         <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
-                          Pedidos
+                          Meus Produtos
                         </Link>
                         <Link to="/seller/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
                           💰 Financeiro
