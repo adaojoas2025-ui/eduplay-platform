@@ -159,7 +159,7 @@ export default function Navbar() {
                 🎁 Order Bumps
               </Link>
             )}
-            {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
+            {user?.role === 'ADMIN' && (
               <Link to="/admin/products" className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-semibold" onClick={() => setMobileMenuOpen(false)}>
                 📋 Produtos Pendentes
               </Link>
@@ -276,7 +276,7 @@ export default function Navbar() {
                             🎁 Order Bumps
                           </Link>
                         )}
-                        {(user?.role === 'PRODUCER' || user?.role === 'ADMIN') && (
+                        {user?.role === 'ADMIN' && (
                           <Link to="/admin/products" className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-semibold" onClick={() => setUserMenuOpen(false)}>
                             📋 Produtos Pendentes
                           </Link>
