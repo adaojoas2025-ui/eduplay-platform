@@ -12,6 +12,18 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Redirect non-hash routes to hash routes (for Mercado Pago callbacks)
+      (function() {
+        var path = window.location.pathname;
+        var search = window.location.search;
+        // If path is not root and doesn't already have hash routing
+        if (path !== '/' && !window.location.hash) {
+          // Redirect to hash-based URL
+          window.location.replace('/#' + path + search);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
