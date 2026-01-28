@@ -122,26 +122,37 @@ export default function SellerProducts() {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="flex gap-2">
+          <p className="text-sm text-gray-600 mb-3 font-medium">Filtros</p>
+          <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setFilter('all')}
+              onClick={() => setFilter('pending_approval')}
               className={`px-4 py-2 rounded-lg font-semibold transition ${
-                filter === 'all'
-                  ? 'bg-blue-600 text-white'
+                filter === 'pending_approval'
+                  ? 'bg-yellow-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Todos ({products.length})
+              Aguardando Aprovacao
             </button>
             <button
               onClick={() => setFilter('published')}
               className={`px-4 py-2 rounded-lg font-semibold transition ${
                 filter === 'published'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-green-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Publicados
+            </button>
+            <button
+              onClick={() => setFilter('rejected')}
+              className={`px-4 py-2 rounded-lg font-semibold transition ${
+                filter === 'rejected'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Rejeitados
             </button>
             <button
               onClick={() => setFilter('draft')}
@@ -152,6 +163,16 @@ export default function SellerProducts() {
               }`}
             >
               Rascunhos
+            </button>
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-4 py-2 rounded-lg font-semibold transition ${
+                filter === 'all'
+                  ? 'bg-gray-800 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Todos
             </button>
           </div>
         </div>
