@@ -51,6 +51,64 @@ router.get('/products', authenticate, async (req, res, next) => {
   }
 });
 
+// Revenue by product
+router.get('/revenue-by-product', authenticate, async (req, res, next) => {
+  try {
+    const sellerId = req.user.id;
+
+    // Get all products with their sales data
+    const products = await prisma.products.findMany({
+      where: { producerId: sellerId },
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        sales: true,
+        orders: {
+          where: {
+            status: 'COMPLETED'
+          },
+          select: {
+            id: true,
+            amount: true,
+            producerAmount: true,
+            platformFee: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+
+    // Calculate revenue for each product
+    const revenueByProduct = products.map(product => {
+      const totalSales = product.orders.length;
+      const totalAmount = product.orders.reduce((sum, order) => sum + (order.amount || 0), 0);
+      const totalProducerAmount = product.orders.reduce((sum, order) => sum + (order.producerAmount || 0), 0);
+      const totalPlatformFee = product.orders.reduce((sum, order) => sum + (order.platformFee || 0), 0);
+
+      return {
+        productId: product.id,
+        productTitle: product.title,
+        productPrice: product.price,
+        totalSales,
+        totalAmount,
+        producerAmount: totalProducerAmount,
+        platformFee: totalPlatformFee
+      };
+    });
+
+    // Sort by total amount (highest first)
+    revenueByProduct.sort((a, b) => b.totalAmount - a.totalAmount);
+
+    res.json({
+      success: true,
+      data: revenueByProduct
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Seller sales
 router.get('/sales', authenticate, async (req, res, next) => {
   try {

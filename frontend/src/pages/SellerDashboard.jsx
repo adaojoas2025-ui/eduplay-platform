@@ -7,6 +7,7 @@ export default function SellerDashboard() {
   const [stats, setStats] = useState(null);
   const [products, setProducts] = useState([]);
   const [recentSales, setRecentSales] = useState([]);
+  const [revenueByProduct, setRevenueByProduct] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -43,9 +44,18 @@ export default function SellerDashboard() {
         }
       );
 
+      // Buscar receita por produto
+      const revenueResponse = await axios.get(
+        `${API_URL}/seller/revenue-by-product`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
       setStats(statsResponse.data.data);
       setProducts(productsResponse.data.data.items || []);
       setRecentSales(salesResponse.data.data.items || []);
+      setRevenueByProduct(revenueResponse.data.data || []);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError(err.response?.data?.message || 'Erro ao carregar dados do dashboard');
@@ -182,6 +192,73 @@ export default function SellerDashboard() {
             </p>
           </div>
         </div>
+
+        {/* Receita por Produto */}
+        {revenueByProduct.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-800">Receita por Produto</h2>
+              <span className="text-2xl">📊</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-600">Produto</th>
+                    <th className="text-center py-3 px-4 font-semibold text-gray-600">Vendas</th>
+                    <th className="text-right py-3 px-4 font-semibold text-gray-600">Valor Total</th>
+                    <th className="text-right py-3 px-4 font-semibold text-gray-600">Taxa Plataforma</th>
+                    <th className="text-right py-3 px-4 font-semibold text-gray-600">Você Recebe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {revenueByProduct.map((product) => (
+                    <tr key={product.productId} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-semibold text-gray-800">{product.productTitle}</p>
+                          <p className="text-sm text-gray-500">Preço: R$ {product.productPrice?.toFixed(2)}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-flex items-center justify-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold">
+                          {product.totalSales}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-semibold text-gray-800">
+                        R$ {product.totalAmount?.toFixed(2)}
+                      </td>
+                      <td className="py-3 px-4 text-right text-orange-600">
+                        R$ {product.platformFee?.toFixed(2)}
+                      </td>
+                      <td className="py-3 px-4 text-right font-bold text-green-600">
+                        R$ {product.producerAmount?.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-gray-50">
+                  <tr className="font-bold">
+                    <td className="py-3 px-4 text-gray-800">Total</td>
+                    <td className="py-3 px-4 text-center text-gray-800">
+                      {revenueByProduct.reduce((sum, p) => sum + p.totalSales, 0)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-gray-800">
+                      R$ {revenueByProduct.reduce((sum, p) => sum + (p.totalAmount || 0), 0).toFixed(2)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-orange-600">
+                      R$ {revenueByProduct.reduce((sum, p) => sum + (p.platformFee || 0), 0).toFixed(2)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-green-600">
+                      R$ {revenueByProduct.reduce((sum, p) => sum + (p.producerAmount || 0), 0).toFixed(2)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Produtos */}
