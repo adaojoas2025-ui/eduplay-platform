@@ -249,119 +249,7 @@ export default function Checkout() {
               )}
 
               <button
-                onClick={async () => {
-                  setLoading(true);
-                  setError(null);
-                  try {
-                    const token = localStorage.getItem('token');
-                    console.log('🔄 Iniciando pagamento instantâneo...');
-                    console.log('🛒 Total de itens no carrinho:', cart.items.length);
-
-                    let successfulOrders = [];
-                    let skippedItems = [];
-
-                    // Combine cart items with order bumps
-                    const allItems = [
-                      ...cart.items.map(item => ({
-                        productId: item.productId,
-                        price: item.price * item.quantity,
-                        title: item.product?.title,
-                        isBump: false
-                      })),
-                      ...orderBumps.map(bump => ({
-                        productId: bump.productId,
-                        price: bump.finalPrice,
-                        title: bump.product?.title,
-                        isBump: true,
-                        bumpId: bump.id
-                      }))
-                    ];
-
-                    console.log('🛒 Total de itens (carrinho + bumps):', allItems.length);
-
-                    // Process each item
-                    for (const item of allItems) {
-                      try {
-                        const orderData = {
-                          productId: item.productId,
-                          amount: item.price,
-                          paymentMethod: 'INSTANT_TEST'
-                        };
-
-                        console.log('📦 Criando pedido para:', item.title, item.isBump ? '(Order Bump)' : '', orderData);
-                        const orderResponse = await axios.post(
-                          `${API_URL}/orders`,
-                          orderData,
-                          { headers: { Authorization: `Bearer ${token}` } }
-                        );
-
-                        const orderId = orderResponse.data.data.order.id;
-                        console.log('✅ Pedido criado:', orderId);
-
-                        console.log('💰 Aprovando pagamento...');
-                        const paymentResponse = await axios.post(
-                          `${API_URL}/test/approve-payment/${orderId}`,
-                          {},
-                          { headers: { Authorization: `Bearer ${token}` } }
-                        );
-
-                        console.log('✅ Pagamento aprovado:', paymentResponse.data);
-                        successfulOrders.push({ orderId, product: item.title });
-
-                        // Track conversion for order bumps
-                        if (item.isBump && item.bumpId) {
-                          try {
-                            await axios.post(
-                              `${API_URL}/order-bumps/${item.bumpId}/track`,
-                              { event: 'conversion' },
-                              { headers: { Authorization: `Bearer ${token}` } }
-                            );
-                            console.log('📊 Conversão do Order Bump rastreada');
-                          } catch (trackError) {
-                            console.warn('⚠️ Erro ao rastrear conversão:', trackError);
-                          }
-                        }
-                      } catch (itemError) {
-                        console.warn('⚠️ Erro ao processar item:', item.title, itemError.response?.data?.message);
-
-                        // If already purchased, skip and continue
-                        if (itemError.response?.data?.message?.includes('already purchased')) {
-                          skippedItems.push(item.title);
-                          console.log('ℹ️ Item já comprado, continuando...');
-                          continue;
-                        }
-
-                        // For other errors, rethrow
-                        throw itemError;
-                      }
-                    }
-
-                    if (successfulOrders.length === 0 && skippedItems.length > 0) {
-                      setError(`Você já possui ${skippedItems.length === 1 ? 'este produto' : 'estes produtos'}: ${skippedItems.join(', ')}`);
-                      setLoading(false);
-                      return;
-                    }
-
-                    if (successfulOrders.length > 0) {
-                      clearCart();
-                      setOrderBumps([]);
-                      setBumpTotal(0);
-
-                      // Show success message
-                      if (skippedItems.length > 0) {
-                        alert(`✅ Compra concluída! ${successfulOrders.length} ${successfulOrders.length === 1 ? 'produto comprado' : 'produtos comprados'}.\n\nℹ️ ${skippedItems.length} ${skippedItems.length === 1 ? 'item foi ignorado pois você já o possui' : 'itens foram ignorados pois você já os possui'}: ${skippedItems.join(', ')}`);
-                      }
-
-                      // Navigate to first successful order
-                      navigate(`/order/${successfulOrders[0].orderId}/success`);
-                    }
-                  } catch (err) {
-                    console.error('❌ Erro no pagamento:', err);
-                    setError(err.response?.data?.message || 'Erro ao processar pagamento. Tente novamente.');
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
+                onClick={handleCheckout}
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-bold text-lg hover:from-green-600 hover:to-green-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -371,21 +259,21 @@ export default function Checkout() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Processando Pagamento...
+                    Processando...
                   </span>
                 ) : (
                   <span className="flex items-center justify-center">
                     <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Pagar Agora - Aprovação Instantânea
+                    Pagar com Mercado Pago
                   </span>
                 )}
               </button>
 
-              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-800 text-center">
-                  <span className="font-semibold">✨ Pagamento de Teste:</span> Aprovação instantânea sem necessidade de cartão. Você receberá o produto por email imediatamente.
+              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-xs text-green-800 text-center">
+                  <span className="font-semibold">🔒 Pagamento Seguro:</span> Você será redirecionado para o Mercado Pago. Aceita PIX, Cartão e Boleto.
                 </p>
               </div>
 
