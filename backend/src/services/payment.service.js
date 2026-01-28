@@ -27,12 +27,12 @@ const createPaymentPreference = async (order) => {
         {
           id: product.id,
           title: product.title,
-          description: product.description.substring(0, 256),
-          picture_url: product.thumbnailUrl,
+          description: product.description ? product.description.substring(0, 256) : product.title,
+          picture_url: product.thumbnailUrl || '',
           category_id: 'digital_goods',
           quantity: 1,
           currency_id: 'BRL',
-          unit_price: order.amount,
+          unit_price: Number(order.amount),
         },
       ],
       payer: {
@@ -40,13 +40,21 @@ const createPaymentPreference = async (order) => {
         name: order.buyer.name,
       },
       back_urls: {
-        success: `${config.frontend.url}/order/${order.id}/success`,
-        failure: `${config.frontend.url}/order/${order.id}/failure`,
-        pending: `${config.frontend.url}/order/${order.id}/pending`,
+        success: `${config.frontend.url}/#/order/${order.id}/success`,
+        failure: `${config.frontend.url}/#/order/${order.id}/failure`,
+        pending: `${config.frontend.url}/#/order/${order.id}/pending`,
       },
+      auto_return: 'approved',
       notification_url: `${config.backend.url}/api/v1/payments/webhook`,
       external_reference: order.id,
-      statement_descriptor: config.platform.name,
+      statement_descriptor: config.platform.name.substring(0, 16),
+      binary_mode: false,
+      expires: false,
+      payment_methods: {
+        excluded_payment_types: [],
+        excluded_payment_methods: [],
+        installments: 12,
+      },
     };
 
     const preference = await mercadopago.createPreference(preferenceData);
