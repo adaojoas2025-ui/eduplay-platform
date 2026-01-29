@@ -198,9 +198,9 @@ const googleCallback = asyncHandler(async (req, res) => {
   // Update last login
   await authService.updateLastLogin(user.id);
 
-  // Redirect to frontend with token in URL
+  // Redirect to frontend with token in URL (using hash for HashRouter)
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5175';
-  const redirectUrl = `${frontendUrl}/auth/google/callback?token=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`;
+  const redirectUrl = `${frontendUrl}/#/auth/google/callback?token=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`;
 
   res.redirect(redirectUrl);
 });
