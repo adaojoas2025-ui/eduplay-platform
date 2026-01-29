@@ -98,11 +98,12 @@ const sendVerificationEmail = async (user, token) => {
 const sendPasswordResetEmail = async (user, token) => {
   try {
     const resetUrl = `${config.frontend.url}/reset-password?token=${token}`;
+    const userName = user.name || 'Usuário';
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #333;">Redefinir Senha</h1>
-        <p>Olá ${user.name},</p>
+        <p>Olá ${userName},</p>
         <p>Você solicitou a redefinição de sua senha. Clique no botão abaixo para continuar:</p>
         <p>
           <a href="${resetUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
