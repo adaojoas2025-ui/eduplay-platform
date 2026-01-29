@@ -147,7 +147,7 @@ CLOUDINARY_CLOUD_NAME=dexlzykqm
 CLOUDINARY_API_KEY=761719984596219
 CLOUDINARY_API_SECRET=xxx
 
-# Google OAuth
+# Google OAuth (ver seção "Configurar Google OAuth" abaixo)
 GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=xxx
 GOOGLE_CALLBACK_URL=https://eduplay-platform.onrender.com/api/v1/auth/google/callback
@@ -160,6 +160,76 @@ NODE_ENV=production
 BACKEND_URL=https://eduplay-platform.onrender.com
 FRONTEND_URL=https://eduplay-frontend.onrender.com
 ```
+
+### Configurar Google OAuth
+
+Para habilitar o login com Google, siga os passos:
+
+#### 1. Criar Projeto no Google Cloud Console
+
+1. Acesse: https://console.cloud.google.com/
+2. Crie um novo projeto ou selecione um existente
+3. Vá em **APIs e Serviços** > **Credenciais**
+
+#### 2. Configurar Tela de Consentimento OAuth
+
+1. Vá em **APIs e Serviços** > **Tela de consentimento OAuth**
+2. Selecione **Externo** e clique em **Criar**
+3. Preencha:
+   - Nome do app: `EducaplayJA`
+   - Email de suporte: seu email
+   - Domínios autorizados: `onrender.com`
+4. Em **Escopos**, adicione: `email`, `profile`, `openid`
+5. Em **Usuários de teste**, adicione seu email (enquanto em modo de teste)
+
+#### 3. Criar Credenciais OAuth
+
+1. Vá em **APIs e Serviços** > **Credenciais**
+2. Clique em **Criar credenciais** > **ID do cliente OAuth**
+3. Tipo de aplicativo: **Aplicativo da Web**
+4. Nome: `EducaplayJA Web`
+5. **Origens JavaScript autorizadas**:
+   ```
+   https://eduplay-frontend.onrender.com
+   ```
+6. **URIs de redirecionamento autorizados**:
+   ```
+   https://eduplay-platform.onrender.com/api/v1/auth/google/callback
+   ```
+7. Clique em **Criar**
+8. Copie o **ID do cliente** e **Chave secreta do cliente**
+
+#### 4. Configurar no Render (Backend)
+
+Adicione estas variáveis de ambiente no serviço `eduplay-platform`:
+
+| Variável | Valor |
+|----------|-------|
+| `GOOGLE_CLIENT_ID` | `seu-client-id.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | `GOCSPX-sua-chave-secreta` |
+| `GOOGLE_CALLBACK_URL` | `https://eduplay-platform.onrender.com/api/v1/auth/google/callback` |
+
+#### 5. Fluxo de Autenticação
+
+```
+1. Usuário clica em "Continuar com Google"
+2. Frontend redireciona para: /api/v1/auth/google
+3. Backend redireciona para Google
+4. Usuário autoriza o app
+5. Google redireciona para: /api/v1/auth/google/callback
+6. Backend cria/encontra usuário e gera tokens JWT
+7. Backend redireciona para: /#/auth/google/callback?token=xxx
+8. Frontend salva tokens e redireciona para home
+```
+
+#### Observações Importantes
+
+- O frontend usa **HashRouter**, por isso o callback usa `/#/`
+- Usuários novos são criados com role `BUYER`
+- O `googleId` é salvo para identificar o usuário em logins futuros
+- Não é necessário senha para usuários OAuth
+
+---
 
 ### IMPORTANTE: Email no Render
 
@@ -265,6 +335,28 @@ GET https://eduplay-platform.onrender.com/api/v1/email-status
 **Local:**
 - Use App Password do Gmail ou SendGrid
 
+### Google OAuth não funciona:
+
+1. **Erro `redirect_uri_mismatch`**:
+   - Verifique se a URL de callback está exatamente igual no Google Cloud Console
+   - URL correta: `https://eduplay-platform.onrender.com/api/v1/auth/google/callback`
+
+2. **Erro `invalid_client`**:
+   - Verifique se `GOOGLE_CLIENT_ID` está correto no Render
+   - Confirme que as credenciais são do projeto correto
+
+3. **Erro 500 no callback**:
+   - Verifique os logs do backend no Render
+   - Possíveis causas: role inválido, ID não gerado, campo obrigatório faltando
+
+4. **Página "Not Found" após login**:
+   - O frontend usa HashRouter, a URL deve ter `/#/`
+   - Verifique se o backend está redirecionando para `/#/auth/google/callback`
+
+5. **Login funciona mas usuário não aparece logado**:
+   - Verifique se o localStorage está salvando com a chave `userData`
+   - O Navbar lê de `localStorage.getItem('userData')`
+
 ---
 
 ## Recursos Úteis
@@ -277,4 +369,4 @@ GET https://eduplay-platform.onrender.com/api/v1/email-status
 
 ---
 
-**Última Atualização:** 22 de Janeiro de 2025
+**Última Atualização:** 29 de Janeiro de 2026
