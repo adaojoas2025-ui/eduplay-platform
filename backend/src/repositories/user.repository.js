@@ -375,6 +375,25 @@ const findUsersByRole = async (role) => {
   }
 };
 
+/**
+ * Find user by reset password token
+ * @param {string} hashedToken - Hashed reset token
+ * @returns {Promise<Object|null>} User or null
+ */
+const findUserByResetToken = async (hashedToken) => {
+  try {
+    const user = await prisma.users.findFirst({
+      where: {
+        resetPasswordToken: hashedToken,
+      },
+    });
+    return user;
+  } catch (error) {
+    logger.error('Error finding user by reset token:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   createUser,
   findUserById,
@@ -391,4 +410,5 @@ module.exports = {
   updateAvatar,
   updatePixKey,
   getProducerStats,
+  findUserByResetToken,
 };

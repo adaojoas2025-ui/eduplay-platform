@@ -241,16 +241,14 @@ const resetPassword = async (token, newPassword) => {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     // Find user with valid token
-    const users = await userRepository.listUsers(
-      {
-        resetPasswordToken: hashedToken,
-      },
-      { page: 1, limit: 1 }
-    );
+    const user = await userRepository.findUserByResetToken(hashedToken);
 
-    const user = users.users[0];
-    if (!user || user.resetPasswordExpires < new Date()) {
+    if (!user) {
       throw ApiError.badRequest('Invalid or expired reset token');
+    }
+
+    if (user.resetPasswordExpires < new Date()) {
+      throw ApiError.badRequest('Reset token has expired');
     }
 
     // Hash new password
