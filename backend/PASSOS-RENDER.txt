@@ -358,3 +358,70 @@ const prisma = new PrismaClient();
 ║  Esta acao e IRREVERSIVEL! Todos os dados serao perdidos.         ║
 ║  Faca backup se necessario antes de executar.                     ║
 ╚═══════════════════════════════════════════════════════════════════╝
+
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                   RECUPERACAO DE SENHA                            ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+O sistema de recuperacao de senha funciona da seguinte forma:
+
+FLUXO DO USUARIO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Usuario acessa: https://eduplay-frontend.onrender.com/#/login
+2. Clica em "Esqueci minha senha"
+3. Digita o email cadastrado
+4. Recebe email com link de recuperacao
+5. Clica no link e define nova senha
+6. Volta para o login com a nova senha
+
+
+CONFIGURACAO TECNICA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O sistema usa HashRouter, entao todas as URLs devem incluir /#/
+
+URL do email: https://eduplay-frontend.onrender.com/#/reset-password?token=XXX
+
+Arquivos envolvidos:
+- Backend: src/services/email.service.js (envia o email)
+- Backend: src/api/controllers/auth.controller.js (gera o token)
+- Frontend: src/pages/ResetPassword.jsx (pagina de redefinicao)
+- Frontend: src/App.jsx (rota /reset-password)
+
+
+SERVICO DE EMAIL:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O sistema suporta dois servicos de email:
+
+1. SendGrid (prioritario)
+   - Variavel: SENDGRID_API_KEY
+   - Usado se configurado
+
+2. Gmail SMTP (fallback)
+   - Variaveis: EMAIL_USER, EMAIL_PASS, EMAIL_HOST, EMAIL_PORT
+   - Usado se SendGrid nao estiver configurado
+
+Variaveis no Render:
+┌─────────────────────────────────────────────────────────────────┐
+│ EMAIL_HOST    = smtp.gmail.com                                  │
+│ EMAIL_PORT    = 587                                             │
+│ EMAIL_SECURE  = false                                           │
+│ EMAIL_USER    = adao.joas2025@gmail.com                         │
+│ EMAIL_PASS    = kiiu xadt rbmk whns (App Password do Gmail)     │
+│ EMAIL_FROM    = EducaplayJA <adao.joas2025@gmail.com>           │
+└─────────────────────────────────────────────────────────────────┘
+
+
+IMPORTANTE - HASHROUTER:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O frontend usa HashRouter para compatibilidade com Static Sites.
+Todas as URLs de email devem usar o formato:
+
+  CORRETO:   https://eduplay-frontend.onrender.com/#/reset-password
+  ERRADO:    https://eduplay-frontend.onrender.com/reset-password
+
+Se uma URL sem /#/ for acessada, aparecera "Not Found".
