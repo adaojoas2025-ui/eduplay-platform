@@ -240,8 +240,19 @@ const resetPassword = async (token, newPassword) => {
     // Hash token
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    // Find user with valid token
+    logger.info('Attempting password reset', {
+      tokenPrefix: token.substring(0, 8),
+      hashedTokenPrefix: hashedToken.substring(0, 16)
+    });
+
+    // Find user with valid token using dedicated function
     const user = await userRepository.findUserByResetToken(hashedToken);
+
+    logger.info('findUserByResetToken result', {
+      found: !!user,
+      userId: user?.id,
+      email: user?.email
+    });
 
     if (!user) {
       throw ApiError.badRequest('Invalid or expired reset token');
@@ -261,7 +272,7 @@ const resetPassword = async (token, newPassword) => {
       resetPasswordExpires: null,
     });
 
-    logger.info('Password reset successfully', { userId: user.id });
+    logger.info('Password reset successfully', { userId: user.id, email: user.email });
   } catch (error) {
     logger.error('Error in reset password service:', error);
     throw error;
