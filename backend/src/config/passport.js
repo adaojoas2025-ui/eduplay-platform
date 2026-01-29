@@ -5,6 +5,7 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { PrismaClient } = require('@prisma/client');
+const crypto = require('crypto');
 
 const prisma = new PrismaClient();
 
@@ -58,13 +59,14 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             // Create new user from Google profile
             user = await prisma.users.create({
               data: {
+                id: crypto.randomUUID(),
                 email: profile.emails[0].value,
                 name: profile.displayName,
                 googleId: profile.id,
                 emailVerified: true, // Google emails are verified
                 emailVerifiedAt: new Date(),
                 status: 'ACTIVE',
-                role: 'CUSTOMER', // Default role for Google users
+                role: 'BUYER', // Default role for Google users
                 password: '', // No password for OAuth users
               },
             });
