@@ -357,6 +357,56 @@ GET https://eduplay-platform.onrender.com/api/v1/email-status
    - Verifique se o localStorage está salvando com a chave `userData`
    - O Navbar lê de `localStorage.getItem('userData')`
 
+### Recuperação de senha não funciona:
+
+1. **Senha resetada mas login falha com credenciais inválidas**:
+   - Verifique os logs no Render para confirmar que o usuário correto foi atualizado
+   - Os logs devem mostrar: `findUserByResetToken result` com o email correto
+   - Se o email estiver errado, pode haver tokens duplicados no banco
+
+2. **Link de recuperação inválido ou expirado**:
+   - O token expira em 1 hora após a solicitação
+   - Solicite um novo link de recuperação
+   - Verifique se o email está correto
+
+3. **Email de recuperação não chega**:
+   - Verifique a pasta de spam
+   - Confirme que o SendGrid está configurado corretamente
+   - Use o endpoint `/api/v1/email-status` para diagnóstico
+
+---
+
+## Histórico de Correções
+
+### 29 de Janeiro de 2026
+
+#### Google OAuth
+- **Problema**: Erro 500 no callback do Google OAuth
+- **Causa**: Role `CUSTOMER` inválido (deveria ser `BUYER`) e ID não gerado automaticamente
+- **Solução**: Corrigido `passport.js` para usar role `BUYER` e gerar UUID com `crypto.randomUUID()`
+
+#### Google OAuth - Redirect
+- **Problema**: Página "Not Found" após login com Google
+- **Causa**: Backend redirecionava sem o prefixo `/#/` necessário para HashRouter
+- **Solução**: Corrigido `auth.controller.js` para redirecionar para `/#/auth/google/callback`
+
+#### Google OAuth - LocalStorage
+- **Problema**: Login com Google funciona mas usuário não aparece logado
+- **Causa**: `CallbackGoogle.jsx` salvava dados com chave `user` em vez de `userData`
+- **Solução**: Corrigido para usar `localStorage.setItem('userData', ...)`
+
+#### Recuperação de Senha
+- **Problema**: Senha resetada com sucesso mas login falha com senha antiga
+- **Causa**: Função `listUsers()` ignorava o filtro `resetPasswordToken`, atualizando a senha do usuário errado
+- **Solução**: Criada função dedicada `findUserByResetToken()` no repositório que busca corretamente pelo token
+
+**Arquivos modificados:**
+- `backend/src/config/passport.js` - Google OAuth strategy
+- `backend/src/api/controllers/auth.controller.js` - Redirect URL
+- `backend/src/repositories/user.repository.js` - Nova função `findUserByResetToken`
+- `backend/src/services/auth.service.js` - Usa a nova função de busca
+- `frontend/src/components/auth/CallbackGoogle.jsx` - LocalStorage key fix
+
 ---
 
 ## Recursos Úteis
