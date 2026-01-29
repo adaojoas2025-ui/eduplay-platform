@@ -97,7 +97,8 @@ const sendVerificationEmail = async (user, token) => {
  */
 const sendPasswordResetEmail = async (user, token) => {
   try {
-    const resetUrl = `${config.frontend.url}/reset-password?token=${token}`;
+    // Frontend uses HashRouter, so URL must include /#/
+    const resetUrl = `${config.frontend.url}/#/reset-password?token=${token}`;
     const userName = user.name || 'Usuário';
 
     const html = `
