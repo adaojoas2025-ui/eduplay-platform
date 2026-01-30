@@ -449,6 +449,23 @@ GET https://eduplay-platform.onrender.com/api/v1/email-status
 - Categoria, Nível, Idioma
 - Certificado incluído, Suporte ao aluno
 
+#### ProductCard - Área Branca Sobre Imagem
+- **Problema**: Área branca aparecia cobrindo parte da imagem do produto
+- **Causa**: Classe `.card` aplicava padding (`p-6`) em todo o card, incluindo a área da imagem
+- **Solução**: Removido padding global, imagem ocupa toda a largura, padding apenas no conteúdo
+
+#### ProductCard - Cards Compactos
+- **Problema**: Apenas 3-4 produtos cabiam na tela, cards muito grandes
+- **Causa**: Cards tinham 320px de largura e imagem de 192px de altura
+- **Solução**: Reduzido para 220px de largura e 128px de altura da imagem
+
+**Arquivos modificados:**
+- `frontend/src/App.jsx` - Adicionada rota `/producer/products/edit/:id`
+- `frontend/src/pages/ProductForm.jsx` - Corrigido acesso aos dados da API
+- `frontend/src/components/ProductCard.jsx` - Layout compacto sem área branca
+- `frontend/src/pages/Home.jsx` - Cards menores (220px)
+- `docs/PROJETO_COMPLETO.md` - Documentação do `PUT /products/:id`
+
 ---
 
 ## Recursos Úteis
