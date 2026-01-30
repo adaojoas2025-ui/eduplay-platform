@@ -2165,6 +2165,7 @@ const createPreference = async (req, res) => {
       external_reference: order.id,
       notification_url: `${process.env.BACKEND_URL}/api/v1/payments/webhook`,
       statement_descriptor: 'EDUPLAYJA'
+      // IMPORTANTE: NÃO usar 'purpose: onboarding_credits' pois força login obrigatório no MP
     };
 
     const response = await mercadopago.preferences.create(preference);
