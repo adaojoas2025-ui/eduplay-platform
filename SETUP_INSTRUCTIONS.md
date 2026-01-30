@@ -466,6 +466,20 @@ GET https://eduplay-platform.onrender.com/api/v1/email-status
 - `frontend/src/pages/Home.jsx` - Cards menores (220px)
 - `docs/PROJETO_COMPLETO.md` - Documentação do `PUT /products/:id`
 
+#### Carrossel de Produtos - Setas de Navegação
+- **Problema**: Usuário precisava rolar manualmente para ver mais produtos em destaque
+- **Causa**: Carrossel não tinha controles de navegação visíveis
+- **Solução**: Adicionadas setas < > nas laterais para scroll suave (estilo Netflix/Amazon)
+
+**Funcionalidades implementadas:**
+- Setas de navegação nas laterais do carrossel
+- Scroll suave ao clicar nas setas (240px por clique)
+- Snap nos cards para alinhamento perfeito
+- Botão "Ver todos" mantido para acesso rápido
+
+**Arquivos modificados:**
+- `frontend/src/pages/Home.jsx` - useRef para scroll, botões de navegação, ícones FiChevronLeft/FiChevronRight
+
 ---
 
 ## Recursos Úteis
@@ -478,4 +492,4 @@ GET https://eduplay-platform.onrender.com/api/v1/email-status
 
 ---
 
-**Última Atualização:** 30 de Janeiro de 2026
+**Última Atualização:** 30 de Janeiro de 2026 (Setas de navegação no carrossel)

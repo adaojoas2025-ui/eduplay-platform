@@ -109,4 +109,12 @@ export const orderAPI = {
   create: (data) => api.post('/orders', data),
 };
 
+// User API endpoints
+export const userAPI = {
+  getProfile: () => api.get('/auth/me'),
+  updateProfile: (data) => api.patch('/users/profile', data),
+  updateProducerSettings: (data) => api.patch('/users/producer-settings', data),
+  upgradeToProducer: (data) => api.post('/users/upgrade-to-producer', data),
+};
+
 export default api;

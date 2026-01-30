@@ -338,6 +338,17 @@ const getProfile = async (userId) => {
         emailVerified: true,
         createdAt: true,
         lastLoginAt: true,
+        // Producer/Seller fields
+        businessName: true,
+        businessDocument: true,
+        businessPhone: true,
+        businessAddress: true,
+        bankName: true,
+        bankAgency: true,
+        bankAccount: true,
+        bankAccountType: true,
+        producerApproved: true,
+        producerApprovedAt: true,
       },
     });
 

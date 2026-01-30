@@ -179,6 +179,22 @@ const upgradeToProducer = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 200, user, 'Upgrade to producer successful');
 });
 
+/**
+ * Update producer settings (business and banking info)
+ * @route PATCH /api/v1/users/producer-settings
+ * @access Private (Producer only)
+ */
+const updateProducerSettings = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const settingsData = req.body;
+
+  const user = await userService.updateProducerSettings(userId, settingsData);
+
+  logger.info('Producer settings updated', { userId });
+
+  return ApiResponse.success(res, 200, user, 'Producer settings updated successfully');
+});
+
 module.exports = {
   getUserById,
   updateProfile,
@@ -193,4 +209,5 @@ module.exports = {
   getProducerStats,
   getUserStats,
   upgradeToProducer,
+  updateProducerSettings,
 };

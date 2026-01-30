@@ -32,6 +32,7 @@ import ProducerDashboard from './pages/producer/Dashboard';
 import ProducerAddProduct from './pages/producer/AddProduct';
 import ProducerMyProducts from './pages/producer/MyProducts';
 import ProducerOrderBumps from './pages/producer/OrderBumps';
+import SellerSettings from './pages/seller/SellerSettings';
 import { AchievementQueueManager } from './components/AchievementNotification';
 import Navbar from './components/Navbar';
 import { API_URL } from './config/api.config';
@@ -913,6 +914,7 @@ function App() {
         <Route path="/seller/products/new" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
         <Route path="/seller/products/:id/edit" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
         <Route path="/seller/combos" element={<ProtectedRoute><SellerCombos /></ProtectedRoute>} />
+        <Route path="/seller/settings" element={<ProtectedRoute><SellerSettings /></ProtectedRoute>} />
 
         {/* Producer Routes */}
         <Route path="/producer/dashboard" element={<ProtectedRoute><ProducerDashboard /></ProtectedRoute>} />

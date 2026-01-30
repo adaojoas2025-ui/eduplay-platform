@@ -473,6 +473,67 @@ const upgradeToProducer = async (userId, upgradeData) => {
   }
 };
 
+/**
+ * Update producer settings (business and banking info)
+ * @param {string} userId - User ID
+ * @param {Object} settingsData - Settings to update
+ * @returns {Promise<Object>} Updated user
+ */
+const updateProducerSettings = async (userId, settingsData) => {
+  try {
+    // Get current user
+    const user = await userRepository.findUserById(userId);
+
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
+
+    // Check if user is a producer
+    if (user.role !== USER_ROLES.PRODUCER) {
+      throw ApiError.forbidden('Only producers can update these settings');
+    }
+
+    // Extract only allowed fields for update
+    const allowedFields = [
+      'businessName',
+      'businessDocument',
+      'businessPhone',
+      'businessAddress',
+      'bankName',
+      'bankAgency',
+      'bankAccount',
+      'bankAccountType',
+      'pixKey'
+    ];
+
+    const updateData = {};
+    for (const field of allowedFields) {
+      if (settingsData[field] !== undefined && settingsData[field] !== '') {
+        updateData[field] = settingsData[field];
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      throw ApiError.badRequest('No valid fields to update');
+    }
+
+    // Update user
+    const updatedUser = await userRepository.updateUser(userId, updateData);
+
+    logger.info('Producer settings updated', {
+      userId,
+      updatedFields: Object.keys(updateData)
+    });
+
+    // Return user without sensitive info
+    const { password, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
+  } catch (error) {
+    logger.error('Error updating producer settings:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   getUserById,
   updateProfile,
@@ -488,4 +549,5 @@ module.exports = {
   getUserStats,
   updateUserRole,
   upgradeToProducer,
+  updateProducerSettings,
 };

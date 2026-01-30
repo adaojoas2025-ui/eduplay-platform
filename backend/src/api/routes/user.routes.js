@@ -72,6 +72,18 @@ router.patch(
 );
 
 /**
+ * @route   PATCH /api/v1/users/producer-settings
+ * @desc    Update producer settings (business and banking info)
+ * @access  Private (Producer only)
+ */
+router.patch(
+  '/producer-settings',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.updateProducerSettings
+);
+
+/**
  * @route   GET /api/v1/users/:id/stats
  * @desc    Get producer statistics
  * @access  Private (Producer or Admin)
