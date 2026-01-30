@@ -59,9 +59,9 @@ export default function ProductCard({ product }) {
   }
 
   return (
-    <Link to={`/product/${product.slug}`} className="card hover:shadow-lg transition-all duration-200 group">
+    <Link to={`/product/${product.slug}`} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 group overflow-hidden">
       {/* Image */}
-      <div className="relative overflow-hidden rounded-lg mb-4 h-48 bg-gray-200">
+      <div className="relative overflow-hidden h-48 bg-gray-200">
         {product.thumbnailUrl ? (
           <img
             src={product.thumbnailUrl}
@@ -81,9 +81,10 @@ export default function ProductCard({ product }) {
       </div>
 
       {/* Content */}
-      <h3 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-primary-500 transition-colors">
-        {product.title}
-      </h3>
+      <div className="p-4">
+        <h3 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-primary-500 transition-colors">
+          {product.title}
+        </h3>
       
       <p className="text-gray-600 text-sm mb-3 line-clamp-2">
         {product.description}
@@ -109,6 +110,7 @@ export default function ProductCard({ product }) {
         >
           <FiShoppingCart className="text-xl" />
         </button>
+      </div>
       </div>
     </Link>
   );
