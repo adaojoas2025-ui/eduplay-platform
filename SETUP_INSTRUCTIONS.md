@@ -357,6 +357,17 @@ GET https://eduplay-platform.onrender.com/api/v1/email-status
    - Verifique se o localStorage está salvando com a chave `userData`
    - O Navbar lê de `localStorage.getItem('userData')`
 
+### Mercado Pago exige login para pagar:
+
+1. **Checkout pede login do Mercado Pago**:
+   - Verifique se a preferência de pagamento NÃO contém `purpose: 'onboarding_credits'`
+   - Esta configuração força o login obrigatório
+   - Remova essa linha para permitir pagamento como convidado
+
+2. **Usando credenciais de teste**:
+   - Credenciais `TEST-xxx` funcionam apenas em modo sandbox
+   - Para produção, use credenciais `APP_USR-xxx`
+
 ### Recuperação de senha não funciona:
 
 1. **Senha resetada mas login falha com credenciais inválidas**:
@@ -400,12 +411,18 @@ GET https://eduplay-platform.onrender.com/api/v1/email-status
 - **Causa**: Função `listUsers()` ignorava o filtro `resetPasswordToken`, atualizando a senha do usuário errado
 - **Solução**: Criada função dedicada `findUserByResetToken()` no repositório que busca corretamente pelo token
 
+#### Mercado Pago - Login Obrigatório
+- **Problema**: Checkout do Mercado Pago exigia login, não permitia pagar como convidado
+- **Causa**: Configuração `purpose: 'onboarding_credits'` na preferência de pagamento
+- **Solução**: Removida essa configuração para permitir pagamento como convidado
+
 **Arquivos modificados:**
 - `backend/src/config/passport.js` - Google OAuth strategy
 - `backend/src/api/controllers/auth.controller.js` - Redirect URL
 - `backend/src/repositories/user.repository.js` - Nova função `findUserByResetToken`
 - `backend/src/services/auth.service.js` - Usa a nova função de busca
 - `frontend/src/components/auth/CallbackGoogle.jsx` - LocalStorage key fix
+- `backend/src/services/payment.service.js` - Removido `purpose: 'onboarding_credits'`
 
 ---
 
@@ -419,4 +436,4 @@ GET https://eduplay-platform.onrender.com/api/v1/email-status
 
 ---
 
-**Última Atualização:** 29 de Janeiro de 2026
+**Última Atualização:** 30 de Janeiro de 2026
