@@ -918,6 +918,7 @@ function App() {
         <Route path="/producer/dashboard" element={<ProtectedRoute><ProducerDashboard /></ProtectedRoute>} />
         <Route path="/producer/products" element={<ProtectedRoute><ProducerMyProducts /></ProtectedRoute>} />
         <Route path="/producer/products/add" element={<ProtectedRoute><ProducerAddProduct /></ProtectedRoute>} />
+        <Route path="/producer/products/edit/:id" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
         <Route path="/producer/order-bumps" element={<ProtectedRoute><ProducerOrderBumps /></ProtectedRoute>} />
 
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

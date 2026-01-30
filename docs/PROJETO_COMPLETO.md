@@ -1176,6 +1176,34 @@ Cria novo produto (PRODUCER only)
 #### PUT /products/:id
 Atualiza produto (PRODUCER only - own products)
 
+**Auth Required:** Yes
+**Role Required:** PRODUCER (próprio produto) ou ADMIN
+
+**Request Body:** (todos os campos são opcionais)
+```json
+{
+  "title": "Novo título do produto",
+  "description": "Nova descrição detalhada...",
+  "price": 149.90,
+  "category": "Programação",
+  "thumbnailUrl": "https://exemplo.com/nova-imagem.jpg",
+  "videoUrl": "https://youtube.com/...",
+  "filesUrl": ["https://drive.google.com/arquivo1", "https://drive.google.com/arquivo2"],
+  "level": "Intermediário",
+  "language": "Português",
+  "certificateIncluded": true,
+  "hasSupport": true,
+  "supportDuration": 30
+}
+```
+
+**Campos protegidos (não podem ser alterados):**
+- `producerId` - Dono do produto
+- `slug` - URL amigável (gerado automaticamente)
+- `views` - Contador de visualizações
+- `sales` - Contador de vendas
+- `status` - Apenas ADMIN pode alterar
+
 #### DELETE /products/:id
 Deleta produto (PRODUCER only - own products)
 
