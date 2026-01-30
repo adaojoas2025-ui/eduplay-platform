@@ -44,7 +44,8 @@ export default function ProductForm() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const product = response.data;
+      // API returns { success: true, data: product }
+      const product = response.data.data || response.data;
 
       setFormData({
         title: product.title || '',
