@@ -1415,6 +1415,49 @@ Atualiza perfil
 #### POST /users/upgrade-to-producer
 Upgrade de BUYER para PRODUCER
 
+#### PATCH /users/producer-settings
+Atualiza configurações do produtor (dados comerciais e bancários)
+
+**Auth Required:** Yes
+**Role Required:** PRODUCER
+
+**Request Body:**
+```json
+{
+  "businessName": "Nome da Empresa",
+  "businessDocument": "12.345.678/0001-90",
+  "businessPhone": "11999999999",
+  "businessAddress": "Rua Exemplo, 123, Cidade - Estado",
+  "bankName": "Banco do Brasil",
+  "bankAgency": "1234",
+  "bankAccount": "12345-6",
+  "bankAccountType": "corrente",
+  "pixKey": "email@exemplo.com"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "name": "João Silva",
+    "email": "joao@example.com",
+    "businessName": "Nome da Empresa",
+    "businessDocument": "12.345.678/0001-90",
+    "businessPhone": "11999999999",
+    "businessAddress": "Rua Exemplo, 123",
+    "bankName": "Banco do Brasil",
+    "bankAgency": "1234",
+    "bankAccount": "12345-6",
+    "bankAccountType": "corrente",
+    "pixKey": "email@exemplo.com"
+  },
+  "message": "Producer settings updated successfully"
+}
+```
+
 #### GET /users/admin/all
 Lista todos usuários (ADMIN only)
 
@@ -3236,7 +3279,34 @@ describe('ProductCard', () => {
 - Produtos pendentes
 - Estatísticas gerais
 
-#### 15. Sistema de Emails Automatizados
+#### 15. Configurações do Produtor (Seller Settings)
+**Página para produtores atualizarem dados comerciais e bancários**
+
+**Dados do Negócio:**
+- Nome do Negócio (businessName)
+- CPF/CNPJ (businessDocument)
+- Telefone Comercial (businessPhone)
+- Endereço Completo (businessAddress)
+
+**Dados Bancários:**
+- Nome do Banco (bankName)
+- Agência (bankAgency)
+- Número da Conta (bankAccount)
+- Tipo de Conta (bankAccountType: corrente/poupança)
+- Chave PIX (pixKey)
+
+**Acesso:**
+- Rota: `/seller/settings`
+- Botão no SellerDashboard
+- Menu dropdown do usuário (navbar)
+- Apenas PRODUCER e ADMIN
+
+**Arquivos:**
+- Frontend: `frontend/src/pages/seller/SellerSettings.jsx`
+- Backend: `PATCH /api/v1/users/producer-settings`
+- Service: `user.service.js → updateProducerSettings()`
+
+#### 16. Sistema de Emails Automatizados
 - Welcome email
 - Produto criado (admin notification)
 - Produto aprovado/rejeitado
@@ -3245,14 +3315,14 @@ describe('ProductCard', () => {
 - Producer welcome (upgrade)
 - Password reset
 
-#### 16. Navegação Mobile Responsiva
+#### 17. Navegação Mobile Responsiva
 - Menu mobile com hamburger
 - Dropdowns animados
 - Chevrons nos menus
 - Links condicionais por role
 - Touch-friendly
 
-#### 17. Sistema de Roles e Permissões
+#### 18. Sistema de Roles e Permissões
 **3 Níveis:**
 - BUYER: Comprar produtos
 - PRODUCER: + Vender produtos
@@ -3263,7 +3333,7 @@ describe('ProductCard', () => {
 - Frontend: ProtectedRoute
 - Conditional rendering
 
-#### 18. Segurança Implementada
+#### 19. Segurança Implementada
 - Password hashing (bcrypt)
 - JWT authentication
 - HTTPS (production)
@@ -3275,7 +3345,7 @@ describe('ProductCard', () => {
 - XSS prevention
 - File upload restrictions
 
-#### 19. Logging e Monitoramento
+#### 20. Logging e Monitoramento
 - Winston logger
 - Daily rotating logs
 - Error tracking
