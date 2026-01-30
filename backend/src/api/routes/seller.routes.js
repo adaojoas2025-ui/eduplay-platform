@@ -155,4 +155,148 @@ router.get('/sales', authenticate, async (req, res, next) => {
   }
 });
 
+// Seller detailed reports with date filtering
+router.get('/reports', authenticate, async (req, res, next) => {
+  try {
+    const sellerId = req.user.id;
+    const { startDate, endDate, page = 1, limit = 20 } = req.query;
+
+    // Build date filter
+    const dateFilter = {};
+    if (startDate) {
+      dateFilter.gte = new Date(startDate);
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      dateFilter.lte = end;
+    }
+
+    const where = {
+      product: {
+        producerId: sellerId
+      },
+      status: 'COMPLETED'
+    };
+
+    if (Object.keys(dateFilter).length > 0) {
+      where.createdAt = dateFilter;
+    }
+
+    // Get total count for pagination
+    const totalCount = await prisma.orders.count({ where });
+
+    // Get paginated orders
+    const orders = await prisma.orders.findMany({
+      where,
+      include: {
+        product: {
+          select: {
+            id: true,
+            title: true,
+            price: true,
+            category: true
+          }
+        },
+        buyer: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip: (parseInt(page) - 1) * parseInt(limit),
+      take: parseInt(limit)
+    });
+
+    // Calculate summary stats for the period
+    const allOrdersInPeriod = await prisma.orders.findMany({
+      where,
+      select: {
+        amount: true,
+        producerAmount: true,
+        platformFee: true,
+        createdAt: true
+      }
+    });
+
+    const summary = {
+      totalSales: allOrdersInPeriod.length,
+      totalAmount: allOrdersInPeriod.reduce((sum, o) => sum + (o.amount || 0), 0),
+      totalProducerAmount: allOrdersInPeriod.reduce((sum, o) => sum + (o.producerAmount || 0), 0),
+      totalPlatformFee: allOrdersInPeriod.reduce((sum, o) => sum + (o.platformFee || 0), 0)
+    };
+
+    // Group sales by day for chart data
+    const salesByDay = {};
+    allOrdersInPeriod.forEach(order => {
+      const day = order.createdAt.toISOString().split('T')[0];
+      if (!salesByDay[day]) {
+        salesByDay[day] = { date: day, count: 0, amount: 0, producerAmount: 0 };
+      }
+      salesByDay[day].count++;
+      salesByDay[day].amount += order.amount || 0;
+      salesByDay[day].producerAmount += order.producerAmount || 0;
+    });
+
+    // Convert to array and sort by date
+    const chartData = Object.values(salesByDay).sort((a, b) =>
+      new Date(a.date) - new Date(b.date)
+    );
+
+    // Get sales by product for the period
+    const productSales = {};
+    const ordersWithProduct = await prisma.orders.findMany({
+      where,
+      include: {
+        product: {
+          select: {
+            id: true,
+            title: true
+          }
+        }
+      }
+    });
+
+    ordersWithProduct.forEach(order => {
+      const productId = order.product?.id;
+      if (productId) {
+        if (!productSales[productId]) {
+          productSales[productId] = {
+            productId,
+            productTitle: order.product.title,
+            count: 0,
+            amount: 0
+          };
+        }
+        productSales[productId].count++;
+        productSales[productId].amount += order.amount || 0;
+      }
+    });
+
+    const salesByProduct = Object.values(productSales).sort((a, b) => b.amount - a.amount);
+
+    res.json({
+      success: true,
+      data: {
+        orders,
+        summary,
+        chartData,
+        salesByProduct,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: totalCount,
+          pages: Math.ceil(totalCount / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

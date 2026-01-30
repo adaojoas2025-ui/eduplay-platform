@@ -359,7 +359,7 @@ export default function SellerDashboard() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-800">Vendas Recentes</h2>
               <Link
-                to="/seller/sales"
+                to="/seller/reports"
                 className="text-blue-600 hover:underline text-sm font-semibold"
               >
                 Ver todas
@@ -429,7 +429,7 @@ export default function SellerDashboard() {
             </Link>
 
             <Link
-              to="/seller/sales"
+              to="/seller/reports"
               className="flex items-center gap-3 p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition"
             >
               <span className="text-3xl">📊</span>
