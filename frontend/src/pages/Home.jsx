@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { FiSearch, FiShoppingBag, FiDollarSign, FiStar, FiPackage, FiArrowRight } from 'react-icons/fi';
-import { useEffect, useState } from 'react';
+import { FiSearch, FiShoppingBag, FiDollarSign, FiStar, FiPackage, FiArrowRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
 import ProductCard from '../components/ProductCard';
 import { useCart } from '../contexts/CartContext';
@@ -15,6 +15,18 @@ export default function Home() {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [user, setUser] = useState(null);
+  const productsScrollRef = useRef(null);
+
+  // Função para scroll dos produtos
+  const scrollProducts = (direction) => {
+    if (productsScrollRef.current) {
+      const scrollAmount = 240;
+      productsScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   // Check if user can sell (PRODUCER or ADMIN)
   const canSell = () => {
@@ -385,12 +397,34 @@ export default function Home() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
             </div>
           ) : (
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
-              {Array.isArray(featuredProducts) && featuredProducts.map((product) => (
-                <div key={product.id} className="flex-shrink-0 w-[220px] snap-start">
-                  <ProductCard product={product} />
-                </div>
-              ))}
+            <div className="relative">
+              {/* Seta Esquerda */}
+              <button
+                onClick={() => scrollProducts('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100 transition-colors"
+              >
+                <FiChevronLeft className="text-2xl text-gray-600" />
+              </button>
+
+              {/* Container de Produtos */}
+              <div
+                ref={productsScrollRef}
+                className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory mx-12"
+              >
+                {Array.isArray(featuredProducts) && featuredProducts.map((product) => (
+                  <div key={product.id} className="flex-shrink-0 w-[220px] snap-start">
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Seta Direita */}
+              <button
+                onClick={() => scrollProducts('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100 transition-colors"
+              >
+                <FiChevronRight className="text-2xl text-gray-600" />
+              </button>
             </div>
           )}
         </div>
