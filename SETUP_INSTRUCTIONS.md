@@ -424,6 +424,31 @@ GET https://eduplay-platform.onrender.com/api/v1/email-status
 - `frontend/src/components/auth/CallbackGoogle.jsx` - LocalStorage key fix
 - `backend/src/services/payment.service.js` - Removido `purpose: 'onboarding_credits'`
 
+### 30 de Janeiro de 2026
+
+#### Edição de Produto - Rota Faltando
+- **Problema**: Produtor não conseguia editar produtos após criar (botão "Editar" não funcionava)
+- **Causa**: Rota `/producer/products/edit/:id` não existia no App.jsx
+- **Solução**: Adicionada rota que aponta para o componente `ProductForm`
+
+#### Edição de Produto - Dados Não Carregavam
+- **Problema**: Formulário de edição abria vazio, não carregava dados do produto
+- **Causa**: API retorna `{ success: true, data: product }` mas o código acessava `response.data` em vez de `response.data.data`
+- **Solução**: Corrigido para acessar `response.data.data || response.data`
+
+**Arquivos modificados:**
+- `frontend/src/App.jsx` - Adicionada rota `/producer/products/edit/:id`
+- `frontend/src/pages/ProductForm.jsx` - Corrigido acesso aos dados da API
+- `docs/PROJETO_COMPLETO.md` - Documentação do `PUT /products/:id`
+
+**Campos que o produtor pode editar:**
+- Título, Descrição, Preço
+- Imagem de capa (thumbnail)
+- Links de arquivos para download
+- Link do vídeo
+- Categoria, Nível, Idioma
+- Certificado incluído, Suporte ao aluno
+
 ---
 
 ## Recursos Úteis
