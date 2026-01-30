@@ -56,7 +56,6 @@ const createPaymentPreference = async (order) => {
       external_reference: order.id,
       statement_descriptor: 'EDUCAPLAYJA',
       binary_mode: false,
-      purpose: 'onboarding_credits',
     };
 
     const preference = await mercadopago.createPreference(preferenceData);
