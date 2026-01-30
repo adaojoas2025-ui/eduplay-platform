@@ -59,9 +59,9 @@ export default function ProductCard({ product }) {
   }
 
   return (
-    <Link to={`/product/${product.slug}`} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 group overflow-hidden">
+    <Link to={`/product/${product.slug}`} className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-200 group overflow-hidden">
       {/* Image */}
-      <div className="relative overflow-hidden h-48 bg-gray-200">
+      <div className="relative overflow-hidden h-32 bg-gray-200">
         {product.thumbnailUrl ? (
           <img
             src={product.thumbnailUrl}
@@ -69,46 +69,40 @@ export default function ProductCard({ product }) {
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl">
+          <div className="w-full h-full flex items-center justify-center text-3xl">
             📚
           </div>
         )}
         {product.status === 'INACTIVE' && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+          <div className="absolute top-1 right-1 bg-red-500 text-white px-2 py-0.5 rounded-full text-xs font-semibold">
             Indisponível
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        <h3 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-primary-500 transition-colors">
+      <div className="p-3">
+        <h3 className="text-sm font-bold mb-1 line-clamp-2 group-hover:text-primary-500 transition-colors">
           {product.title}
         </h3>
-      
-      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-        {product.description}
-      </p>
 
       {/* Rating */}
-      <div className="flex items-center gap-1 mb-3">
-        <FiStar className="text-yellow-400 fill-current" />
-        <span className="font-semibold">4.8</span>
-        <span className="text-gray-500 text-sm">(234 avaliações)</span>
+      <div className="flex items-center gap-1 mb-2">
+        <FiStar className="text-yellow-400 fill-current text-xs" />
+        <span className="text-xs font-semibold">4.8</span>
+        <span className="text-gray-500 text-xs">(234)</span>
       </div>
 
       {/* Price and Action */}
       <div className="flex items-center justify-between">
-        <div>
-          <div className="text-2xl font-bold text-primary-500">
-            {formatPrice(product.price)}
-          </div>
+        <div className="text-lg font-bold text-primary-500">
+          {formatPrice(product.price)}
         </div>
         <button
           onClick={handleAddToCart}
-          className="bg-primary-500 text-white p-3 rounded-lg hover:bg-primary-600 transition-colors"
+          className="bg-primary-500 text-white p-2 rounded-lg hover:bg-primary-600 transition-colors"
         >
-          <FiShoppingCart className="text-xl" />
+          <FiShoppingCart className="text-sm" />
         </button>
       </div>
       </div>

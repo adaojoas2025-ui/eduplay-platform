@@ -385,9 +385,9 @@ export default function Home() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
             </div>
           ) : (
-            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
               {Array.isArray(featuredProducts) && featuredProducts.map((product) => (
-                <div key={product.id} className="flex-shrink-0 w-[320px] snap-start">
+                <div key={product.id} className="flex-shrink-0 w-[220px] snap-start">
                   <ProductCard product={product} />
                 </div>
               ))}
