@@ -66,7 +66,7 @@ router.get('/revenue-by-product', authenticate, async (req, res, next) => {
         sales: true,
         orders: {
           where: {
-            status: 'COMPLETED'
+            status: { in: ['APPROVED', 'COMPLETED'] }
           },
           select: {
             id: true,
@@ -121,7 +121,7 @@ router.get('/sales', authenticate, async (req, res, next) => {
         product: {
           producerId: sellerId
         },
-        status: 'COMPLETED'
+        status: { in: ['APPROVED', 'COMPLETED'] }
       },
       include: {
         product: {
@@ -176,7 +176,7 @@ router.get('/reports', authenticate, async (req, res, next) => {
       product: {
         producerId: sellerId
       },
-      status: 'COMPLETED'
+      status: { in: ['APPROVED', 'COMPLETED'] }
     };
 
     if (Object.keys(dateFilter).length > 0) {
