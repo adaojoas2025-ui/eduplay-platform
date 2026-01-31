@@ -1463,6 +1463,65 @@ Lista todos usuários (ADMIN only)
 
 ---
 
+### 📊 Seller Endpoints
+
+#### GET /seller/stats
+Estatísticas do vendedor (total vendas, comissões, produtos)
+
+**Auth Required:** Yes
+**Role Required:** PRODUCER, ADMIN
+
+#### GET /seller/products
+Lista produtos do vendedor
+
+#### GET /seller/sales
+Vendas recentes do vendedor
+
+#### GET /seller/revenue-by-product
+Receita detalhada por produto
+
+#### GET /seller/reports
+Relatórios detalhados de vendas com filtros
+
+**Auth Required:** Yes
+**Role Required:** PRODUCER, ADMIN
+
+**Query Params:**
+- `startDate` - Data inicial (YYYY-MM-DD)
+- `endDate` - Data final (YYYY-MM-DD)
+- `page` - Página (default: 1)
+- `limit` - Itens por página (default: 20)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "orders": [...],
+    "summary": {
+      "totalSales": 10,
+      "totalAmount": 199.90,
+      "totalProducerAmount": 193.90,
+      "totalPlatformFee": 6.00
+    },
+    "chartData": [
+      { "date": "2026-01-30", "count": 2, "amount": 39.98 }
+    ],
+    "salesByProduct": [
+      { "productId": "...", "productTitle": "Curso X", "count": 5, "amount": 99.95 }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 10,
+      "pages": 1
+    }
+  }
+}
+```
+
+---
+
 ### 📦 Combo Endpoints
 
 #### GET /combos
@@ -3306,7 +3365,39 @@ describe('ProductCard', () => {
 - Backend: `PATCH /api/v1/users/producer-settings`
 - Service: `user.service.js → updateProducerSettings()`
 
-#### 16. Sistema de Emails Automatizados
+#### 16. Relatórios de Vendas (Seller Reports)
+**Página completa de analytics para produtores**
+
+**Filtros:**
+- Período rápido: Todos, Hoje, 7 dias, 30 dias, 1 ano
+- Período customizado: Data inicial e final
+
+**Métricas (Cards):**
+- Total de Vendas
+- Valor Total
+- Comissão Plataforma (3%)
+- Valor Líquido (você recebe)
+
+**Visualizações:**
+- Vendas por Dia (últimos 14 dias)
+- Vendas por Produto (ranking com medalhas)
+- Histórico de Vendas (tabela paginada)
+
+**Funcionalidades:**
+- Exportar para CSV
+- Paginação
+- Detalhes: data, produto, cliente, valores
+
+**Acesso:**
+- Rota: `/seller/reports`
+- Botão "Ver Relatórios" no Dashboard
+- Link "Ver todas" nas vendas recentes
+
+**Arquivos:**
+- Frontend: `frontend/src/pages/seller/SellerReports.jsx`
+- Backend: `GET /api/v1/seller/reports`
+
+#### 17. Sistema de Emails Automatizados
 - Welcome email
 - Produto criado (admin notification)
 - Produto aprovado/rejeitado
@@ -3315,14 +3406,15 @@ describe('ProductCard', () => {
 - Producer welcome (upgrade)
 - Password reset
 
-#### 17. Navegação Mobile Responsiva
+#### 18. Navegação Mobile Responsiva
 - Menu mobile com hamburger
 - Dropdowns animados
 - Chevrons nos menus
 - Links condicionais por role
 - Touch-friendly
+- Click outside para fechar dropdown (desktop)
 
-#### 18. Sistema de Roles e Permissões
+#### 19. Sistema de Roles e Permissões
 **3 Níveis:**
 - BUYER: Comprar produtos
 - PRODUCER: + Vender produtos
@@ -3333,7 +3425,7 @@ describe('ProductCard', () => {
 - Frontend: ProtectedRoute
 - Conditional rendering
 
-#### 19. Segurança Implementada
+#### 20. Segurança Implementada
 - Password hashing (bcrypt)
 - JWT authentication
 - HTTPS (production)
@@ -3345,7 +3437,7 @@ describe('ProductCard', () => {
 - XSS prevention
 - File upload restrictions
 
-#### 20. Logging e Monitoramento
+#### 21. Logging e Monitoramento
 - Winston logger
 - Daily rotating logs
 - Error tracking
