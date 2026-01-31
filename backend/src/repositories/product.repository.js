@@ -346,13 +346,13 @@ const getProductStats = async (productId) => {
       prisma.orders.count({
         where: {
           productId,
-          status: 'COMPLETED',
+          status: { in: ['APPROVED', 'COMPLETED'] },
         },
       }),
       prisma.orders.aggregate({
         where: {
           productId,
-          status: 'COMPLETED',
+          status: { in: ['APPROVED', 'COMPLETED'] },
         },
         _sum: {
           amount: true,

@@ -312,7 +312,7 @@ const listOrders = async (filters = {}, pagination = {}, sorting = {}) => {
 const getOrderStats = async (filters = {}) => {
   try {
     const where = {
-      status: 'COMPLETED',
+      status: { in: ['APPROVED', 'COMPLETED'] },
     };
 
     if (filters.producerId) {
@@ -428,7 +428,7 @@ const hasUserPurchasedProduct = async (userId, productId) => {
       where: {
         buyerId: userId,
         productId,
-        status: 'COMPLETED',
+        status: { in: ['APPROVED', 'COMPLETED'] },
       },
     });
 

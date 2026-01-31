@@ -298,13 +298,13 @@ const getProducerStats = async (producerId) => {
       prisma.orders.count({
         where: {
           product: { producerId },
-          status: 'COMPLETED',
+          status: { in: ['APPROVED', 'COMPLETED'] },
         },
       }),
       prisma.orders.aggregate({
         where: {
           product: { producerId },
-          status: 'COMPLETED',
+          status: { in: ['APPROVED', 'COMPLETED'] },
         },
         _sum: {
           producerAmount: true,
@@ -313,7 +313,7 @@ const getProducerStats = async (producerId) => {
       prisma.orders.aggregate({
         where: {
           product: { producerId },
-          status: 'COMPLETED',
+          status: { in: ['APPROVED', 'COMPLETED'] },
         },
         _sum: {
           amount: true,

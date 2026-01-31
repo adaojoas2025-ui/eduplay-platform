@@ -182,7 +182,7 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
       // Buscar também orders de apps (sem comissão)
       prisma.orders.findMany({
         where: {
-          status: 'COMPLETED',
+          status: { in: ['APPROVED', 'COMPLETED'] },
           productId: null, // App sales
           ...(filters.startDate || filters.endDate ? {
             createdAt: {
@@ -206,7 +206,7 @@ const listCommissions = async (filters = {}, pagination = {}, sorting = {}) => {
       }),
       prisma.orders.count({
         where: {
-          status: 'COMPLETED',
+          status: { in: ['APPROVED', 'COMPLETED'] },
           productId: null,
           ...(filters.startDate || filters.endDate ? {
             createdAt: {
@@ -503,7 +503,7 @@ const getCommissionStats = async (filters = {}) => {
 
     // Get app sales (orders without commissions - 100% goes to platform)
     const appSalesWhere = {
-      status: 'COMPLETED',
+      status: { in: ['APPROVED', 'COMPLETED'] },
       productId: null, // App purchases don't have productId
     };
 
