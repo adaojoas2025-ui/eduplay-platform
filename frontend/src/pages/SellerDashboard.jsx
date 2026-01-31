@@ -198,22 +198,6 @@ export default function SellerDashboard() {
           </div>
         </div>
 
-        {/* Configurações - Acesso Rápido */}
-        <div className="mb-8">
-          <Link
-            to="/seller/settings"
-            className="flex items-center gap-4 p-4 bg-white border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition max-w-md"
-          >
-            <div className="bg-purple-100 p-3 rounded-full">
-              <span className="text-2xl">⚙️</span>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-800">Configurações</h3>
-              <p className="text-sm text-gray-600">Dados de pagamento e perfil</p>
-            </div>
-          </Link>
-        </div>
-
         {/* Receita por Produto */}
         {revenueByProduct.length > 0 && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
