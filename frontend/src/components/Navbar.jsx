@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiDollarSign, FiChevronDown } from 'react-icons/fi';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useStore from '../store/useStore';
 import { toast } from 'react-toastify';
 import { getUser, isAuthenticated, clearAuth } from '../lib/auth';
@@ -12,6 +12,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
 
   const [authState, setAuthState] = useState({
     user: getUser(),
@@ -52,6 +53,23 @@ export default function Navbar() {
 
     return () => clearInterval(interval);
   }, [authState]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [userMenuOpen]);
 
   const handleLogout = () => {
     clearAuth();
@@ -255,7 +273,7 @@ export default function Navbar() {
                       </span>
                     )}
                   </Link>
-                  <div className="relative">
+                  <div className="relative" ref={userMenuRef}>
                     <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center space-x-2 text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                       <FiUser className="w-5 h-5" />
                       <span>{user?.name?.split(' ')[0]}</span>
