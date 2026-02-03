@@ -142,6 +142,91 @@ router.post(
   userController.unlinkMercadoPago
 );
 
+// PIX automatic payment routes
+/**
+ * @route   GET /api/v1/users/pix/config
+ * @desc    Get PIX configuration
+ * @access  Private (Producer only)
+ */
+router.get(
+  '/pix/config',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.getPixConfig
+);
+
+/**
+ * @route   POST /api/v1/users/pix/config
+ * @desc    Save PIX key configuration
+ * @access  Private (Producer only)
+ */
+router.post(
+  '/pix/config',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.savePixConfig
+);
+
+/**
+ * @route   DELETE /api/v1/users/pix/config
+ * @desc    Remove PIX configuration
+ * @access  Private (Producer only)
+ */
+router.delete(
+  '/pix/config',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.removePixConfig
+);
+
+/**
+ * @route   POST /api/v1/users/pix/enable
+ * @desc    Enable automatic PIX payments
+ * @access  Private (Producer only)
+ */
+router.post(
+  '/pix/enable',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.enablePixAutoPayment
+);
+
+/**
+ * @route   POST /api/v1/users/pix/disable
+ * @desc    Disable automatic PIX payments
+ * @access  Private (Producer only)
+ */
+router.post(
+  '/pix/disable',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.disablePixAutoPayment
+);
+
+/**
+ * @route   GET /api/v1/users/pix/transfers
+ * @desc    Get PIX transfer history
+ * @access  Private (Producer only)
+ */
+router.get(
+  '/pix/transfers',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.getPixTransferHistory
+);
+
+/**
+ * @route   GET /api/v1/users/pix/stats
+ * @desc    Get PIX transfer statistics
+ * @access  Private (Producer only)
+ */
+router.get(
+  '/pix/stats',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.getPixTransferStats
+);
+
 // Admin routes
 /**
  * @route   GET /api/v1/users

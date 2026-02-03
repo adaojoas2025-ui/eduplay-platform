@@ -8,6 +8,7 @@ const mercadopago = require('../config/mercadopago');
 const orderRepository = require('../repositories/order.repository');
 const productRepository = require('../repositories/product.repository');
 const emailService = require('./email.service');
+const pixTransferService = require('./pixTransfer.service');
 const ApiError = require('../utils/ApiError');
 const logger = require('../utils/logger');
 const config = require('../config/env');
@@ -160,8 +161,9 @@ const processPaymentWebhook = async (notification) => {
     const orderService = require('./order.service');
     await orderService.updateOrderStatus(order.id, orderStatus, updateData);
 
-    // If payment approved, send product access email
+    // If payment approved, send product access email and process PIX transfer
     if (payment.status === 'approved') {
+      // Send product access email
       try {
         const product = await productRepository.findProductById(order.productId);
         await emailService.sendProductAccessEmail(order.buyer, product, order);
@@ -169,6 +171,21 @@ const processPaymentWebhook = async (notification) => {
       } catch (emailError) {
         logger.error('Failed to send product access email', { error: emailError, orderId: order.id });
         // Don't throw - order is still processed successfully
+      }
+
+      // Process automatic PIX transfer to producer
+      try {
+        const pixTransfer = await pixTransferService.processAutomaticPixPayment(order.id);
+        if (pixTransfer) {
+          logger.info('PIX transfer initiated', {
+            orderId: order.id,
+            transferId: pixTransfer.id,
+            amount: pixTransfer.amount
+          });
+        }
+      } catch (pixError) {
+        logger.error('Failed to process PIX transfer', { error: pixError, orderId: order.id });
+        // Don't throw - order is still processed successfully, PIX transfer can be retried
       }
     }
 

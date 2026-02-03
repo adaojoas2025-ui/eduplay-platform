@@ -5,6 +5,7 @@ import { userAPI } from '../../services/api';
 import { saveAuth, getToken } from '../../lib/auth';
 import { FiSettings, FiBriefcase, FiCreditCard, FiSave, FiArrowLeft, FiAlertCircle } from 'react-icons/fi';
 import LinkMercadoPago from '../../components/LinkMercadoPago';
+import ConfigurePixPayment from '../../components/ConfigurePixPayment';
 
 export default function SellerSettings() {
   const navigate = useNavigate();
@@ -328,8 +329,24 @@ export default function SellerSettings() {
           </div>
         </form>
 
-        {/* Mercado Pago Integration */}
-        <div className="mt-8">
+        {/* Payment Options */}
+        <div className="mt-8 space-y-6">
+          <h2 className="text-xl font-bold text-gray-900">Opcoes de Recebimento Automatico</h2>
+          <p className="text-gray-600">Escolha como deseja receber seus pagamentos automaticamente. Voce pode usar PIX (qualquer banco) ou vincular sua conta do Mercado Pago.</p>
+
+          {/* PIX Payment - Primary option */}
+          <ConfigurePixPayment />
+
+          {/* Mercado Pago - Alternative option */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center" aria-hidden="true">
+              <div className="w-full border-t border-gray-200" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-gray-50 px-4 text-sm text-gray-500">ou</span>
+            </div>
+          </div>
+
           <LinkMercadoPago />
         </div>
       </div>

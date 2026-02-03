@@ -236,6 +236,7 @@ model orders {
   updatedAt      DateTime     @updatedAt
   metadata       Json?
   commissions    commissions?
+  pix_transfer   pix_transfers?
   buyer          users        @relation(fields: [buyerId], references: [id])
   product        products?    @relation(fields: [productId], references: [id])
 
@@ -412,14 +413,48 @@ model users {
   mercadopagoAccountLinked  Boolean            @default(false)
   mercadopagoLinkedAt       DateTime?
   mercadopagoTokenExpiresAt DateTime?
+  // PIX automatic payment fields
+  pixKeyType                String?            // CPF, EMAIL, PHONE, RANDOM
+  pixBankName               String?            // Bank name for display
+  pixAccountHolder          String?            // Account holder name
+  pixAutoPaymentEnabled     Boolean            @default(false)
+  pixVerifiedAt             DateTime?
   cart_items             cart_items[]
   combos                 combos[]
   commissions            commissions[]
   order_bumps            order_bumps[]
   orders                 orders[]
+  pix_transfers          pix_transfers[]
   products               products[]
   reviews                reviews[]
   user_gamification      user_gamification?
+}
+
+model pix_transfers {
+  id              String            @id
+  orderId         String            @unique
+  producerId      String
+  amount          Float
+  pixKey          String
+  pixKeyType      String
+  status          PixTransferStatus @default(PENDING)
+  mercadopagoId   String?           // MP transfer ID
+  errorMessage    String?
+  processedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  orders          orders            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  producer        users             @relation(fields: [producerId], references: [id])
+
+  @@index([producerId])
+  @@index([status])
+}
+
+enum PixTransferStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }
 
 enum AppStatus {

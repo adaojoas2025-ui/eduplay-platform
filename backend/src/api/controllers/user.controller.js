@@ -7,6 +7,7 @@
 const userService = require('../../services/user.service');
 const storageService = require('../../services/storage.service');
 const mercadopagoService = require('../../services/mercadopago.service');
+const pixTransferService = require('../../services/pixTransfer.service');
 const ApiResponse = require('../../utils/ApiResponse');
 const asyncHandler = require('../../utils/asyncHandler');
 const logger = require('../../utils/logger');
@@ -264,6 +265,123 @@ const unlinkMercadoPago = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 200, null, 'Mercado Pago account unlinked');
 });
 
+/**
+ * Save PIX key configuration for automatic payments
+ * @route POST /api/v1/users/pix/config
+ * @access Private (Producer only)
+ */
+const savePixConfig = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const { pixKey, pixKeyType, pixAccountHolder, pixBankName } = req.body;
+
+  if (!pixKey || !pixKeyType || !pixAccountHolder) {
+    return ApiResponse.error(res, 400, 'Chave PIX, tipo e nome do titular são obrigatórios');
+  }
+
+  const result = await pixTransferService.savePixKey(
+    userId,
+    pixKey,
+    pixKeyType,
+    pixAccountHolder,
+    pixBankName
+  );
+
+  logger.info('PIX config saved', { userId, pixKeyType });
+
+  return ApiResponse.success(res, 200, result, 'Configuração PIX salva com sucesso');
+});
+
+/**
+ * Get PIX configuration
+ * @route GET /api/v1/users/pix/config
+ * @access Private (Producer only)
+ */
+const getPixConfig = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const config = await pixTransferService.getPixConfig(userId);
+
+  return ApiResponse.success(res, 200, config, 'Configuração PIX recuperada');
+});
+
+/**
+ * Enable automatic PIX payments
+ * @route POST /api/v1/users/pix/enable
+ * @access Private (Producer only)
+ */
+const enablePixAutoPayment = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const result = await pixTransferService.enablePixAutoPayment(userId);
+
+  logger.info('PIX auto-payment enabled', { userId });
+
+  return ApiResponse.success(res, 200, result, 'Pagamento automático via PIX habilitado');
+});
+
+/**
+ * Disable automatic PIX payments
+ * @route POST /api/v1/users/pix/disable
+ * @access Private (Producer only)
+ */
+const disablePixAutoPayment = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const result = await pixTransferService.disablePixAutoPayment(userId);
+
+  logger.info('PIX auto-payment disabled', { userId });
+
+  return ApiResponse.success(res, 200, result, 'Pagamento automático via PIX desabilitado');
+});
+
+/**
+ * Remove PIX configuration
+ * @route DELETE /api/v1/users/pix/config
+ * @access Private (Producer only)
+ */
+const removePixConfig = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  await pixTransferService.removePixConfig(userId);
+
+  logger.info('PIX config removed', { userId });
+
+  return ApiResponse.success(res, 200, null, 'Configuração PIX removida');
+});
+
+/**
+ * Get PIX transfer history
+ * @route GET /api/v1/users/pix/transfers
+ * @access Private (Producer only)
+ */
+const getPixTransferHistory = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const { page = 1, limit = 10 } = req.query;
+
+  const result = await pixTransferService.getTransferHistory(
+    userId,
+    parseInt(page),
+    parseInt(limit)
+  );
+
+  return ApiResponse.paginated(
+    res,
+    result.transfers,
+    result.pagination.page,
+    result.pagination.limit,
+    result.pagination.total,
+    'Histórico de transferências PIX recuperado'
+  );
+});
+
+/**
+ * Get PIX transfer statistics
+ * @route GET /api/v1/users/pix/stats
+ * @access Private (Producer only)
+ */
+const getPixTransferStats = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const stats = await pixTransferService.getTransferStats(userId);
+
+  return ApiResponse.success(res, 200, stats, 'Estatísticas de transferências PIX');
+});
+
 module.exports = {
   getUserById,
   updateProfile,
@@ -283,4 +401,11 @@ module.exports = {
   handleMercadoPagoCallback,
   getMercadoPagoStatus,
   unlinkMercadoPago,
+  savePixConfig,
+  getPixConfig,
+  enablePixAutoPayment,
+  disablePixAutoPayment,
+  removePixConfig,
+  getPixTransferHistory,
+  getPixTransferStats,
 };
