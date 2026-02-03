@@ -1,6 +1,8 @@
 const { PrismaClient } = require('@prisma/client');
 const { v4: uuidv4 } = require('uuid');
 const env = require('../config/env');
+const mercadopago = require('../config/mercadopago');
+const logger = require('../utils/logger');
 
 const prisma = new PrismaClient();
 
@@ -468,7 +470,7 @@ async function requestWithdrawal(producerId) {
   }
 
   // Get available balance
-  const { availableBalance, pendingOrders, orders } = await getAvailableBalance(producerId);
+  const { availableBalance, orders } = await getAvailableBalance(producerId);
 
   if (availableBalance <= 0) {
     throw new Error('Não há saldo disponível para saque');
@@ -491,18 +493,65 @@ async function requestWithdrawal(producerId) {
     transfers.push(transfer);
   }
 
-  console.log(`Created ${transfers.length} PIX transfer records for producer ${producerId}, total: R$ ${availableBalance}`);
+  logger.info(`Created ${transfers.length} PIX transfer records for producer ${producerId}, total: R$ ${availableBalance}`);
 
-  // For now, mark all as COMPLETED (simulating instant transfer)
-  // In production, you would integrate with actual PIX API here
-  for (const transfer of transfers) {
-    await prisma.pix_transfers.update({
-      where: { id: transfer.id },
-      data: {
-        status: 'COMPLETED',
-        processedAt: new Date()
-      }
+  // Execute actual PIX transfer via Mercado Pago
+  let pixPayoutResult = null;
+  let pixPayoutError = null;
+
+  try {
+    // Create a single PIX payout for the total amount
+    const externalReference = `withdrawal-${producerId}-${Date.now()}`;
+
+    pixPayoutResult = await mercadopago.createPixPayout({
+      amount: availableBalance,
+      pixKey: user.pixKey,
+      pixKeyType: user.pixKeyType,
+      description: `Saque EducaplayJA - ${transfers.length} venda(s)`,
+      externalReference
     });
+
+    logger.info('PIX payout executed successfully', {
+      producerId,
+      amount: availableBalance,
+      mpId: pixPayoutResult?.id,
+      status: pixPayoutResult?.status
+    });
+
+    // Mark all transfers as COMPLETED
+    for (const transfer of transfers) {
+      await prisma.pix_transfers.update({
+        where: { id: transfer.id },
+        data: {
+          status: 'COMPLETED',
+          mercadopagoId: pixPayoutResult?.id?.toString(),
+          processedAt: new Date()
+        }
+      });
+    }
+  } catch (error) {
+    pixPayoutError = error;
+    logger.error('PIX payout failed', {
+      producerId,
+      amount: availableBalance,
+      error: error.response?.data || error.message
+    });
+
+    // Mark all transfers as FAILED
+    for (const transfer of transfers) {
+      await prisma.pix_transfers.update({
+        where: { id: transfer.id },
+        data: {
+          status: 'FAILED',
+          errorMessage: error.response?.data?.message || error.message || 'Erro ao processar PIX'
+        }
+      });
+    }
+
+    // Throw a user-friendly error
+    const errorMsg = error.response?.data?.message ||
+                     'Erro ao processar transferência PIX. A funcionalidade de saque automático pode não estar habilitada na conta do Mercado Pago.';
+    throw new Error(errorMsg);
   }
 
   return {
@@ -511,7 +560,8 @@ async function requestWithdrawal(producerId) {
     transferCount: transfers.length,
     pixKey: user.pixKey,
     pixKeyType: user.pixKeyType,
-    pixAccountHolder: user.pixAccountHolder
+    pixAccountHolder: user.pixAccountHolder,
+    mercadopagoId: pixPayoutResult?.id
   };
 }
 
