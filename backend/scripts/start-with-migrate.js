@@ -31,24 +31,20 @@ async function main() {
 
   // Step 2: Try to deploy migrations normally
   console.log('\nStep 2: Deploying migrations...');
-  const migrateSuccess = runCommand(
+  runCommand(
     'npx prisma migrate deploy',
     'Prisma migrate deploy'
   );
 
-  if (!migrateSuccess) {
-    console.log('\n>>> Migration deploy failed. Trying alternative approach...');
+  // Step 3: Always run db push to sync schema changes not in migrations
+  console.log('\nStep 3: Syncing schema with db push...');
+  const pushSuccess = runCommand(
+    'npx prisma db push --accept-data-loss',
+    'Prisma db push (schema sync)'
+  );
 
-    // Step 3: If migrate deploy fails, try db push as fallback
-    console.log('\nStep 3: Trying db push as fallback...');
-    const pushSuccess = runCommand(
-      'npx prisma db push --accept-data-loss',
-      'Prisma db push'
-    );
-
-    if (!pushSuccess) {
-      console.log('\n>>> WARNING: Could not apply migrations. Server may have issues.');
-    }
+  if (!pushSuccess) {
+    console.log('\n>>> WARNING: Could not sync schema. Server may have issues.');
   }
 
   // Step 4: Start the server
