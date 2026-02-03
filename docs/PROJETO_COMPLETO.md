@@ -3445,6 +3445,59 @@ describe('ProductCard', () => {
 - Performance monitoring
 - Health check endpoints
 
+#### 22. Pagamento Automático (Split Payment)
+**Sistema de pagamento automático para produtores via Mercado Pago Split Payment**
+
+**Como Funciona:**
+- Produtor vincula conta do Mercado Pago via OAuth
+- Ao vender, o dinheiro é dividido automaticamente:
+  - 97% vai direto para a conta MP do produtor
+  - 3% vai para a conta da plataforma (marketplace_fee)
+- Não precisa de transferências manuais
+- Reembolsos são processados proporcionalmente
+
+**Fluxo de Vinculação:**
+1. Produtor acessa Configurações
+2. Clica em "Vincular Mercado Pago"
+3. É redirecionado para página de autorização do MP
+4. Faz login e autoriza a plataforma
+5. Redirecionado de volta com código de autorização
+6. Sistema troca código por tokens de acesso
+7. Conta vinculada e pronta para receber
+
+**Database (Novos campos em users):**
+- `mercadopagoAccessToken` - Token de acesso OAuth
+- `mercadopagoRefreshToken` - Token para renovação
+- `mercadopagoUserId` - ID do usuário no MP
+- `mercadopagoPublicKey` - Chave pública
+- `mercadopagoAccountLinked` - Status da vinculação
+- `mercadopagoLinkedAt` - Data da vinculação
+- `mercadopagoTokenExpiresAt` - Expiração do token
+
+**API Endpoints:**
+- `GET /users/mercadopago/auth-url` - Gera URL de autorização
+- `GET /users/mercadopago/callback` - Callback OAuth (recebe código)
+- `GET /users/mercadopago/status` - Status da conta vinculada
+- `POST /users/mercadopago/unlink` - Desvincular conta
+
+**Frontend Components:**
+- `LinkMercadoPago.jsx` - Componente de vinculação
+- Aviso no Dashboard se MP não vinculado
+- Seção na página de Configurações
+
+**Fallback:**
+- Se produtor não vincular MP, usa sistema de comissões manuais
+- Aviso aparece no dashboard incentivando vinculação
+
+**Arquivos:**
+- Backend: `mercadopago.service.js`, `paymentService.js`
+- Frontend: `LinkMercadoPago.jsx`, `SellerSettings.jsx`, `SellerDashboard.jsx`
+
+**Variáveis de Ambiente Necessárias:**
+- `MP_CLIENT_ID` - Client ID da aplicação OAuth
+- `MP_CLIENT_SECRET` - Client Secret
+- `MP_REDIRECT_URI` - URL de callback
+
 ### 🎯 Features por Módulo
 
 ```

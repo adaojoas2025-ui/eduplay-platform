@@ -10,6 +10,7 @@ export default function SellerDashboard() {
   const [revenueByProduct, setRevenueByProduct] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mpStatus, setMpStatus] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -61,6 +62,20 @@ export default function SellerDashboard() {
         console.warn('Revenue by product not available:', revenueErr);
         setRevenueByProduct([]);
       }
+
+      // Buscar status do Mercado Pago (independente)
+      try {
+        const mpResponse = await axios.get(
+          `${API_URL}/users/mercadopago/status`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        setMpStatus(mpResponse.data.data);
+      } catch (mpErr) {
+        console.warn('MP status not available:', mpErr);
+        setMpStatus(null);
+      }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError(err.response?.data?.message || 'Erro ao carregar dados do dashboard');
@@ -100,6 +115,69 @@ export default function SellerDashboard() {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard do Vendedor</h1>
           <p className="text-gray-600">Gerencie seus produtos e acompanhe suas vendas</p>
         </div>
+
+        {/* Mercado Pago Warning */}
+        {mpStatus && !mpStatus.isLinked && (
+          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Receba seus pagamentos automaticamente!
+                </h3>
+                <p className="mt-1 text-sm text-yellow-700">
+                  Vincule sua conta do Mercado Pago para receber 97% do valor de cada venda diretamente na sua conta.
+                  Sem vinculação, os pagamentos serão processados manualmente.
+                </p>
+                <div className="mt-3">
+                  <Link
+                    to="/seller/settings"
+                    className="inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    Vincular Mercado Pago
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Token Expiring Warning */}
+        {mpStatus && mpStatus.isLinked && mpStatus.needsReauthorization && (
+          <div className="mb-6 bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-orange-800">
+                  Sua autorização do Mercado Pago expira em breve
+                </h3>
+                <p className="mt-1 text-sm text-orange-700">
+                  Reautorize sua conta para continuar recebendo pagamentos automaticamente.
+                  {mpStatus.daysUntilExpiration > 0 && ` Restam ${mpStatus.daysUntilExpiration} dias.`}
+                </p>
+                <div className="mt-3">
+                  <Link
+                    to="/seller/settings"
+                    className="inline-flex items-center px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition"
+                  >
+                    Reautorizar Agora
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

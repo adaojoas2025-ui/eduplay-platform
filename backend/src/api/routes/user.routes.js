@@ -95,6 +95,53 @@ router.get(
   userController.getProducerStats
 );
 
+// Mercado Pago OAuth routes (for split payments)
+/**
+ * @route   GET /api/v1/users/mercadopago/auth-url
+ * @desc    Get Mercado Pago authorization URL
+ * @access  Private (Producer only)
+ */
+router.get(
+  '/mercadopago/auth-url',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.getMercadoPagoAuthUrl
+);
+
+/**
+ * @route   GET /api/v1/users/mercadopago/callback
+ * @desc    Handle Mercado Pago OAuth callback
+ * @access  Public (redirected from MP)
+ */
+router.get(
+  '/mercadopago/callback',
+  userController.handleMercadoPagoCallback
+);
+
+/**
+ * @route   GET /api/v1/users/mercadopago/status
+ * @desc    Get Mercado Pago account status
+ * @access  Private (Producer only)
+ */
+router.get(
+  '/mercadopago/status',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.getMercadoPagoStatus
+);
+
+/**
+ * @route   POST /api/v1/users/mercadopago/unlink
+ * @desc    Unlink Mercado Pago account
+ * @access  Private (Producer only)
+ */
+router.post(
+  '/mercadopago/unlink',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.unlinkMercadoPago
+);
+
 // Admin routes
 /**
  * @route   GET /api/v1/users

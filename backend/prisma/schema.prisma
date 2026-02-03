@@ -404,6 +404,14 @@ model users {
   businessPhone          String?
   producerApproved       Boolean            @default(false)
   producerApprovedAt     DateTime?
+  // Mercado Pago OAuth fields for split payments
+  mercadopagoAccessToken    String?
+  mercadopagoRefreshToken   String?
+  mercadopagoUserId         String?
+  mercadopagoPublicKey      String?
+  mercadopagoAccountLinked  Boolean            @default(false)
+  mercadopagoLinkedAt       DateTime?
+  mercadopagoTokenExpiresAt DateTime?
   cart_items             cart_items[]
   combos                 combos[]
   commissions            commissions[]

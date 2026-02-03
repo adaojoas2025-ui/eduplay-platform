@@ -6,9 +6,11 @@
 
 const userService = require('../../services/user.service');
 const storageService = require('../../services/storage.service');
+const mercadopagoService = require('../../services/mercadopago.service');
 const ApiResponse = require('../../utils/ApiResponse');
 const asyncHandler = require('../../utils/asyncHandler');
 const logger = require('../../utils/logger');
+const config = require('../../config/env');
 
 /**
  * Get user by ID
@@ -195,6 +197,73 @@ const updateProducerSettings = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 200, user, 'Producer settings updated successfully');
 });
 
+/**
+ * Get Mercado Pago authorization URL
+ * @route GET /api/v1/users/mercadopago/auth-url
+ * @access Private (Producer only)
+ */
+const getMercadoPagoAuthUrl = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const authUrl = mercadopagoService.getAuthorizationUrl(userId);
+
+  logger.info('MP auth URL generated', { userId });
+
+  return ApiResponse.success(res, 200, { authUrl }, 'Authorization URL generated');
+});
+
+/**
+ * Handle Mercado Pago OAuth callback
+ * @route GET /api/v1/users/mercadopago/callback
+ * @access Public (redirected from MP)
+ */
+const handleMercadoPagoCallback = asyncHandler(async (req, res) => {
+  const { code, state } = req.query;
+
+  if (!code || !state) {
+    // Redirect to frontend with error
+    return res.redirect(`${config.urls.frontend}/seller/settings?mp_error=missing_params`);
+  }
+
+  try {
+    // state contains the userId
+    await mercadopagoService.linkAccount(state, code);
+
+    logger.info('MP account linked via callback', { userId: state });
+
+    // Redirect to frontend with success
+    return res.redirect(`${config.urls.frontend}/seller/settings?mp_linked=true`);
+  } catch (error) {
+    logger.error('MP callback error:', error);
+    return res.redirect(`${config.urls.frontend}/seller/settings?mp_error=link_failed`);
+  }
+});
+
+/**
+ * Get Mercado Pago account status
+ * @route GET /api/v1/users/mercadopago/status
+ * @access Private (Producer only)
+ */
+const getMercadoPagoStatus = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const status = await mercadopagoService.getAccountStatus(userId);
+
+  return ApiResponse.success(res, 200, status, 'MP account status retrieved');
+});
+
+/**
+ * Unlink Mercado Pago account
+ * @route POST /api/v1/users/mercadopago/unlink
+ * @access Private (Producer only)
+ */
+const unlinkMercadoPago = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  await mercadopagoService.unlinkAccount(userId);
+
+  logger.info('MP account unlinked', { userId });
+
+  return ApiResponse.success(res, 200, null, 'Mercado Pago account unlinked');
+});
+
 module.exports = {
   getUserById,
   updateProfile,
@@ -210,4 +279,8 @@ module.exports = {
   getUserStats,
   upgradeToProducer,
   updateProducerSettings,
+  getMercadoPagoAuthUrl,
+  handleMercadoPagoCallback,
+  getMercadoPagoStatus,
+  unlinkMercadoPago,
 };

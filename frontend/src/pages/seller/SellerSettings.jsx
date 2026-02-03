@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { userAPI } from '../../services/api';
 import { saveAuth, getToken } from '../../lib/auth';
 import { FiSettings, FiBriefcase, FiCreditCard, FiSave, FiArrowLeft, FiAlertCircle } from 'react-icons/fi';
+import LinkMercadoPago from '../../components/LinkMercadoPago';
 
 export default function SellerSettings() {
   const navigate = useNavigate();
@@ -326,6 +327,11 @@ export default function SellerSettings() {
             </button>
           </div>
         </form>
+
+        {/* Mercado Pago Integration */}
+        <div className="mt-8">
+          <LinkMercadoPago />
+        </div>
       </div>
     </div>
   );

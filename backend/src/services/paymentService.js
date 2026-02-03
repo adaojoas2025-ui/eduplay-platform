@@ -2,12 +2,43 @@ const crypto = require('crypto');
 const { preference, payment } = require('../config/mercadopago');
 const { prisma } = require('../config/database');
 const { sendPurchaseEmail, sendSaleNotification } = require('./emailService');
+const mercadopagoService = require('./mercadopago.service');
+const logger = require('../utils/logger');
 
 /**
  * Create Mercado Pago preference
+ * Tries to use split payment if producer has linked MP account
  */
 async function createPreference(product, buyer, additionalData = {}) {
   try {
+    // Get producer data
+    const producer = await prisma.users.findUnique({
+      where: { id: product.producerId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        mercadopagoAccountLinked: true,
+      },
+    });
+
+    // Try to create split payment preference if producer has MP linked
+    if (producer && producer.mercadopagoAccountLinked) {
+      const splitPreference = await mercadopagoService.createSplitPaymentPreference(
+        product,
+        buyer,
+        producer
+      );
+
+      if (splitPreference) {
+        logger.info(`Split payment preference created for product ${product.id}`);
+        return splitPreference;
+      }
+    }
+
+    // Fallback to regular payment (platform receives all, pays producer manually)
+    logger.info(`Using regular payment for product ${product.id} (producer MP not linked)`);
+
     const preferenceData = {
       items: [
         {
@@ -34,11 +65,15 @@ async function createPreference(product, buyer, additionalData = {}) {
         product_id: product.id,
         buyer_id: buyer.id,
         seller_id: product.producerId,
+        split_payment: false,
       },
     };
 
     const result = await preference.create({ body: preferenceData });
-    return result;
+    return {
+      ...result,
+      isSplitPayment: false,
+    };
   } catch (error) {
     console.error('Create preference error:', error);
     throw error;

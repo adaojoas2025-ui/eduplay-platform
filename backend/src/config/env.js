@@ -11,6 +11,9 @@ const envSchema = Joi.object({
   JWT_REFRESH_EXPIRES_IN: Joi.string().default('30d'),
   MP_ACCESS_TOKEN: Joi.string().default(''),
   MP_PUBLIC_KEY: Joi.string().default(''),
+  MP_CLIENT_ID: Joi.string().default(''),
+  MP_CLIENT_SECRET: Joi.string().default(''),
+  MP_REDIRECT_URI: Joi.string().default(''),
   CLOUDINARY_CLOUD_NAME: Joi.string(),
   CLOUDINARY_API_KEY: Joi.string(),
   CLOUDINARY_API_SECRET: Joi.string(),
@@ -50,6 +53,9 @@ module.exports = {
   mercadopago: {
     accessToken: envVars.MP_ACCESS_TOKEN,
     publicKey: envVars.MP_PUBLIC_KEY,
+    clientId: envVars.MP_CLIENT_ID,
+    clientSecret: envVars.MP_CLIENT_SECRET,
+    redirectUri: envVars.MP_REDIRECT_URI,
   },
   cloudinary: {
     cloudName: envVars.CLOUDINARY_CLOUD_NAME,
