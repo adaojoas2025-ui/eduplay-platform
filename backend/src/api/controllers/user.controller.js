@@ -413,6 +413,25 @@ const requestWithdrawal = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 200, result, 'Saque solicitado com sucesso');
 });
 
+/**
+ * Restore balance by deleting latest PIX transfer (for testing)
+ * @route DELETE /api/v1/users/pix/restore-balance
+ * @access Private (Producer only)
+ */
+const restoreBalance = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+
+  const result = await pixTransferService.restoreBalance(userId);
+
+  logger.info('Balance restored', {
+    userId,
+    deletedTransfers: result.deletedCount,
+    restoredAmount: result.restoredAmount
+  });
+
+  return ApiResponse.success(res, 200, result, 'Saldo restaurado com sucesso');
+});
+
 module.exports = {
   getUserById,
   updateProfile,
@@ -441,4 +460,5 @@ module.exports = {
   getPixTransferStats,
   getAvailableBalance,
   requestWithdrawal,
+  restoreBalance,
 };

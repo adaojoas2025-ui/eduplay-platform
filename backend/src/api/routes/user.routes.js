@@ -251,6 +251,18 @@ router.post(
   userController.requestWithdrawal
 );
 
+/**
+ * @route   DELETE /api/v1/users/pix/restore-balance
+ * @desc    Restore balance by deleting PIX transfers (for testing)
+ * @access  Private (Producer only)
+ */
+router.delete(
+  '/pix/restore-balance',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.restoreBalance
+);
+
 // Admin routes
 /**
  * @route   GET /api/v1/users

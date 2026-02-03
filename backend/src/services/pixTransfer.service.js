@@ -609,6 +609,48 @@ async function getTransferStats(producerId) {
   return result;
 }
 
+// Restore balance by deleting recent PIX transfers (for testing)
+async function restoreBalance(producerId) {
+  // Find recent transfers for this producer
+  const transfers = await prisma.pix_transfers.findMany({
+    where: { producerId },
+    orderBy: { createdAt: 'desc' },
+    take: 10
+  });
+
+  if (transfers.length === 0) {
+    return {
+      deletedCount: 0,
+      restoredAmount: 0,
+      message: 'Nenhuma transferência encontrada'
+    };
+  }
+
+  // Delete all recent transfers to restore balance
+  let restoredAmount = 0;
+  let deletedCount = 0;
+
+  for (const transfer of transfers) {
+    await prisma.pix_transfers.delete({
+      where: { id: transfer.id }
+    });
+    restoredAmount += transfer.amount;
+    deletedCount++;
+  }
+
+  logger.info('Balance restored', {
+    producerId,
+    deletedCount,
+    restoredAmount
+  });
+
+  return {
+    deletedCount,
+    restoredAmount,
+    message: `${deletedCount} transferência(s) deletada(s), R$ ${restoredAmount.toFixed(2)} restaurado`
+  };
+}
+
 module.exports = {
   PIX_KEY_TYPES,
   validatePixKey,
@@ -624,5 +666,6 @@ module.exports = {
   getTransferHistory,
   getTransferStats,
   getAvailableBalance,
-  requestWithdrawal
+  requestWithdrawal,
+  restoreBalance
 };
