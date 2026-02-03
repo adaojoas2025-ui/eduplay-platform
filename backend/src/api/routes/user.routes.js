@@ -227,6 +227,30 @@ router.get(
   userController.getPixTransferStats
 );
 
+/**
+ * @route   GET /api/v1/users/pix/balance
+ * @desc    Get available balance for withdrawal
+ * @access  Private (Producer only)
+ */
+router.get(
+  '/pix/balance',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.getAvailableBalance
+);
+
+/**
+ * @route   POST /api/v1/users/pix/withdraw
+ * @desc    Request withdrawal
+ * @access  Private (Producer only)
+ */
+router.post(
+  '/pix/withdraw',
+  authenticate,
+  authorize(USER_ROLES.PRODUCER),
+  userController.requestWithdrawal
+);
+
 // Admin routes
 /**
  * @route   GET /api/v1/users

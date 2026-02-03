@@ -403,6 +403,106 @@ async function getTransferHistory(producerId, page = 1, limit = 10) {
   };
 }
 
+// Get available balance for withdrawal (orders without PIX transfer)
+async function getAvailableBalance(producerId) {
+  // Get all COMPLETED orders from this producer that don't have a PIX transfer yet
+  const ordersWithoutTransfer = await prisma.orders.findMany({
+    where: {
+      product: {
+        producerId: producerId
+      },
+      status: {
+        in: ['COMPLETED', 'APPROVED']
+      },
+      pix_transfer: null
+    },
+    select: {
+      id: true,
+      producerAmount: true,
+      createdAt: true,
+      product: {
+        select: {
+          title: true
+        }
+      }
+    }
+  });
+
+  const availableBalance = ordersWithoutTransfer.reduce((sum, order) => sum + (order.producerAmount || 0), 0);
+  const pendingOrders = ordersWithoutTransfer.length;
+
+  return {
+    availableBalance,
+    pendingOrders,
+    orders: ordersWithoutTransfer
+  };
+}
+
+// Request withdrawal - creates PIX transfers for all pending orders
+async function requestWithdrawal(producerId) {
+  // Get user's PIX config
+  const user = await prisma.users.findUnique({
+    where: { id: producerId },
+    select: {
+      pixKey: true,
+      pixKeyType: true,
+      pixAccountHolder: true,
+      pixBankName: true
+    }
+  });
+
+  if (!user?.pixKey || !user?.pixKeyType || !user?.pixAccountHolder) {
+    throw new Error('Configure sua chave PIX antes de solicitar saque');
+  }
+
+  // Get available balance
+  const { availableBalance, pendingOrders, orders } = await getAvailableBalance(producerId);
+
+  if (availableBalance <= 0) {
+    throw new Error('Não há saldo disponível para saque');
+  }
+
+  // Create PIX transfer records for each order
+  const transfers = [];
+  for (const order of orders) {
+    const transfer = await prisma.pix_transfers.create({
+      data: {
+        id: uuidv4(),
+        orderId: order.id,
+        producerId,
+        amount: order.producerAmount,
+        pixKey: user.pixKey,
+        pixKeyType: user.pixKeyType,
+        status: 'PENDING'
+      }
+    });
+    transfers.push(transfer);
+  }
+
+  console.log(`Created ${transfers.length} PIX transfer records for producer ${producerId}, total: R$ ${availableBalance}`);
+
+  // For now, mark all as COMPLETED (simulating instant transfer)
+  // In production, you would integrate with actual PIX API here
+  for (const transfer of transfers) {
+    await prisma.pix_transfers.update({
+      where: { id: transfer.id },
+      data: {
+        status: 'COMPLETED',
+        processedAt: new Date()
+      }
+    });
+  }
+
+  return {
+    success: true,
+    totalAmount: availableBalance,
+    transferCount: transfers.length,
+    pixKey: user.pixKey,
+    pixKeyType: user.pixKeyType,
+    pixAccountHolder: user.pixAccountHolder
+  };
+}
+
 // Get transfer statistics for a producer
 async function getTransferStats(producerId) {
   const stats = await prisma.pix_transfers.groupBy({
@@ -460,5 +560,7 @@ module.exports = {
   executePixTransfer,
   processAutomaticPixPayment,
   getTransferHistory,
-  getTransferStats
+  getTransferStats,
+  getAvailableBalance,
+  requestWithdrawal
 };

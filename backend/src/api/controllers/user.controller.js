@@ -382,6 +382,37 @@ const getPixTransferStats = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 200, stats, 'Estatísticas de transferências PIX');
 });
 
+/**
+ * Get available balance for withdrawal
+ * @route GET /api/v1/users/pix/balance
+ * @access Private (Producer only)
+ */
+const getAvailableBalance = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const balance = await pixTransferService.getAvailableBalance(userId);
+
+  return ApiResponse.success(res, 200, balance, 'Saldo disponível para saque');
+});
+
+/**
+ * Request withdrawal
+ * @route POST /api/v1/users/pix/withdraw
+ * @access Private (Producer only)
+ */
+const requestWithdrawal = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+
+  const result = await pixTransferService.requestWithdrawal(userId);
+
+  logger.info('Withdrawal requested', {
+    userId,
+    amount: result.totalAmount,
+    transfers: result.transferCount
+  });
+
+  return ApiResponse.success(res, 200, result, 'Saque solicitado com sucesso');
+});
+
 module.exports = {
   getUserById,
   updateProfile,
@@ -408,4 +439,6 @@ module.exports = {
   removePixConfig,
   getPixTransferHistory,
   getPixTransferStats,
+  getAvailableBalance,
+  requestWithdrawal,
 };

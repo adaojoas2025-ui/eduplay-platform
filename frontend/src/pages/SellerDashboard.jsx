@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config/api.config';
 import TransferHistory from '../components/TransferHistory';
+import WithdrawalSection from '../components/WithdrawalSection';
 
 export default function SellerDashboard() {
   const [stats, setStats] = useState(null);
@@ -344,8 +345,9 @@ export default function SellerDashboard() {
           </div>
         )}
 
-        {/* Transferencias PIX */}
-        <div className="mb-8">
+        {/* Saque e Transferencias PIX */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <WithdrawalSection />
           <TransferHistory limit={5} showViewAll={true} />
         </div>
 

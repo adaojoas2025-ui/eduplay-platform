@@ -173,20 +173,8 @@ const processPaymentWebhook = async (notification) => {
         // Don't throw - order is still processed successfully
       }
 
-      // Process automatic PIX transfer to producer
-      try {
-        const pixTransfer = await pixTransferService.processAutomaticPixPayment(order.id);
-        if (pixTransfer) {
-          logger.info('PIX transfer initiated', {
-            orderId: order.id,
-            transferId: pixTransfer.id,
-            amount: pixTransfer.amount
-          });
-        }
-      } catch (pixError) {
-        logger.error('Failed to process PIX transfer', { error: pixError, orderId: order.id });
-        // Don't throw - order is still processed successfully, PIX transfer can be retried
-      }
+      // Note: PIX transfer is now done on-demand when producer requests withdrawal
+      // The producer amount is tracked in the order and commissions table
     }
 
     logger.info('Payment webhook processed', {
