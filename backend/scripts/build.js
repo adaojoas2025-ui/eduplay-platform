@@ -28,8 +28,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 2: Deploy migrations (optional - may fail if already applied)
-  run('npx prisma migrate deploy', 'Deploying migrations');
+  // Step 2: Push schema changes to database (sync schema without migrations)
+  run('npx prisma db push --accept-data-loss', 'Pushing schema to database');
 
   console.log('\n=== Build process complete ===');
   process.exit(0);
