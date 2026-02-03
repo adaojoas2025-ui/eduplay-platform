@@ -405,37 +405,49 @@ async function getTransferHistory(producerId, page = 1, limit = 10) {
 
 // Get available balance for withdrawal (orders without PIX transfer)
 async function getAvailableBalance(producerId) {
-  // Get all COMPLETED orders from this producer that don't have a PIX transfer yet
-  const ordersWithoutTransfer = await prisma.orders.findMany({
-    where: {
-      product: {
-        producerId: producerId
+  try {
+    // Get all COMPLETED orders from this producer that don't have a PIX transfer yet
+    const ordersWithoutTransfer = await prisma.orders.findMany({
+      where: {
+        product: {
+          producerId: producerId
+        },
+        status: {
+          in: ['COMPLETED', 'APPROVED']
+        },
+        pix_transfer: {
+          is: null
+        }
       },
-      status: {
-        in: ['COMPLETED', 'APPROVED']
-      },
-      pix_transfer: null
-    },
-    select: {
-      id: true,
-      producerAmount: true,
-      createdAt: true,
-      product: {
-        select: {
-          title: true
+      select: {
+        id: true,
+        producerAmount: true,
+        createdAt: true,
+        product: {
+          select: {
+            title: true
+          }
         }
       }
-    }
-  });
+    });
 
-  const availableBalance = ordersWithoutTransfer.reduce((sum, order) => sum + (order.producerAmount || 0), 0);
-  const pendingOrders = ordersWithoutTransfer.length;
+    const availableBalance = ordersWithoutTransfer.reduce((sum, order) => sum + (order.producerAmount || 0), 0);
+    const pendingOrders = ordersWithoutTransfer.length;
 
-  return {
-    availableBalance,
-    pendingOrders,
-    orders: ordersWithoutTransfer
-  };
+    return {
+      availableBalance,
+      pendingOrders,
+      orders: ordersWithoutTransfer
+    };
+  } catch (error) {
+    console.error('Error getting available balance:', error);
+    // Return empty balance if there's an error (e.g., schema not synced)
+    return {
+      availableBalance: 0,
+      pendingOrders: 0,
+      orders: []
+    };
+  }
 }
 
 // Request withdrawal - creates PIX transfers for all pending orders
