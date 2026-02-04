@@ -16,6 +16,7 @@ const envSchema = Joi.object({
   MP_REDIRECT_URI: Joi.string().default(''),
   ASAAS_API_KEY: Joi.string().default(''),
   ASAAS_ENVIRONMENT: Joi.string().valid('sandbox', 'production').default('sandbox'),
+  ASAAS_WEBHOOK_TOKEN: Joi.string().default(''),
   CLOUDINARY_CLOUD_NAME: Joi.string(),
   CLOUDINARY_API_KEY: Joi.string(),
   CLOUDINARY_API_SECRET: Joi.string(),
@@ -65,6 +66,7 @@ module.exports = {
     baseUrl: envVars.ASAAS_ENVIRONMENT === 'production'
       ? 'https://api.asaas.com/v3'
       : 'https://sandbox.asaas.com/api/v3',
+    webhookToken: envVars.ASAAS_WEBHOOK_TOKEN,
   },
   cloudinary: {
     cloudName: envVars.CLOUDINARY_CLOUD_NAME,

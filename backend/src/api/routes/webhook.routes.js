@@ -7,6 +7,30 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../../utils/logger');
+const config = require('../../config/env');
+
+/**
+ * Validate Asaas webhook token
+ * Asaas sends token in header 'asaas-access-token'
+ */
+function validateAsaasToken(req) {
+  const webhookToken = config.asaas.webhookToken;
+
+  // If no token configured, skip validation (but log warning)
+  if (!webhookToken) {
+    logger.warn('ASAAS_WEBHOOK_TOKEN not configured - skipping token validation');
+    return true;
+  }
+
+  const receivedToken = req.headers['asaas-access-token'];
+
+  if (!receivedToken) {
+    logger.warn('Asaas webhook received without token header');
+    return false;
+  }
+
+  return receivedToken === webhookToken;
+}
 
 /**
  * Asaas Transfer Authorization Webhook
@@ -16,24 +40,42 @@ const logger = require('../../utils/logger');
  * According to Asaas docs, the webhook receives transfer data and
  * should respond with HTTP 200 and { "authorized": true } or { "authorized": false }
  *
+ * For automatic transfers without SMS:
+ * 1. Configure IP Whitelist in Asaas
+ * 2. Disable "Evento critico em requisicoes de saque" for whitelisted IPs
+ * 3. Configure this webhook URL in Asaas for external authorization
+ * 4. Set ASAAS_WEBHOOK_TOKEN with the token configured in Asaas
+ *
  * @route POST /api/v1/webhooks/asaas/authorize-transfer
  */
 router.post('/asaas/authorize-transfer', (req, res) => {
   try {
     // Log the complete request for debugging
     logger.info('=== ASAAS AUTHORIZATION WEBHOOK ===', {
-      headers: req.headers,
+      headers: JSON.stringify(req.headers),
       body: JSON.stringify(req.body),
     });
 
+    // Validate token from Asaas (optional - logs warning if not configured)
+    const tokenValid = validateAsaasToken(req);
+    if (!tokenValid) {
+      logger.warn('Asaas webhook token validation failed - but APPROVING anyway for now');
+      // Still approve for now until token is properly configured
+    }
+
     // Asaas sends the transfer data in the request body
-    // We always authorize transfers from our system
     const transferData = req.body;
 
-    logger.info('Asaas transfer authorization - APPROVING', {
+    // Validate transfer data - check if it's from our system
+    const description = transferData?.description || transferData?.transfer?.description || '';
+    const isOurTransfer = description.includes('EducaplayJA') || description.includes('Saque');
+
+    logger.info('Asaas transfer authorization', {
       transferId: transferData?.id || transferData?.transfer?.id || 'unknown',
       value: transferData?.value || transferData?.transfer?.value,
-      description: transferData?.description || transferData?.transfer?.description,
+      description,
+      isOurTransfer,
+      decision: isOurTransfer ? 'APPROVED' : 'APPROVED (unknown source)',
     });
 
     // Return authorization response
@@ -48,7 +90,7 @@ router.post('/asaas/authorize-transfer', (req, res) => {
       body: req.body,
     });
 
-    // Even on error, try to authorize
+    // On error, still approve to avoid blocking transfers
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).send(JSON.stringify({ authorized: true }));
   }
