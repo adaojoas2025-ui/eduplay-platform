@@ -561,7 +561,7 @@ Usamos seus dados apenas para:
       title: 'Email',
       description: 'Envie sua dúvida por email',
       contact: 'ja.eduplay@gmail.com',
-      link: 'mailto:ja.eduplay@gmail.com',
+      link: 'https://mail.google.com/mail/?view=cm&to=ja.eduplay@gmail.com&su=Contato%20EducaplayJA',
       responseTime: 'Resposta em até 24h',
       color: 'blue'
     },
@@ -766,8 +766,8 @@ Usamos seus dados apenas para:
                 <a
                   key={index}
                   href={channel.link}
-                  target={channel.link.startsWith('mailto:') ? undefined : '_blank'}
-                  rel={channel.link.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center hover:bg-white/20 transition transform hover:scale-105"
                 >
                   <Icon className="text-4xl mx-auto mb-3" />
