@@ -14,12 +14,29 @@ const { single } = require('../middlewares/upload.middleware');
 const userValidator = require('../validators/user.validator');
 const { USER_ROLES } = require('../../utils/constants');
 
+// ============================================
+// SPECIFIC ROUTES FIRST (before :id routes)
+// ============================================
+
 /**
- * @route   GET /api/v1/users/:id
- * @desc    Get user by ID
- * @access  Public
+ * @route   GET /api/v1/users
+ * @desc    List users
+ * @access  Private (Admin)
  */
-router.get('/:id', validate(userValidator.getUserSchema), userController.getUserById);
+router.get(
+  '/',
+  authenticate,
+  authorize(USER_ROLES.ADMIN),
+  validate(userValidator.listUsersSchema),
+  userController.listUsers
+);
+
+/**
+ * @route   GET /api/v1/users/stats
+ * @desc    Get user statistics
+ * @access  Private (Admin)
+ */
+router.get('/stats', authenticate, authorize(USER_ROLES.ADMIN), userController.getUserStats);
 
 /**
  * @route   PATCH /api/v1/users/profile
@@ -83,19 +100,10 @@ router.patch(
   userController.updateProducerSettings
 );
 
-/**
- * @route   GET /api/v1/users/:id/stats
- * @desc    Get producer statistics
- * @access  Private (Producer or Admin)
- */
-router.get(
-  '/:id/stats',
-  authenticate,
-  validate(userValidator.getUserSchema),
-  userController.getProducerStats
-);
+// ============================================
+// Mercado Pago OAuth routes
+// ============================================
 
-// Mercado Pago OAuth routes (for split payments)
 /**
  * @route   GET /api/v1/users/mercadopago/auth-url
  * @desc    Get Mercado Pago authorization URL
@@ -142,7 +150,10 @@ router.post(
   userController.unlinkMercadoPago
 );
 
-// PIX automatic payment routes
+// ============================================
+// PIX Routes
+// ============================================
+
 /**
  * @route   GET /api/v1/users/pix/config
  * @desc    Get PIX configuration
@@ -263,18 +274,28 @@ router.delete(
   userController.restoreBalance
 );
 
-// Admin routes
+// ============================================
+// PARAMETERIZED ROUTES LAST (with :id)
+// These must come AFTER specific routes
+// ============================================
+
 /**
- * @route   GET /api/v1/users
- * @desc    List users
- * @access  Private (Admin)
+ * @route   GET /api/v1/users/:id
+ * @desc    Get user by ID
+ * @access  Public
+ */
+router.get('/:id', validate(userValidator.getUserSchema), userController.getUserById);
+
+/**
+ * @route   GET /api/v1/users/:id/stats
+ * @desc    Get producer statistics
+ * @access  Private (Producer or Admin)
  */
 router.get(
-  '/',
+  '/:id/stats',
   authenticate,
-  authorize(USER_ROLES.ADMIN),
-  validate(userValidator.listUsersSchema),
-  userController.listUsers
+  validate(userValidator.getUserSchema),
+  userController.getProducerStats
 );
 
 /**
@@ -341,12 +362,5 @@ router.post(
   validate(userValidator.getUserSchema),
   userController.unbanUser
 );
-
-/**
- * @route   GET /api/v1/users/stats
- * @desc    Get user statistics
- * @access  Private (Admin)
- */
-router.get('/stats', authenticate, authorize(USER_ROLES.ADMIN), userController.getUserStats);
 
 module.exports = router;
