@@ -401,8 +401,12 @@ const getAvailableBalance = asyncHandler(async (req, res) => {
  */
 const requestWithdrawal = asyncHandler(async (req, res) => {
   const userId = req.user.id;
+  const { amount } = req.body; // Optional: specific amount to withdraw
 
-  const result = await pixTransferService.requestWithdrawal(userId);
+  // Parse amount if provided
+  const withdrawAmount = amount ? parseFloat(amount) : null;
+
+  const result = await pixTransferService.requestWithdrawal(userId, withdrawAmount);
 
   logger.info('Withdrawal requested', {
     userId,

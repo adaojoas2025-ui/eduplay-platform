@@ -453,9 +453,10 @@ async function getAvailableBalance(producerId) {
   }
 }
 
-// Request withdrawal - creates PIX transfers for all pending orders
-async function requestWithdrawal(producerId) {
-  logger.info('=== WITHDRAWAL REQUEST v2 - Graceful fallback enabled ===', { producerId });
+// Request withdrawal - creates PIX transfers for pending orders
+// If amount is specified, only withdraw that amount (partial withdrawal)
+async function requestWithdrawal(producerId, requestedAmount = null) {
+  logger.info('=== WITHDRAWAL REQUEST v3 - Partial withdrawal support ===', { producerId, requestedAmount });
 
   // Get user's PIX config
   const user = await prisma.users.findUnique({
@@ -479,9 +480,56 @@ async function requestWithdrawal(producerId) {
     throw new Error('Não há saldo disponível para saque');
   }
 
-  // Create PIX transfer records for each order
+  // Determine withdrawal amount
+  let withdrawalAmount = requestedAmount || availableBalance;
+
+  // Validate requested amount
+  if (requestedAmount) {
+    if (requestedAmount <= 0) {
+      throw new Error('Valor de saque deve ser maior que zero');
+    }
+    if (requestedAmount > availableBalance) {
+      throw new Error(`Valor solicitado (R$ ${requestedAmount.toFixed(2)}) é maior que o saldo disponível (R$ ${availableBalance.toFixed(2)})`);
+    }
+    // Minimum withdrawal amount
+    if (requestedAmount < 1) {
+      throw new Error('Valor mínimo para saque é R$ 1,00');
+    }
+  }
+
+  // Select orders for withdrawal (up to the requested amount)
+  let selectedOrders = [];
+  let selectedAmount = 0;
+
+  // Sort orders by amount (smallest first) to maximize order selection
+  const sortedOrders = [...orders].sort((a, b) => a.producerAmount - b.producerAmount);
+
+  for (const order of sortedOrders) {
+    if (selectedAmount + order.producerAmount <= withdrawalAmount) {
+      selectedOrders.push(order);
+      selectedAmount += order.producerAmount;
+    }
+    // If we've reached the exact requested amount, stop
+    if (requestedAmount && selectedAmount >= requestedAmount) break;
+  }
+
+  // If no orders selected, try to get at least one order (even if exceeds requested)
+  if (selectedOrders.length === 0 && orders.length > 0) {
+    // Find the smallest order
+    const smallestOrder = sortedOrders[0];
+    selectedOrders = [smallestOrder];
+    selectedAmount = smallestOrder.producerAmount;
+  }
+
+  if (selectedOrders.length === 0) {
+    throw new Error('Não há vendas disponíveis para saque');
+  }
+
+  logger.info(`Selected ${selectedOrders.length} orders for withdrawal: R$ ${selectedAmount.toFixed(2)}`, { producerId });
+
+  // Create PIX transfer records for selected orders
   const transfers = [];
-  for (const order of orders) {
+  for (const order of selectedOrders) {
     const transfer = await prisma.pix_transfers.create({
       data: {
         id: uuidv4(),
@@ -496,7 +544,7 @@ async function requestWithdrawal(producerId) {
     transfers.push(transfer);
   }
 
-  logger.info(`Created ${transfers.length} PIX transfer records for producer ${producerId}, total: R$ ${availableBalance}`);
+  logger.info(`Created ${transfers.length} PIX transfer records for producer ${producerId}, total: R$ ${selectedAmount.toFixed(2)}`);
 
   // Try to execute actual PIX transfer via Asaas
   let pixPayoutResult = null;
@@ -524,7 +572,7 @@ async function requestWithdrawal(producerId) {
       const externalReference = `withdrawal-${producerId}-${Date.now()}`;
 
       pixPayoutResult = await asaas.createPixTransfer({
-        amount: availableBalance,
+        amount: selectedAmount,
         pixKey: user.pixKey,
         pixKeyType: user.pixKeyType,
         description: `Saque EducaplayJA - ${transfers.length} venda(s)`,
@@ -533,7 +581,7 @@ async function requestWithdrawal(producerId) {
 
       logger.info('Asaas PIX transfer executed successfully', {
         producerId,
-        amount: availableBalance,
+        amount: selectedAmount,
         asaasId: pixPayoutResult?.id,
         status: pixPayoutResult?.status
       });
@@ -552,7 +600,7 @@ async function requestWithdrawal(producerId) {
     } catch (error) {
       logger.error('Asaas PIX transfer failed', {
         producerId,
-        amount: availableBalance,
+        amount: selectedAmount,
         error: error.message
       });
 
@@ -574,8 +622,9 @@ async function requestWithdrawal(producerId) {
 
   return {
     success: true,
-    totalAmount: availableBalance,
+    totalAmount: selectedAmount,
     transferCount: transfers.length,
+    remainingBalance: availableBalance - selectedAmount,
     pixKey: user.pixKey,
     pixKeyType: user.pixKeyType,
     pixAccountHolder: user.pixAccountHolder,
