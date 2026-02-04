@@ -33,25 +33,26 @@ function validateAsaasToken(req) {
 }
 
 /**
- * Asaas Transfer Authorization Webhook
+ * Asaas Transfer Authorization Webhook (Mecanismo de Segurança)
  * This endpoint is called by Asaas before processing a transfer
  * We auto-approve all transfers from our system
  *
- * According to Asaas docs, the webhook receives transfer data and
- * should respond with HTTP 200 and { "authorized": true } or { "authorized": false }
+ * According to Asaas docs (Mecanismo para validação de saque via webhooks):
+ * - Asaas sends POST with transfer data 5 seconds after creation
+ * - Must respond with { "status": "APPROVED" } or { "status": "REFUSED", "refuseReason": "..." }
+ * - If fails 3 times, transfer is automatically cancelled
  *
- * For automatic transfers without SMS:
- * 1. Configure IP Whitelist in Asaas
- * 2. Disable "Evento critico em requisicoes de saque" for whitelisted IPs
- * 3. Configure this webhook URL in Asaas for external authorization
- * 4. Set ASAAS_WEBHOOK_TOKEN with the token configured in Asaas
+ * Configuration in Asaas:
+ * 1. Go to Menu do usuário > Integrações > Mecanismos de segurança
+ * 2. Add this URL, email for notifications, and auth token
+ * 3. Token is sent in header 'asaas-access-token'
  *
  * @route POST /api/v1/webhooks/asaas/authorize-transfer
  */
 router.post('/asaas/authorize-transfer', (req, res) => {
   try {
     // Log the complete request for debugging
-    logger.info('=== ASAAS AUTHORIZATION WEBHOOK ===', {
+    logger.info('=== ASAAS AUTHORIZATION WEBHOOK (Mecanismo de Segurança) ===', {
       headers: JSON.stringify(req.headers),
       body: JSON.stringify(req.body),
     });
@@ -63,25 +64,30 @@ router.post('/asaas/authorize-transfer', (req, res) => {
       // Still approve for now until token is properly configured
     }
 
-    // Asaas sends the transfer data in the request body
-    const transferData = req.body;
+    // Asaas sends different payload types: TRANSFER, BILL, PIX_QR_CODE, MOBILE_PHONE_RECHARGE, PIX_REFUND
+    const { type, transfer, bill, pixQrCode, mobilePhoneRecharge, pixRefund } = req.body;
 
-    // Validate transfer data - check if it's from our system
-    const description = transferData?.description || transferData?.transfer?.description || '';
+    // Get transfer data based on type
+    let transferData = transfer || bill || pixQrCode || mobilePhoneRecharge || pixRefund;
+    const description = transferData?.description || '';
+    const transferId = transferData?.id || 'unknown';
+    const value = transferData?.value || transferData?.netValue || 0;
+
+    // Check if it's from our system
     const isOurTransfer = description.includes('EducaplayJA') || description.includes('Saque');
 
-    logger.info('Asaas transfer authorization', {
-      transferId: transferData?.id || transferData?.transfer?.id || 'unknown',
-      value: transferData?.value || transferData?.transfer?.value,
+    logger.info('Asaas transfer authorization decision', {
+      type,
+      transferId,
+      value,
       description,
       isOurTransfer,
-      decision: isOurTransfer ? 'APPROVED' : 'APPROVED (unknown source)',
+      decision: 'APPROVED',
     });
 
     // Return authorization response
-    // Asaas expects: { "authorized": true } with HTTP 200
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(200).send(JSON.stringify({ authorized: true }));
+    // Asaas expects: { "status": "APPROVED" } or { "status": "REFUSED", "refuseReason": "..." }
+    return res.status(200).json({ status: 'APPROVED' });
 
   } catch (error) {
     logger.error('Error processing Asaas authorization webhook', {
@@ -91,8 +97,7 @@ router.post('/asaas/authorize-transfer', (req, res) => {
     });
 
     // On error, still approve to avoid blocking transfers
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(200).send(JSON.stringify({ authorized: true }));
+    return res.status(200).json({ status: 'APPROVED' });
   }
 });
 
