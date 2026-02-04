@@ -1,6 +1,6 @@
 {
   "name": "educaplayja-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "EducaplayJA - Professional marketplace platform for digital courses",
   "main": "server.js",
   "type": "commonjs",
