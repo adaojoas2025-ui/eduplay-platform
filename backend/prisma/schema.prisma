@@ -236,7 +236,7 @@ model orders {
   updatedAt      DateTime     @updatedAt
   metadata       Json?
   commissions    commissions?
-  pix_transfer   pix_transfers?
+  pix_transfers  pix_transfers[]
   buyer          users        @relation(fields: [buyerId], references: [id])
   product        products?    @relation(fields: [productId], references: [id])
 
@@ -432,7 +432,7 @@ model users {
 
 model pix_transfers {
   id              String            @id
-  orderId         String            @unique
+  orderId         String
   producerId      String
   amount          Float
   pixKey          String
@@ -446,6 +446,7 @@ model pix_transfers {
   orders          orders            @relation(fields: [orderId], references: [id], onDelete: Cascade)
   producer        users             @relation(fields: [producerId], references: [id])
 
+  @@index([orderId])
   @@index([producerId])
   @@index([status])
 }

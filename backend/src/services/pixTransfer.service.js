@@ -186,8 +186,8 @@ async function createPixTransferRecord(orderId, producerId, amount, pixKey, pixK
 // Execute PIX transfer via Mercado Pago
 async function executePixTransfer(orderId) {
   // Get the transfer record
-  const transfer = await prisma.pix_transfers.findUnique({
-    where: { orderId },
+  const transfer = await prisma.pix_transfers.findFirst({
+    where: { orderId, status: 'PENDING' },
     include: {
       producer: true,
       orders: true
@@ -303,8 +303,8 @@ async function processAutomaticPixPayment(orderId) {
           producer: true
         }
       },
-      pix_transfer: true
-    }
+      pix_transfers: true
+ }
   });
 
   if (!order) {
@@ -312,10 +312,15 @@ async function processAutomaticPixPayment(orderId) {
     return null;
   }
 
-  // Check if already has a transfer
-  if (order.pix_transfer) {
-    console.log(`Order ${orderId} already has a PIX transfer record`);
-    return order.pix_transfer;
+  // Check if already has a completed transfer covering the full amount
+  if (order.pix_transfers && order.pix_transfers.length > 0) {
+    const totalTransferred = order.pix_transfers
+      .filter(t => t.status === 'COMPLETED')
+      .reduce((sum, t) => sum + t.amount, 0);
+    if (totalTransferred >= order.producerAmount) {
+      console.log(`Order ${orderId} already has PIX transfers covering full amount`);
+      return order.pix_transfers[0];
+    }
   }
 
   // Check if order is approved
@@ -406,20 +411,17 @@ async function getTransferHistory(producerId, page = 1, limit = 10) {
   };
 }
 
-// Get available balance for withdrawal (orders without PIX transfer)
+// Get available balance for withdrawal (supports partial order consumption)
 async function getAvailableBalance(producerId) {
   try {
-    // Get all COMPLETED orders from this producer that don't have a PIX transfer yet
-    const ordersWithoutTransfer = await prisma.orders.findMany({
+    // Get all COMPLETED/APPROVED orders from this producer, including their transfers
+    const allOrders = await prisma.orders.findMany({
       where: {
         product: {
           producerId: producerId
         },
         status: {
           in: ['COMPLETED', 'APPROVED']
-        },
-        pix_transfer: {
-          is: null
         }
       },
       select: {
@@ -430,21 +432,48 @@ async function getAvailableBalance(producerId) {
           select: {
             title: true
           }
+        },
+        pix_transfers: {
+          where: {
+            status: 'COMPLETED'
+          },
+          select: {
+            amount: true
+          }
         }
       }
     });
 
-    const availableBalance = ordersWithoutTransfer.reduce((sum, order) => sum + (order.producerAmount || 0), 0);
-    const pendingOrders = ordersWithoutTransfer.length;
+    // Calculate remaining balance per order
+    const ordersWithBalance = [];
+    let availableBalance = 0;
+
+    for (const order of allOrders) {
+      const totalWithdrawn = order.pix_transfers.reduce((sum, t) => sum + t.amount, 0);
+      const remaining = (order.producerAmount || 0) - totalWithdrawn;
+
+      if (remaining > 0.001) { // Small epsilon to avoid floating point issues
+        const roundedRemaining = Math.round(remaining * 100) / 100;
+        ordersWithBalance.push({
+          id: order.id,
+          producerAmount: roundedRemaining, // This is now the REMAINING amount
+          originalAmount: order.producerAmount,
+          createdAt: order.createdAt,
+          product: order.product
+        });
+        availableBalance += roundedRemaining;
+      }
+    }
+
+    availableBalance = Math.round(availableBalance * 100) / 100;
 
     return {
       availableBalance,
-      pendingOrders,
-      orders: ordersWithoutTransfer
+      pendingOrders: ordersWithBalance.length,
+      orders: ordersWithBalance
     };
   } catch (error) {
     console.error('Error getting available balance:', error);
-    // Return empty balance if there's an error (e.g., schema not synced)
     return {
       availableBalance: 0,
       pendingOrders: 0,
@@ -454,9 +483,9 @@ async function getAvailableBalance(producerId) {
 }
 
 // Request withdrawal - creates PIX transfers for pending orders
-// If amount is specified, only withdraw that amount (partial withdrawal)
+// If amount is specified, withdraw that exact amount (with partial order consumption)
 async function requestWithdrawal(producerId, requestedAmount = null) {
-  logger.info('=== WITHDRAWAL REQUEST v3 - Partial withdrawal support ===', { producerId, requestedAmount });
+  logger.info('=== WITHDRAWAL REQUEST v4 - Exact amount withdrawal ===', { producerId, requestedAmount });
 
   // Get user's PIX config
   const user = await prisma.users.findUnique({
@@ -473,7 +502,7 @@ async function requestWithdrawal(producerId, requestedAmount = null) {
     throw new Error('Configure sua chave PIX antes de solicitar saque');
   }
 
-  // Get available balance
+  // Get available balance (orders now have remaining amounts after partial withdrawals)
   const { availableBalance, orders } = await getAvailableBalance(producerId);
 
   if (availableBalance <= 0) {
@@ -488,54 +517,57 @@ async function requestWithdrawal(producerId, requestedAmount = null) {
     if (requestedAmount <= 0) {
       throw new Error('Valor de saque deve ser maior que zero');
     }
-    if (requestedAmount > availableBalance) {
+    if (requestedAmount > availableBalance + 0.01) { // Small epsilon for floating point
       throw new Error(`Valor solicitado (R$ ${requestedAmount.toFixed(2)}) é maior que o saldo disponível (R$ ${availableBalance.toFixed(2)})`);
     }
-    // Minimum withdrawal amount
     if (requestedAmount < 1) {
       throw new Error('Valor mínimo para saque é R$ 1,00');
     }
   }
 
-  // Select orders for withdrawal (up to the requested amount)
-  let selectedOrders = [];
-  let selectedAmount = 0;
+  // Round to avoid floating point issues
+  withdrawalAmount = Math.round(withdrawalAmount * 100) / 100;
 
-  // Sort orders by amount (smallest first) to maximize order selection
+  // Select orders for withdrawal with partial consumption support
+  // orders[].producerAmount here is the REMAINING balance of each order
   const sortedOrders = [...orders].sort((a, b) => a.producerAmount - b.producerAmount);
 
+  let remaining = withdrawalAmount;
+  const orderConsumptions = []; // { order, consumeAmount }
+
   for (const order of sortedOrders) {
-    if (selectedAmount + order.producerAmount <= withdrawalAmount) {
-      selectedOrders.push(order);
-      selectedAmount += order.producerAmount;
+    if (remaining <= 0.001) break;
+
+    const consumeAmount = Math.min(order.producerAmount, remaining);
+    const roundedConsume = Math.round(consumeAmount * 100) / 100;
+
+    if (roundedConsume > 0) {
+      orderConsumptions.push({ order, consumeAmount: roundedConsume });
+      remaining = Math.round((remaining - roundedConsume) * 100) / 100;
     }
-    // If we've reached the exact requested amount, stop
-    if (requestedAmount && selectedAmount >= requestedAmount) break;
   }
 
-  // If no orders selected, try to get at least one order (even if exceeds requested)
-  if (selectedOrders.length === 0 && orders.length > 0) {
-    // Find the smallest order
-    const smallestOrder = sortedOrders[0];
-    selectedOrders = [smallestOrder];
-    selectedAmount = smallestOrder.producerAmount;
-  }
-
-  if (selectedOrders.length === 0) {
+  if (orderConsumptions.length === 0) {
     throw new Error('Não há vendas disponíveis para saque');
   }
 
-  logger.info(`Selected ${selectedOrders.length} orders for withdrawal: R$ ${selectedAmount.toFixed(2)}`, { producerId });
+  const selectedAmount = orderConsumptions.reduce((sum, oc) => sum + oc.consumeAmount, 0);
+  const roundedSelectedAmount = Math.round(selectedAmount * 100) / 100;
 
-  // Create PIX transfer records for selected orders
+  logger.info(`Selected ${orderConsumptions.length} orders for withdrawal: R$ ${roundedSelectedAmount.toFixed(2)}`, {
+    producerId,
+    details: orderConsumptions.map(oc => ({ orderId: oc.order.id, amount: oc.consumeAmount }))
+  });
+
+  // Create PIX transfer records (one per consumed order, with exact consumed amount)
   const transfers = [];
-  for (const order of selectedOrders) {
+  for (const { order, consumeAmount } of orderConsumptions) {
     const transfer = await prisma.pix_transfers.create({
       data: {
         id: uuidv4(),
         orderId: order.id,
         producerId,
-        amount: order.producerAmount,
+        amount: consumeAmount,
         pixKey: user.pixKey,
         pixKeyType: user.pixKeyType,
         status: 'PENDING'
@@ -544,7 +576,7 @@ async function requestWithdrawal(producerId, requestedAmount = null) {
     transfers.push(transfer);
   }
 
-  logger.info(`Created ${transfers.length} PIX transfer records for producer ${producerId}, total: R$ ${selectedAmount.toFixed(2)}`);
+  logger.info(`Created ${transfers.length} PIX transfer records for producer ${producerId}, total: R$ ${roundedSelectedAmount.toFixed(2)}`);
 
   // Try to execute actual PIX transfer via Asaas
   let pixPayoutResult = null;
@@ -568,11 +600,11 @@ async function requestWithdrawal(producerId, requestedAmount = null) {
     }
   } else {
     try {
-      // Create PIX transfer via Asaas
+      // Create PIX transfer via Asaas - sends the EXACT requested amount
       const externalReference = `withdrawal-${producerId}-${Date.now()}`;
 
       pixPayoutResult = await asaas.createPixTransfer({
-        amount: selectedAmount,
+        amount: roundedSelectedAmount,
         pixKey: user.pixKey,
         pixKeyType: user.pixKeyType,
         description: `Saque EducaplayJA - ${transfers.length} venda(s)`,
@@ -581,7 +613,7 @@ async function requestWithdrawal(producerId, requestedAmount = null) {
 
       logger.info('Asaas PIX transfer executed successfully', {
         producerId,
-        amount: selectedAmount,
+        amount: roundedSelectedAmount,
         asaasId: pixPayoutResult?.id,
         status: pixPayoutResult?.status
       });
@@ -600,7 +632,7 @@ async function requestWithdrawal(producerId, requestedAmount = null) {
     } catch (error) {
       logger.error('Asaas PIX transfer failed', {
         producerId,
-        amount: selectedAmount,
+        amount: roundedSelectedAmount,
         error: error.message
       });
 
@@ -622,9 +654,9 @@ async function requestWithdrawal(producerId, requestedAmount = null) {
 
   return {
     success: true,
-    totalAmount: selectedAmount,
+    totalAmount: roundedSelectedAmount,
     transferCount: transfers.length,
-    remainingBalance: availableBalance - selectedAmount,
+    remainingBalance: Math.round((availableBalance - roundedSelectedAmount) * 100) / 100,
     pixKey: user.pixKey,
     pixKeyType: user.pixKeyType,
     pixAccountHolder: user.pixAccountHolder,
