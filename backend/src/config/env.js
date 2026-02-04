@@ -14,6 +14,8 @@ const envSchema = Joi.object({
   MP_CLIENT_ID: Joi.string().default(''),
   MP_CLIENT_SECRET: Joi.string().default(''),
   MP_REDIRECT_URI: Joi.string().default(''),
+  ASAAS_API_KEY: Joi.string().default(''),
+  ASAAS_ENVIRONMENT: Joi.string().valid('sandbox', 'production').default('sandbox'),
   CLOUDINARY_CLOUD_NAME: Joi.string(),
   CLOUDINARY_API_KEY: Joi.string(),
   CLOUDINARY_API_SECRET: Joi.string(),
@@ -56,6 +58,13 @@ module.exports = {
     clientId: envVars.MP_CLIENT_ID,
     clientSecret: envVars.MP_CLIENT_SECRET,
     redirectUri: envVars.MP_REDIRECT_URI,
+  },
+  asaas: {
+    apiKey: envVars.ASAAS_API_KEY,
+    environment: envVars.ASAAS_ENVIRONMENT,
+    baseUrl: envVars.ASAAS_ENVIRONMENT === 'production'
+      ? 'https://api.asaas.com/v3'
+      : 'https://sandbox.asaas.com/api/v3',
   },
   cloudinary: {
     cloudName: envVars.CLOUDINARY_CLOUD_NAME,

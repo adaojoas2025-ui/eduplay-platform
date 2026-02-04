@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const { v4: uuidv4 } = require('uuid');
 const env = require('../config/env');
 const mercadopago = require('../config/mercadopago');
+const asaas = require('../config/asaas');
 const logger = require('../utils/logger');
 
 const prisma = new PrismaClient();
@@ -497,48 +498,13 @@ async function requestWithdrawal(producerId) {
 
   logger.info(`Created ${transfers.length} PIX transfer records for producer ${producerId}, total: R$ ${availableBalance}`);
 
-  // Try to execute actual PIX transfer via Mercado Pago
+  // Try to execute actual PIX transfer via Asaas
   let pixPayoutResult = null;
   let simulatedTransfer = false;
 
-  try {
-    // Create a single PIX payout for the total amount
-    const externalReference = `withdrawal-${producerId}-${Date.now()}`;
-
-    pixPayoutResult = await mercadopago.createPixPayout({
-      amount: availableBalance,
-      pixKey: user.pixKey,
-      pixKeyType: user.pixKeyType,
-      description: `Saque EducaplayJA - ${transfers.length} venda(s)`,
-      externalReference
-    });
-
-    logger.info('PIX payout executed successfully', {
-      producerId,
-      amount: availableBalance,
-      mpId: pixPayoutResult?.id,
-      status: pixPayoutResult?.status
-    });
-
-    // Mark all transfers as COMPLETED with MP ID
-    for (const transfer of transfers) {
-      await prisma.pix_transfers.update({
-        where: { id: transfer.id },
-        data: {
-          status: 'COMPLETED',
-          mercadopagoId: pixPayoutResult?.id?.toString(),
-          processedAt: new Date()
-        }
-      });
-    }
-  } catch (error) {
-    // Log the error but don't fail - mark as COMPLETED (simulated/manual transfer needed)
-    logger.warn('PIX payout API failed, marking as completed (manual transfer needed)', {
-      producerId,
-      amount: availableBalance,
-      error: error.response?.data || error.message
-    });
-
+  // Check if Asaas is configured
+  if (!asaas.isConfigured()) {
+    logger.warn('Asaas not configured, marking transfer as pending manual processing', { producerId });
     simulatedTransfer = true;
 
     // Mark all transfers as COMPLETED (admin will need to manually transfer)
@@ -547,10 +513,62 @@ async function requestWithdrawal(producerId) {
         where: { id: transfer.id },
         data: {
           status: 'COMPLETED',
-          errorMessage: 'Transferência manual necessária - API de payout não disponível',
+          errorMessage: 'Asaas não configurado - transferência manual necessária',
           processedAt: new Date()
         }
       });
+    }
+  } else {
+    try {
+      // Create PIX transfer via Asaas
+      const externalReference = `withdrawal-${producerId}-${Date.now()}`;
+
+      pixPayoutResult = await asaas.createPixTransfer({
+        amount: availableBalance,
+        pixKey: user.pixKey,
+        pixKeyType: user.pixKeyType,
+        description: `Saque EducaplayJA - ${transfers.length} venda(s)`,
+        externalReference
+      });
+
+      logger.info('Asaas PIX transfer executed successfully', {
+        producerId,
+        amount: availableBalance,
+        asaasId: pixPayoutResult?.id,
+        status: pixPayoutResult?.status
+      });
+
+      // Mark all transfers as COMPLETED with Asaas ID
+      for (const transfer of transfers) {
+        await prisma.pix_transfers.update({
+          where: { id: transfer.id },
+          data: {
+            status: 'COMPLETED',
+            mercadopagoId: pixPayoutResult?.id, // Reusing field for Asaas ID
+            processedAt: new Date()
+          }
+        });
+      }
+    } catch (error) {
+      logger.error('Asaas PIX transfer failed', {
+        producerId,
+        amount: availableBalance,
+        error: error.message
+      });
+
+      // Mark all transfers as FAILED
+      for (const transfer of transfers) {
+        await prisma.pix_transfers.update({
+          where: { id: transfer.id },
+          data: {
+            status: 'FAILED',
+            errorMessage: error.message || 'Erro ao processar transferência PIX'
+          }
+        });
+      }
+
+      // Throw the error to show user-friendly message
+      throw error;
     }
   }
 
@@ -561,7 +579,7 @@ async function requestWithdrawal(producerId) {
     pixKey: user.pixKey,
     pixKeyType: user.pixKeyType,
     pixAccountHolder: user.pixAccountHolder,
-    mercadopagoId: pixPayoutResult?.id,
+    asaasId: pixPayoutResult?.id,
     simulatedTransfer,
     message: simulatedTransfer
       ? 'Saque registrado! A transferência será processada manualmente pelo administrador.'
