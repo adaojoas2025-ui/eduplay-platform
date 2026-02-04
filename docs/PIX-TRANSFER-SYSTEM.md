@@ -4,6 +4,8 @@
 
 O sistema de transferência PIX permite que produtores solicitem saques de suas vendas. O dinheiro é transferido automaticamente via PIX para a chave cadastrada pelo produtor.
 
+O sistema suporta **saque de valor exato** com consumo parcial de pedidos. O produtor pode escolher qualquer valor dentro do saldo disponível, e o sistema consome os pedidos necessários (incluindo parcialmente) para atingir o valor solicitado.
+
 ## Arquitetura
 
 ```
@@ -28,7 +30,7 @@ COMPRADORES                         PRODUTORES
 # Asaas Configuration
 ASAAS_API_KEY=sua_api_key_aqui
 ASAAS_ENVIRONMENT=production  # ou 'sandbox' para testes
-ASAAS_WEBHOOK_TOKEN=token_para_validar_webhooks  # Opcional - para autorização automática
+ASAAS_WEBHOOK_TOKEN=token_para_validar_webhooks  # Para autorização automática
 ```
 
 ### Configuração no Asaas
@@ -42,7 +44,7 @@ ASAAS_WEBHOOK_TOKEN=token_para_validar_webhooks  # Opcional - para autorização
 
 Existem duas formas de autorizar transferências no Asaas:
 
-#### Opção 1: Via SMS (Padrão)
+#### Opção 1: Via SMS (Manual)
 
 1. Produtor solicita saque na plataforma
 2. Sistema envia solicitação para Asaas
@@ -50,37 +52,67 @@ Existem duas formas de autorizar transferências no Asaas:
 4. Administrador autoriza no painel Asaas
 5. PIX é enviado ao produtor
 
-#### Opção 2: Automática (Sem SMS) - RECOMENDADO
+#### Opção 2: Automática via Webhook (Sem SMS) - RECOMENDADO E ATIVO
 
 Para automatizar transferências sem precisar de SMS, configure:
 
-**Passo 1: Whitelist de IPs no Asaas**
+**Passo 1: Mecanismo de Segurança no Asaas**
 1. Acesse: Menu do usuário → Integrações → Mecanismos de segurança
-2. Adicione os IPs do Render (ver seção abaixo)
-3. **IMPORTANTE**: Desative "Evento crítico em requisições de saque"
+   - URL direta: `https://www.asaas.com/apiAccessControl/index`
+2. Na seção "Validação de saque via webhooks", configure:
+   - **URL**: `https://eduplay-platform.onrender.com/api/v1/webhooks/asaas/authorize-transfer`
+   - **Email**: email para notificações de falha
+   - **Token de autenticação**: crie um token e salve-o
+3. **IMPORTANTE**: Desative "Evento crítico em requisições de saque" (se quiser evitar SMS)
 
-**Passo 2: Autorização Externa via Webhook**
-1. No Asaas: Integrações → Webhooks → Autorização Externa
-2. Configure a URL: `https://eduplay-platform.onrender.com/api/v1/webhooks/asaas/authorize-transfer`
-3. Crie um token de autenticação e salve-o
-4. No Render, adicione: `ASAAS_WEBHOOK_TOKEN=seu_token_aqui`
+**Passo 2: Configurar Token no Render**
+1. No Render, adicione a variável de ambiente: `ASAAS_WEBHOOK_TOKEN=seu_token_aqui`
+2. O token deve ser **exatamente igual** ao configurado no Asaas
 
-**IPs do Render para Whitelist:**
+**IPs do Render para Whitelist (opcional):**
 O Render usa IPs dinâmicos. Para obter os IPs atuais:
 - Acesse: https://render.com/docs/static-outbound-ip-addresses
 - Ou use um serviço como https://api.ipify.org no seu app para descobrir
 
-**Variáveis de Ambiente Adicionais:**
-```env
-ASAAS_WEBHOOK_TOKEN=token_configurado_no_asaas
-```
-
 **Fluxo Automático:**
 1. Produtor solicita saque
-2. Sistema envia para Asaas
-3. Asaas chama nosso webhook de autorização
-4. Webhook valida token e retorna `{ "authorized": true }`
-5. PIX é enviado automaticamente ao produtor
+2. Sistema envia para Asaas via API `/transfers`
+3. Asaas chama nosso webhook de autorização (5 segundos após criação)
+4. Asaas envia token no header `asaas-access-token`
+5. Webhook valida token e retorna `{ "status": "APPROVED" }`
+6. PIX é enviado automaticamente ao produtor
+
+**Obs:** Se o webhook falhar 3 vezes, a transferência é cancelada automaticamente pelo Asaas.
+
+## Saque de Valor Exato (Consumo Parcial)
+
+O sistema permite que o produtor saque **qualquer valor** dentro do saldo disponível, não apenas pedidos inteiros.
+
+### Como Funciona
+
+- Cada pedido tem um `producerAmount` (valor do produtor após taxa da plataforma)
+- O saldo disponível é calculado como: `producerAmount - SUM(transferências COMPLETED)` por pedido
+- Um mesmo pedido pode ser sacado parcialmente em múltiplas transferências
+
+### Relação no Banco de Dados
+
+- **pix_transfers.orderId**: NÃO é unique (permite múltiplas transferências por pedido)
+- **Relação**: `orders` 1:N `pix_transfers` (um pedido pode ter várias transferências parciais)
+
+### Exemplo
+
+**Pedidos disponíveis:** Pedido A (R$1,79), Pedido B (R$4,05)
+**Usuário solicita:** R$2,00
+
+1. Sistema consome Pedido A inteiro → `pix_transfer(orderId=A, amount=1.79)`
+2. Falta R$0,21 → consome Pedido B parcialmente → `pix_transfer(orderId=B, amount=0.21)`
+3. Envia **exatamente R$2,00** via Asaas PIX
+4. Saldo restante: Pedido B tem R$3,84 disponível
+
+**Próximo saque de R$3,84:**
+1. Pedido B tem R$3,84 restante → `pix_transfer(orderId=B, amount=3.84)`
+2. Envia R$3,84 via Asaas PIX
+3. Saldo: R$0,00
 
 ## Arquivos do Sistema
 
@@ -95,14 +127,14 @@ Configuração do cliente Asaas API com funções:
 
 #### `backend/src/services/pixTransfer.service.js`
 Serviço principal de transferências PIX:
-- `requestWithdrawal(producerId, amount?)` - Solicita saque (com valor opcional)
-- `getAvailableBalance(producerId)` - Retorna saldo disponível
+- `requestWithdrawal(producerId, amount?)` - Solicita saque com consumo parcial de pedidos. Se `amount` é informado, saca exatamente esse valor. Se não, saca todo o saldo disponível.
+- `getAvailableBalance(producerId)` - Calcula saldo disponível por pedido (descontando transferências já realizadas)
 - `getTransferHistory(producerId)` - Histórico de transferências
 - `savePixKey()` - Salva chave PIX do produtor
 
 #### `backend/src/api/routes/webhook.routes.js`
 Endpoints de webhook:
-- `POST /api/v1/webhooks/asaas/authorize-transfer` - Autorização de transferências
+- `POST /api/v1/webhooks/asaas/authorize-transfer` - Autorização de transferências (retorna `{ "status": "APPROVED" }`)
 - `POST /api/v1/webhooks/asaas/transfer-status` - Notificações de status
 - `POST /api/v1/webhooks/asaas` - Webhook genérico
 
@@ -169,15 +201,16 @@ Body: {
 ## Fluxo de Saque
 
 1. **Produtor acessa Financeiro** no painel do vendedor
-2. **Visualiza saldo disponível** (vendas completadas sem saque)
+2. **Visualiza saldo disponível** (calculado a partir das vendas, descontando saques anteriores)
 3. **Opcionalmente escolhe valor** a sacar (toggle + input)
 4. **Clica em "Solicitar Saque"**
-5. **Sistema cria registro** de transferência no banco
-6. **Envia para Asaas** via API `/transfers`
-7. **Asaas solicita autorização** via SMS
-8. **Admin autoriza** no painel Asaas
-9. **PIX é enviado** ao produtor
-10. **Status atualizado** no sistema
+5. **Sistema seleciona pedidos** para consumo (inteiros e/ou parciais)
+6. **Cria registros de transferência** no banco (um por pedido consumido)
+7. **Envia valor exato para Asaas** via API `/transfers`
+8. **Asaas chama webhook** de autorização automática
+9. **Webhook retorna** `{ "status": "APPROVED" }`
+10. **PIX é enviado** ao produtor
+11. **Status atualizado** no sistema
 
 ## Taxas
 
@@ -196,14 +229,29 @@ Body: {
 
 ### Transferência "Falhou"
 - Verifique se a chave PIX do produtor está correta
-- Confirme se o webhook está desabilitado (use SMS)
+- Verifique se o webhook de autorização está configurado corretamente
 - Verifique logs no Render
 
-### SMS não chega
-- Verifique número cadastrado no Asaas
-- Clique em "Reenviar código" no painel Asaas
+### Erro "Autorização externa foi recusada"
+- Verifique se o `ASAAS_WEBHOOK_TOKEN` no Render é igual ao token configurado no Asaas
+- Verifique se a URL do webhook está acessível externamente
+- Verifique se o servidor está rodando e respondendo (logs no Render)
+- No Asaas: Menu do usuário → Integrações → Mecanismos de segurança → verificar configuração
+
+### Webhook não funciona / SMS continua sendo exigido
+- Confirme que a "Validação de saque via webhooks" está ativada no Asaas
+- Desative "Evento crítico em requisições de saque" no Asaas
+- Verifique se a URL do webhook responde com status 200
 
 ## Histórico de Mudanças
+
+### 04/02/2026 (Noite)
+- Saque de valor exato com consumo parcial de pedidos (v4)
+- Mudança de schema: relação `pix_transfers` de 1:1 para 1:N (um pedido pode ter múltiplas transferências)
+- Migration: removido unique index de `orderId`, adicionado index não-único para performance
+- Correção do formato de resposta do webhook: `{ "status": "APPROVED" }` (antes `{ "authorized": true }`)
+- `getAvailableBalance()` agora calcula saldo restante por pedido (descontando transferências anteriores)
+- `requestWithdrawal()` agora consome pedidos parcialmente para atingir valor exato
 
 ### 04/02/2026 (Tarde)
 - Implementação de autorização automática sem SMS
@@ -221,8 +269,10 @@ Body: {
 ### Arquivos Modificados
 - `backend/src/config/asaas.js` (NOVO)
 - `backend/src/config/env.js` (variáveis Asaas + webhookToken)
-- `backend/src/services/pixTransfer.service.js` (Asaas + saque parcial)
+- `backend/src/services/pixTransfer.service.js` (Asaas + saque parcial + consumo parcial v4)
 - `backend/src/api/routes/webhook.routes.js` (NOVO - com validação de token)
 - `backend/src/api/routes/index.js` (webhook routes)
 - `backend/src/api/controllers/user.controller.js` (amount param)
 - `frontend/src/components/WithdrawalSection.jsx` (escolher valor)
+- `backend/prisma/schema.prisma` (relação 1:N em pix_transfers, removido @unique de orderId)
+- `backend/prisma/migrations/20260204200000_allow_partial_order_withdrawals/migration.sql` (NOVO)

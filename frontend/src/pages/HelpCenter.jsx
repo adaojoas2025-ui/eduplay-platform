@@ -766,8 +766,8 @@ Usamos seus dados apenas para:
                 <a
                   key={index}
                   href={channel.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target={channel.link.startsWith('mailto:') ? undefined : '_blank'}
+                  rel={channel.link.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
                   className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center hover:bg-white/20 transition transform hover:scale-105"
                 >
                   <Icon className="text-4xl mx-auto mb-3" />
