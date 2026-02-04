@@ -25,14 +25,17 @@ export default function TransferHistory({ limit = 5, showViewAll = true }) {
         api.get(`/users/pix/transfers?limit=${limit}`),
         api.get('/users/pix/stats')
       ]);
-      setTransfers(transfersRes.data.data || []);
+      // API returns { data: { items: [...], pagination: {...} } }
+      const transfersData = transfersRes.data.data;
+      setTransfers(Array.isArray(transfersData) ? transfersData : (transfersData?.items || []));
       setStats(statsRes.data.data);
     } catch (err) {
       console.error('Error fetching transfer history:', err);
       // Don't show error if user just doesn't have PIX configured
-      if (err.response?.status !== 403) {
+      if (err.response?.status !== 403 && err.response?.status !== 400) {
         setError('Erro ao carregar historico');
       }
+      setTransfers([]);
     } finally {
       setLoading(false);
     }
