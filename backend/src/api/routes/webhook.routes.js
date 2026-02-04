@@ -13,54 +13,44 @@ const logger = require('../../utils/logger');
  * This endpoint is called by Asaas before processing a transfer
  * We auto-approve all transfers from our system
  *
+ * According to Asaas docs, the webhook receives transfer data and
+ * should respond with HTTP 200 and { "authorized": true } or { "authorized": false }
+ *
  * @route POST /api/v1/webhooks/asaas/authorize-transfer
  */
 router.post('/asaas/authorize-transfer', (req, res) => {
   try {
-    const { id, value, pixAddressKey, description } = req.body;
-
-    logger.info('Asaas transfer authorization webhook received', {
-      transferId: id,
-      value,
-      pixKey: pixAddressKey ? pixAddressKey.substring(0, 4) + '****' : 'N/A',
-      description,
+    // Log the complete request for debugging
+    logger.info('=== ASAAS AUTHORIZATION WEBHOOK ===', {
+      headers: req.headers,
+      body: JSON.stringify(req.body),
     });
 
-    // Check if this is a legitimate transfer from our system
-    // by verifying the description contains our identifier
-    const isFromOurSystem = description &&
-      (description.includes('EducaplayJA') || description.includes('Saque'));
+    // Asaas sends the transfer data in the request body
+    // We always authorize transfers from our system
+    const transferData = req.body;
 
-    if (isFromOurSystem) {
-      logger.info('Transfer authorized - from EducaplayJA system', { transferId: id });
-
-      // Respond with authorization
-      return res.status(200).json({
-        authorized: true,
-      });
-    }
-
-    // For transfers not from our system, still authorize but log warning
-    logger.warn('Transfer authorized - unknown source', {
-      transferId: id,
-      description
+    logger.info('Asaas transfer authorization - APPROVING', {
+      transferId: transferData?.id || transferData?.transfer?.id || 'unknown',
+      value: transferData?.value || transferData?.transfer?.value,
+      description: transferData?.description || transferData?.transfer?.description,
     });
 
-    return res.status(200).json({
-      authorized: true,
-    });
+    // Return authorization response
+    // Asaas expects: { "authorized": true } with HTTP 200
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(200).send(JSON.stringify({ authorized: true }));
 
   } catch (error) {
     logger.error('Error processing Asaas authorization webhook', {
       error: error.message,
+      stack: error.stack,
       body: req.body,
     });
 
-    // Even on error, authorize to prevent blocking legitimate transfers
-    // In production, you might want to be more strict
-    return res.status(200).json({
-      authorized: true,
-    });
+    // Even on error, try to authorize
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(200).send(JSON.stringify({ authorized: true }));
   }
 });
 
