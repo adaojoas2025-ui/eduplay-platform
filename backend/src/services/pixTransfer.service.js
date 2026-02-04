@@ -454,6 +454,8 @@ async function getAvailableBalance(producerId) {
 
 // Request withdrawal - creates PIX transfers for all pending orders
 async function requestWithdrawal(producerId) {
+  logger.info('=== WITHDRAWAL REQUEST v2 - Graceful fallback enabled ===', { producerId });
+
   // Get user's PIX config
   const user = await prisma.users.findUnique({
     where: { id: producerId },
