@@ -190,7 +190,11 @@
       "WebFetch(domain:eduplay-frontend.onrender.com)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlNmM2MGIyOC01NzhkLTQwMWMtOGYzMy0zODgyZDUwNzUxZTkiLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzY5NTA1NDQ5LCJleHAiOjE3NzAxMTAyNDl9.3JhfiA4yey8zoWI_IJ51z5EdE62MYspG_wpLlOkacyY\")",
       "Bash(DATABASE_URL=\"postgresql://eduplay_user:9ob3x50jpRiCiTeaa2K7htpdk72wcTG8@dpg-d5jtmvvgi27c73e2uqgg-a.oregon-postgres.render.com/eduplay_db_yhu2?sslmode=require\" node:*)",
-      "WebFetch(domain:eduplay-backend-yw7z.onrender.com)"
+      "WebFetch(domain:eduplay-backend-yw7z.onrender.com)",
+      "Bash(git show:*)",
+      "WebFetch(domain:docs.asaas.com)",
+      "Bash(nslookup:*)",
+      "Bash(dig:*)"
     ],
     "deny": [],
     "ask": []

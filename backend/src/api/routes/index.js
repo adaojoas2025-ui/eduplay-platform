@@ -25,6 +25,7 @@ const comboRoutes = require('./combo.routes');
 const orderBumpRoutes = require('./order-bump.routes');
 const emailTestRoutes = require('./email-test.routes'); // TEMPORARY - For email debugging
 const diagnosticRoutes = require('./diagnostic.routes'); // TEMPORARY - For diagnostics
+const webhookRoutes = require('./webhook.routes');
 
 /**
  * Health check route
@@ -59,6 +60,7 @@ router.use('/combos', comboRoutes);
 router.use('/order-bumps', orderBumpRoutes);
 router.use('/email-debug', emailTestRoutes); // TEMPORARY - For email debugging
 router.use('/diagnostic', diagnosticRoutes); // TEMPORARY - For diagnostics
+router.use('/webhooks', webhookRoutes);
 
 /**
  * 404 handler for API routes
