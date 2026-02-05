@@ -26,7 +26,9 @@ export default function ManageApps() {
       setApps(response.data.data.items || []);
     } catch (error) {
       console.error('Error fetching apps:', error);
-      alert('Erro ao carregar apps');
+      // Nao mostrar alerta - definir lista vazia
+      // A UI ja mostra mensagem "Nenhum app encontrado"
+      setApps([]);
     } finally {
       setLoading(false);
     }
