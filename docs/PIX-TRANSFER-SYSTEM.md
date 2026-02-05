@@ -245,6 +245,14 @@ Body: {
 
 ## Histórico de Mudanças
 
+### 05/02/2026
+- Formulário de contato conectado ao backend (antes era fake com setTimeout)
+- Criada rota `POST /api/v1/contact` com rate limiting (5/hora/IP)
+- Correção de email de suporte: FROM (`ja.eduplay@gmail.com`) diferente do TO (`adao.joas2025@gmail.com`)
+- Links `mailto:` substituídos por Gmail Compose URL nas páginas HelpCenter e Contact
+- Tentativa de melhoria anti-spam nos templates (revertida - não melhorou deliverability)
+- Documentação PROJETO_COMPLETO.md atualizada com seções de Asaas, email e contato
+
 ### 04/02/2026 (Noite)
 - Saque de valor exato com consumo parcial de pedidos (v4)
 - Mudança de schema: relação `pix_transfers` de 1:1 para 1:N (um pedido pode ter múltiplas transferências)

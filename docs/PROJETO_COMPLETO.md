@@ -37,7 +37,7 @@
 
 ### 🌐 URLs
 
-- **Backend API**: https://eduplay-backend-yw7z.onrender.com/api/v1
+- **Backend API**: https://eduplay-platform.onrender.com/api/v1
 - **Frontend**: https://eduplay-frontend.onrender.com
 - **Repositório**: GitHub (privado)
 
@@ -46,8 +46,8 @@
 EduplayJA é um marketplace que conecta produtores de conteúdo educacional com compradores, oferecendo:
 - Sistema completo de venda de produtos digitais
 - Aprovação administrativa de produtos
-- Processamento de pagamentos via Mercado Pago
-- Sistema de comissões (97% produtor, 3% plataforma)
+- Processamento de pagamentos via Mercado Pago (compras) e Asaas (saques PIX)
+- Sistema de comissões (90% produtor, 10% plataforma)
 - Order Bump para aumentar ticket médio de vendas
 - Gamificação com pontos, níveis, badges e missões
 - Store de aplicativos/jogos educacionais
@@ -66,7 +66,7 @@ EduplayJA é um marketplace que conecta produtores de conteúdo educacional com 
   "database": "PostgreSQL",
   "orm": "Prisma",
   "authentication": "JWT + Google OAuth",
-  "payments": "Mercado Pago API",
+  "payments": "Mercado Pago API + Asaas (PIX transfers)",
   "storage": "Cloudinary",
   "email": "Nodemailer (Gmail) + SendGrid",
   "logger": "Winston",
@@ -97,7 +97,7 @@ EduplayJA é um marketplace que conecta produtores de conteúdo educacional com 
 - **Database**: PostgreSQL no Render.com
 - **File Storage**: Cloudinary
 - **Email Service**: Gmail SMTP + SendGrid
-- **Payment Gateway**: Mercado Pago
+- **Payment Gateway**: Mercado Pago (compras) + Asaas (saques PIX)
 
 ### 🔄 Arquitetura de Camadas
 
@@ -1057,7 +1057,7 @@ For each OrderItem:
 
 ### 🔌 Base URL
 ```
-Production: https://eduplay-backend-yw7z.onrender.com/api/v1/api/v1
+Production: https://eduplay-platform.onrender.com/api/v1/api/v1
 ```
 
 ### 🔐 Authentication Endpoints
@@ -2228,7 +2228,7 @@ module.exports = mercadopago;
 MERCADOPAGO_ACCESS_TOKEN=APP_USR-xxxx-xxxxxxxx
 MERCADOPAGO_PUBLIC_KEY=APP_USR-xxxx-xxxxxxxx
 FRONTEND_URL=https://eduplay-frontend.onrender.com
-BACKEND_URL=https://eduplay-backend-yw7z.onrender.com/api/v1
+BACKEND_URL=https://eduplay-platform.onrender.com/api/v1
 ```
 
 ### 🛒 Checkout Flow
@@ -2543,6 +2543,35 @@ const sendSaleNotification = async (producerEmail, order, product) => {
 };
 ```
 
+### 💸 Asaas - Transferências PIX (Saques de Produtores)
+
+O sistema usa **Asaas** para enviar PIX aos produtores quando solicitam saques.
+
+- **Mercado Pago**: Recebe pagamentos dos compradores
+- **Asaas**: Envia PIX para os produtores (saques)
+
+#### Configuração
+```env
+ASAAS_API_KEY=sua_api_key
+ASAAS_ENVIRONMENT=production
+ASAAS_WEBHOOK_TOKEN=token_para_webhooks
+```
+
+#### Fluxo de Saque
+1. Produtor solicita saque (valor exato ou total)
+2. Sistema consome pedidos (inteiros ou parcialmente)
+3. Envia valor exato via Asaas API `/transfers`
+4. Asaas chama webhook de autorização automática
+5. Webhook retorna `{ "status": "APPROVED" }`
+6. PIX é enviado ao produtor
+
+#### Saque Parcial
+- O produtor pode sacar qualquer valor dentro do saldo
+- Pedidos são consumidos parcialmente quando necessário
+- Relação 1:N entre pedidos e transferências PIX
+
+> **Documentação completa**: Ver [PIX-TRANSFER-SYSTEM.md](PIX-TRANSFER-SYSTEM.md)
+
 ---
 
 ## 10. Sistema de Emails
@@ -2850,6 +2879,82 @@ const trackEmail = (type, success) => {
   }
 };
 ```
+
+### 📧 Configuração Atual (Produção)
+
+#### Provedor: SendGrid (Primário)
+
+```env
+SENDGRID_API_KEY=SG.xxx
+EMAIL_FROM=EducaplayJA <ja.eduplay@gmail.com>
+PLATFORM_SUPPORT_EMAIL=adao.joas2025@gmail.com
+```
+
+**Regras importantes:**
+- **FROM** deve ser um email verificado no SendGrid (Single Sender Identity)
+- **FROM e TO devem ser diferentes** - Gmail rejeita silenciosamente emails onde remetente = destinatário via terceiros
+- Configuração atual: FROM=`ja.eduplay@gmail.com` (verificado) | TO de suporte=`adao.joas2025@gmail.com`
+
+#### Provedor: Nodemailer/Gmail SMTP (Fallback)
+
+Usado automaticamente quando `SENDGRID_API_KEY` não está configurada.
+
+```env
+EMAIL_USER=seu_email@gmail.com
+EMAIL_PASS=app_password_do_gmail
+```
+
+#### Arquivos do Sistema de Email
+
+| Arquivo | Função |
+|---------|--------|
+| `backend/src/config/email.js` | Inicialização do serviço (SendGrid ou Nodemailer) |
+| `backend/src/services/email.service.js` | Templates HTML e funções de envio |
+| `backend/src/config/env.js` | Variáveis de ambiente (defaults) |
+
+#### Templates de Email (12 tipos)
+
+1. **Welcome** - Boas-vindas ao novo usuário
+2. **Verification** - Verificação de email
+3. **Password Reset** - Redefinição de senha (link expira em 1h)
+4. **Order Confirmation** - Confirmação de pedido ao comprador
+5. **Product Access** - Acesso ao produto com links de download
+6. **New Sale Notification** - Notificação de venda ao produtor
+7. **Commission Paid** - Comissão paga ao produtor
+8. **Product Submitted** - Produto enviado para aprovação (admin)
+9. **Product Pending Approval** - Produto aguardando aprovação (admin, template detalhado)
+10. **Product Approved** - Produto aprovado (produtor)
+11. **Product Rejected** - Produto rejeitado com motivo (produtor)
+12. **Contact Form** - Mensagem do formulário de contato
+
+### 📬 Formulário de Contato
+
+**Endpoint:** `POST /api/v1/contact`
+
+```javascript
+// Campos obrigatórios
+{
+  name: "Nome do usuário",
+  email: "email@exemplo.com",
+  subject: "Assunto",
+  message: "Mensagem de contato"
+}
+```
+
+- **Rate limit**: 5 requisições por hora por IP
+- **Destino**: `config.platform.supportEmail` (padrão: `adao.joas2025@gmail.com`)
+- **Reply-To**: Email do remetente (permite responder diretamente)
+- **Arquivo**: `backend/src/api/routes/contact.routes.js`
+
+### 📧 Links de Email no Frontend
+
+Os links de email nas páginas HelpCenter e Contact usam **Gmail Compose URL** ao invés de `mailto:`:
+
+```
+https://mail.google.com/mail/?view=cm&to=EMAIL&su=SUBJECT
+```
+
+**Motivo**: `mailto:` com `target="_blank"` abre `about:blank` em navegadores sem cliente de email configurado.
 
 ---
 
