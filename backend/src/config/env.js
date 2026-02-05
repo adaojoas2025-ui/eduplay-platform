@@ -30,7 +30,7 @@ const envSchema = Joi.object({
   PLATFORM_FEE_PERCENT: Joi.number().min(0).max(100).default(10),
   PLATFORM_NAME: Joi.string().default('EducaplayJA'),
   PLATFORM_EMAIL: Joi.string().email().default('ja.eduplay@gmail.com'),
-  PLATFORM_SUPPORT_EMAIL: Joi.string().email().default('ja.eduplay@gmail.com'),
+  PLATFORM_SUPPORT_EMAIL: Joi.string().email().default('adao.joas2025@gmail.com'),
   BCRYPT_ROUNDS: Joi.number().default(10),
   LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'debug').default('info'),
   LOG_DIR: Joi.string().default('logs'),
