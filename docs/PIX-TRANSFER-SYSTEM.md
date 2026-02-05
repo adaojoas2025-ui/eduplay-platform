@@ -253,6 +253,7 @@ Body: {
 - **Script de reset do banco**: `reset-keep-users.js` remove produtos e dados financeiros mantendo usuários
 - **Tradução de status de comissões**: PENDING→Pendentes, PROCESSING→Processando, PAID→Pagas, FAILED→Falhou
 - **Comissão da plataforma**: 3% (corrigido na documentação - não é 10%)
+- **Correção ManageApps**: Removido alerta de erro ao clicar nos filtros quando não há apps cadastrados
 
 ### 05/02/2026 (Noite)
 - **Taxa de cartão + R$1 no checkout**: Comprador escolhe PIX ou Cartão ANTES de redirecionar ao MP
