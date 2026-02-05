@@ -245,6 +245,15 @@ Body: {
 
 ## Histórico de Mudanças
 
+### 05/02/2026 (Noite 2)
+- **Páginas de ajuda individuais**: 6 artigos detalhados em `/help/:slug`
+  - primeira-compra, comecar-a-vender, combos, reembolso, formas-pagamento, receber-vendas
+  - Cada artigo com passo a passo, dicas, tabelas e boxes informativos
+  - Reembolso em 7 dias (Art. 49 CDC) documentado
+- **Script de reset do banco**: `reset-keep-users.js` remove produtos e dados financeiros mantendo usuários
+- **Tradução de status de comissões**: PENDING→Pendentes, PROCESSING→Processando, PAID→Pagas, FAILED→Falhou
+- **Comissão da plataforma**: 3% (corrigido na documentação - não é 10%)
+
 ### 05/02/2026 (Noite)
 - **Taxa de cartão + R$1 no checkout**: Comprador escolhe PIX ou Cartão ANTES de redirecionar ao MP
 - PIX: preço normal do produto, MP mostra apenas PIX
