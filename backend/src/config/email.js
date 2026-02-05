@@ -82,7 +82,7 @@ const verifyConnection = async () => {
  * @returns {Promise<Object>} Send result
  */
 const sendEmail = async ({ to, subject, html, text, replyTo }) => {
-  const fromEmail = process.env.EMAIL_FROM || 'EDUPLAY <ja.eduplay@gmail.com>';
+  const fromEmail = process.env.EMAIL_FROM || 'EducaplayJA <adao.joas2025@gmail.com>';
 
   try {
     // Try SendGrid first
