@@ -87,7 +87,7 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
   try {
     // Try SendGrid first
     if (useSendGrid && sgMail) {
-      logger.info('Sending email via SendGrid...', { to, subject });
+      logger.info('📤 Sending email via SendGrid...', { to, subject });
 
       const msg = {
         to,
@@ -100,7 +100,7 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
 
       const [response] = await sgMail.send(msg);
 
-      logger.info('Email sent successfully via SendGrid', {
+      logger.info('✅ Email sent successfully via SendGrid', {
         to,
         subject,
         statusCode: response.statusCode,
@@ -111,7 +111,7 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
 
     // Try Nodemailer
     if (useNodemailer && transporter) {
-      logger.info('Sending email via Nodemailer...', { to, subject });
+      logger.info('📤 Sending email via Nodemailer...', { to, subject });
 
       const mailOptions = {
         from: fromEmail,
@@ -124,7 +124,7 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
 
       const result = await transporter.sendMail(mailOptions);
 
-      logger.info('Email sent successfully via Nodemailer', {
+      logger.info('✅ Email sent successfully via Nodemailer', {
         to,
         subject,
         messageId: result.messageId,
@@ -135,7 +135,7 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
 
     throw new Error('No email service configured');
   } catch (error) {
-    logger.error('Error sending email:', {
+    logger.error('❌ Error sending email:', {
       error: error.message,
       to,
       subject,
