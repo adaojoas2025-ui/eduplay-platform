@@ -83,7 +83,6 @@ const verifyConnection = async () => {
  */
 const sendEmail = async ({ to, subject, html, text, replyTo }) => {
   const fromEmail = process.env.EMAIL_FROM || 'EducaplayJA <ja.eduplay@gmail.com>';
-  const supportEmail = process.env.PLATFORM_SUPPORT_EMAIL || 'adao.joas2025@gmail.com';
 
   try {
     // Try SendGrid first
@@ -97,9 +96,6 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
         text: text || subject,
         html,
         ...(replyTo && { replyTo }),
-        headers: {
-          'List-Unsubscribe': `<mailto:${supportEmail}?subject=unsubscribe>`,
-        },
       };
 
       const [response] = await sgMail.send(msg);
@@ -124,9 +120,6 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
         text: text || subject,
         html,
         ...(replyTo && { replyTo }),
-        headers: {
-          'List-Unsubscribe': `<mailto:${supportEmail}?subject=unsubscribe>`,
-        },
       };
 
       const result = await transporter.sendMail(mailOptions);
