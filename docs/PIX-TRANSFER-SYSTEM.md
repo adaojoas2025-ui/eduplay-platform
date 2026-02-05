@@ -251,6 +251,7 @@ Body: {
 - Correção de email de suporte: FROM (`ja.eduplay@gmail.com`) diferente do TO (`adao.joas2025@gmail.com`)
 - Links `mailto:` substituídos por Gmail Compose URL nas páginas HelpCenter e Contact
 - Tentativa de melhoria anti-spam nos templates (revertida - não melhorou deliverability)
+- Emojis restaurados nos log messages de `email.js` (📤, ✅, ❌)
 - Documentação PROJETO_COMPLETO.md atualizada com seções de Asaas, email e contato
 
 ### 04/02/2026 (Noite)

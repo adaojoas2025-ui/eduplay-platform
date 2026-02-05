@@ -940,7 +940,7 @@ enum LeaderboardPeriod {
    If payment approved:
      - Update order: status=APPROVED
      - Create OrderItems
-     - Calculate commissions (97% / 3%)
+     - Calculate commissions (90% / 10%)
      - Clear user's cart
      - Send email to buyer (purchase confirmation)
      - Send email to producer (sale notification)
@@ -973,8 +973,8 @@ For each OrderItem:
   Get product.price and product.producerId
   ↓
   Calculate:
-    - producerAmount = price * 0.97 (97%)
-    - platformFee = price * 0.03 (3%)
+    - producerAmount = price * 0.90 (90%)
+    - platformFee = price * 0.10 (10%)
   ↓
   Create Commission:
     - orderId
@@ -2386,8 +2386,8 @@ const handleWebhook = async (req, res) => {
       // Create commissions
       for (const item of order.items) {
         const productPrice = parseFloat(item.price);
-        const producerAmount = productPrice * 0.97; // 97%
-        const platformFee = productPrice * 0.03; // 3%
+        const producerAmount = productPrice * 0.90; // 90%
+        const platformFee = productPrice * 0.10; // 10%
 
         await prisma.commission.create({
           data: {
@@ -2468,8 +2468,8 @@ const calculateCommissions = (orderItems) => {
 
     return {
       producerId: item.product.producerId,
-      producerAmount: totalItemPrice * 0.97, // 97%
-      platformFee: totalItemPrice * 0.03,     // 3%
+      producerAmount: totalItemPrice * 0.90, // 90%
+      platformFee: totalItemPrice * 0.10,     // 10%
       percentage: 97.00
     };
   });
@@ -2530,7 +2530,7 @@ const sendSaleNotification = async (producerEmail, order, product) => {
     <p>Preço: R$ ${product.price}</p>
 
     <h3>Sua Comissão</h3>
-    <p><strong>R$ ${commission.toFixed(2)}</strong> (97%)</p>
+    <p><strong>R$ ${commission.toFixed(2)}</strong> (90%)</p>
 
     <p>
       <a href="${process.env.FRONTEND_URL}/producer/sales">
@@ -2729,7 +2729,7 @@ const sendProductApprovedEmail = async (producerEmail, product) => {
         <p><strong>Data de aprovação:</strong> ${new Date(product.approvedAt).toLocaleString('pt-BR')}</p>
 
         <p>Agora os compradores podem encontrar e adquirir seu produto.
-           Você receberá 97% do valor de cada venda.</p>
+           Você receberá 90% do valor de cada venda.</p>
 
         <p style="text-align: center; margin-top: 30px;">
           <a href="${process.env.FRONTEND_URL}/product/${product.slug}" class="button">
@@ -2801,7 +2801,7 @@ const sendProducerWelcome = async (email) => {
         <h3>O que você pode fazer agora:</h3>
         <ul>
           <li>Criar e vender produtos digitais</li>
-          <li>Receber 97% do valor de cada venda</li>
+          <li>Receber 90% do valor de cada venda</li>
           <li>Acompanhar suas vendas em tempo real</li>
           <li>Gerenciar suas comissões</li>
         </ul>
@@ -3036,7 +3036,7 @@ Order Bump é uma estratégia de marketing que permite aos produtores **fortalec
 - Não exibe produtos já no carrinho
 
 #### Comissões
-- Mantém o sistema existente: 97% produtor, 3% plataforma
+- Mantém o sistema existente: 90% produtor, 10% plataforma
 - Bumps contam como vendas normais para analytics
 
 ### 🚀 Implementação (Fase 1 Completa)
@@ -3119,7 +3119,7 @@ Order Bump é uma estratégia de marketing que permite aos produtores **fortalec
 - Oportunidade única (só aparece no checkout)
 
 **Para Plataforma**:
-- Aumenta comissões (3% de vendas maiores)
+- Aumenta comissões (10% de vendas maiores)
 - Melhora métricas de conversão
 - Diferencial competitivo
 
@@ -3163,7 +3163,7 @@ Order Bump é uma estratégia de marketing que permite aos produtores **fortalec
 - ✅ Redirect para checkout MP
 - ✅ Webhook recebe notificação de pagamento
 - ✅ Order status atualizado para APPROVED
-- ✅ Comissões criadas (97% / 3%)
+- ✅ Comissões criadas (90% / 10%)
 - ✅ Carrinho limpo após compra
 - ✅ Emails enviados (comprador + produtor)
 - ✅ Gamificação: +100 XP para comprador
@@ -3195,7 +3195,7 @@ to={`/product/${purchase.product?.slug || purchase.product?.id}`}  // ✅ works
 
 #### 5. Sistema de Comissões
 - ✅ Comissão criada após aprovação do pagamento
-- ✅ Cálculo correto: 97% produtor, 3% plataforma
+- ✅ Cálculo correto: 90% produtor, 10% plataforma
 - ✅ Produtor visualiza comissões no dashboard
 - ✅ Admin pode marcar comissão como paga
 
@@ -3337,7 +3337,7 @@ describe('ProductCard', () => {
 - Suporte a diferentes métodos de pagamento
 
 #### 6. Sistema de Comissões
-- Cálculo automático: 97% produtor, 3% plataforma
+- Cálculo automático: 90% produtor, 10% plataforma
 - Registro de comissões por venda
 - Dashboard para produtores
 - Admin pode marcar como paga
@@ -3480,7 +3480,7 @@ describe('ProductCard', () => {
 **Métricas (Cards):**
 - Total de Vendas
 - Valor Total
-- Comissão Plataforma (3%)
+- Comissão Plataforma (10%)
 - Valor Líquido (você recebe)
 
 **Visualizações:**
@@ -3556,8 +3556,8 @@ describe('ProductCard', () => {
 **Como Funciona:**
 - Produtor vincula conta do Mercado Pago via OAuth
 - Ao vender, o dinheiro é dividido automaticamente:
-  - 97% vai direto para a conta MP do produtor
-  - 3% vai para a conta da plataforma (marketplace_fee)
+  - 90% é repassado para a conta MP do produtor
+  - 10% vai para a conta da plataforma (marketplace_fee)
 - Não precisa de transferências manuais
 - Reembolsos são processados proporcionalmente
 
@@ -4301,7 +4301,7 @@ Este documento representa o estado atual completo do projeto **EduplayJA**, um m
 - ✅ **Sistema completo de autenticação** com OAuth e JWT
 - ✅ **Marketplace funcional** com aprovação de produtos
 - ✅ **Integração com Mercado Pago** (pagamentos e webhooks)
-- ✅ **Sistema de comissões** (97% / 3%)
+- ✅ **Sistema de comissões** (90% / 10%)
 - ✅ **Order Bump** para aumentar ticket médio (Fase 1 completa)
 - ✅ **Gamificação completa** (XP, níveis, badges, missões, leaderboards)
 - ✅ **Upload de arquivos** via Cloudinary
