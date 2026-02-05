@@ -82,7 +82,7 @@ export default function AdminCommissions() {
             💰 Comissões da Plataforma
           </h1>
           <p className="text-gray-600">
-            Gerencie as comissões de 3% da EDUPLAY
+            Gerencie as comissões de 10% da EDUPLAY
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export default function AdminCommissions() {
               R$ {(stats?.platformRevenue || 0).toFixed(2)}
             </div>
             <div className="text-xs mt-1 opacity-75">
-              3% sobre R$ {(stats?.totalSalesRevenue || 0).toFixed(2)} em vendas
+              10% sobre R$ {(stats?.totalSalesRevenue || 0).toFixed(2)} em vendas
             </div>
           </div>
 
@@ -152,19 +152,28 @@ export default function AdminCommissions() {
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-6">
           <div className="flex gap-2">
-            {['ALL', 'PENDING', 'PROCESSING', 'PAID', 'FAILED'].map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilter(status)}
-                className={`px-4 py-2 rounded-lg font-semibold transition ${
-                  filter === status
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {status === 'ALL' ? 'Todas' : status}
-              </button>
-            ))}
+            {['ALL', 'PENDING', 'PROCESSING', 'PAID', 'FAILED'].map((status) => {
+              const statusLabels = {
+                ALL: 'Todas',
+                PENDING: 'Pendentes',
+                PROCESSING: 'Processando',
+                PAID: 'Pagas',
+                FAILED: 'Falhou',
+              };
+              return (
+                <button
+                  key={status}
+                  onClick={() => setFilter(status)}
+                  className={`px-4 py-2 rounded-lg font-semibold transition ${
+                    filter === status
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {statusLabels[status]}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -187,7 +196,7 @@ export default function AdminCommissions() {
                     Valor Venda
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Comissão (3%)
+                    Comissão (10%)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                     Status
@@ -263,7 +272,12 @@ export default function AdminCommissions() {
                                 : 'bg-red-100 text-red-800'
                             }`}
                           >
-                            {isAppSale ? 'PLATAFORMA' : commission.status}
+                            {isAppSale ? 'PLATAFORMA' : {
+                              PENDING: 'PENDENTE',
+                              PROCESSING: 'PROCESSANDO',
+                              PAID: 'PAGO',
+                              FAILED: 'FALHOU',
+                            }[commission.status] || commission.status}
                           </span>
                         </td>
                         <td className="px-6 py-4">
