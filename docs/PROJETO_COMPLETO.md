@@ -920,9 +920,14 @@ enum LeaderboardPeriod {
    ↓
    Review items and total
    ↓
-   Click "Pagar com Mercado Pago"
+   Select payment method: PIX or Cartão
    ↓
-   Backend creates Mercado Pago preference
+   PIX: price = product price (no extra fees)
+   Cartão: price = product + 4.99% MP fee + installment fee + R$1.00
+   ↓
+   Click "Pagar R$ X com PIX/Cartão"
+   ↓
+   Backend creates Mercado Pago preference (restricted to selected method)
    ↓
    Redirect to Mercado Pago checkout
    ↓
@@ -1874,23 +1879,36 @@ const { cart, updateQuantity, removeItem, clearCart } = useCart();
 ```
 
 #### Checkout.jsx
-Página de checkout
+Página de checkout com seletor de forma de pagamento
 
 **Features:**
 - Revisão dos itens
-- Total a pagar
-- Botão "Pagar com Mercado Pago"
+- Seletor PIX / Cartão (cards grandes e visíveis)
+- PIX: preço normal com badge "Melhor preço!"
+- Cartão: preço com taxas + detalhamento transparente
+- Tabela de parcelas 1x a 12x com valores
+- Resumo lateral dinâmico (atualiza conforme seleção)
+- Botão muda cor: verde (PIX) / azul (Cartão)
+
+**Taxas no Cartão:**
+- Taxa MP: 4.99% sobre o preço do produto
+- Taxa de parcelamento: varia de 0% (1x) a 17.28% (12x)
+- Taxa de serviço: R$1.00 fixo
+- Todas as taxas são visíveis para o comprador antes de pagar
 
 **Flow:**
 ```jsx
 const handleCheckout = async () => {
-  // Create Mercado Pago preference
-  const response = await api.post('/payments/create-preference', {
-    items: cart.items
-  });
+  const orderData = {
+    productId: item.productId,
+    paymentMethod: paymentType === 'pix' ? 'PIX' : 'CARD',
+    paymentType: paymentType, // 'pix' or 'card'
+  };
 
-  // Redirect to Mercado Pago
-  window.location.href = response.data.data.initPoint;
+  const response = await axios.post(`${API_URL}/orders`, orderData);
+
+  // Redirect to Mercado Pago (restricted to selected method)
+  window.location.href = response.data.data.paymentUrl;
 };
 ```
 
@@ -2294,8 +2312,13 @@ const createPreference = async (req, res) => {
       auto_return: 'approved',
       external_reference: order.id,
       notification_url: `${process.env.BACKEND_URL}/api/v1/payments/webhook`,
-      statement_descriptor: 'EDUPLAYJA'
+      statement_descriptor: 'EDUPLAYJA',
       // IMPORTANTE: NÃO usar 'purpose: onboarding_credits' pois força login obrigatório no MP
+
+      // Payment method restrictions based on paymentType:
+      // PIX: excludes credit_card, debit_card, prepaid_card, account_money, ticket
+      // Card: excludes bank_transfer (PIX) and ticket, allows up to 12 installments
+      payment_methods: paymentMethodsConfig
     };
 
     const response = await mercadopago.preferences.create(preference);
@@ -4300,7 +4323,8 @@ Este documento representa o estado atual completo do projeto **EduplayJA**, um m
 
 - ✅ **Sistema completo de autenticação** com OAuth e JWT
 - ✅ **Marketplace funcional** com aprovação de produtos
-- ✅ **Integração com Mercado Pago** (pagamentos e webhooks)
+- ✅ **Integração com Mercado Pago** (pagamentos, webhooks, taxas de cartão repassadas ao comprador)
+- ✅ **Seletor PIX/Cartão no checkout** com taxas transparentes e tabela de parcelas
 - ✅ **Sistema de comissões** (90% / 10%)
 - ✅ **Order Bump** para aumentar ticket médio (Fase 1 completa)
 - ✅ **Gamificação completa** (XP, níveis, badges, missões, leaderboards)
@@ -4315,7 +4339,7 @@ Este documento representa o estado atual completo do projeto **EduplayJA**, um m
 **Backend**: Node.js, Express, Prisma, PostgreSQL
 **Frontend**: React, Vite, Tailwind CSS, Zustand
 **Infraestrutura**: Render.com, Render, Cloudinary
-**Pagamentos**: Mercado Pago
+**Pagamentos**: Mercado Pago (compras) + Asaas (saques PIX)
 **Email**: SendGrid / Gmail SMTP
 
 ### 👥 Equipe
@@ -4332,7 +4356,7 @@ Este documento representa o estado atual completo do projeto **EduplayJA**, um m
 
 ---
 
-**Última atualização**: 13 de Janeiro de 2026
+**Última atualização**: 05 de Fevereiro de 2026
 **Versão do documento**: 1.0.0
 
 ---

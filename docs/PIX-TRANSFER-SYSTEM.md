@@ -245,6 +245,18 @@ Body: {
 
 ## Histórico de Mudanças
 
+### 05/02/2026 (Noite)
+- **Taxa de cartão + R$1 no checkout**: Comprador escolhe PIX ou Cartão ANTES de redirecionar ao MP
+- PIX: preço normal do produto, MP mostra apenas PIX
+- Cartão: preço + taxa MP (4.99%) + taxa parcelamento + R$1,00 de serviço
+- Seletor visual com cards grandes (PIX verde / Cartão azul) no checkout
+- Detalhamento transparente de todas as taxas quando cartão selecionado
+- Tabela de parcelas 1x a 12x com valores por parcela e total
+- Resumo lateral atualiza dinamicamente com taxas do cartão
+- Backend restringe métodos de pagamento no MP via `payment_methods.excluded_payment_types`
+- Comissão do produtor sempre calculada sobre preço BASE (não afetada pelas taxas)
+- `paymentType` armazenado em `metadata` JSON (sem necessidade de migration)
+
 ### 05/02/2026
 - Formulário de contato conectado ao backend (antes era fake com setTimeout)
 - Criada rota `POST /api/v1/contact` com rate limiting (5/hora/IP)
