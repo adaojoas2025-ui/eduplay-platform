@@ -82,7 +82,7 @@ export default function AdminCommissions() {
             💰 Comissões da Plataforma
           </h1>
           <p className="text-gray-600">
-            Gerencie as comissões de 10% da EDUPLAY
+            Gerencie as comissões de 3% da EDUPLAY
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export default function AdminCommissions() {
               R$ {(stats?.platformRevenue || 0).toFixed(2)}
             </div>
             <div className="text-xs mt-1 opacity-75">
-              10% sobre R$ {(stats?.totalSalesRevenue || 0).toFixed(2)} em vendas
+              3% sobre R$ {(stats?.totalSalesRevenue || 0).toFixed(2)} em vendas
             </div>
           </div>
 
@@ -196,7 +196,7 @@ export default function AdminCommissions() {
                     Valor Venda
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Comissão (10%)
+                    Comissão (3%)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                     Status
