@@ -43,6 +43,7 @@ import HelpCenter from './pages/HelpCenter';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contact from './pages/Contact';
+import HelpArticle from './pages/HelpArticle';
 import ResetPassword from './pages/ResetPassword';
 
 
@@ -899,6 +900,7 @@ function App() {
 
         {/* Help & Legal Pages */}
         <Route path="/help" element={<HelpCenter />} />
+        <Route path="/help/:slug" element={<HelpArticle />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />

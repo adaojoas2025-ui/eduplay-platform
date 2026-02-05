@@ -827,24 +827,24 @@ Usamos seus dados apenas para:
         <div className="mt-12 bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h3 className="font-bold text-lg mb-4 text-blue-900">🔥 Tópicos Populares</h3>
           <div className="grid md:grid-cols-2 gap-3">
-            <button onClick={() => { setSearchQuery('como comprar'); setSelectedCategory('buying'); }} className="text-left text-blue-700 hover:text-blue-900 hover:underline">
+            <Link to="/help/primeira-compra" className="text-left text-blue-700 hover:text-blue-900 hover:underline">
               → Como fazer minha primeira compra?
-            </button>
-            <button onClick={() => { setSearchQuery('reembolso'); setSelectedCategory('policies'); }} className="text-left text-blue-700 hover:text-blue-900 hover:underline">
+            </Link>
+            <Link to="/help/reembolso" className="text-left text-blue-700 hover:text-blue-900 hover:underline">
               → Como solicitar reembolso?
-            </button>
-            <button onClick={() => { setSearchQuery('começar a vender'); setSelectedCategory('selling'); }} className="text-left text-blue-700 hover:text-blue-900 hover:underline">
+            </Link>
+            <Link to="/help/comecar-a-vender" className="text-left text-blue-700 hover:text-blue-900 hover:underline">
               → Como começar a vender?
-            </button>
-            <button onClick={() => { setSearchQuery('formas de pagamento'); setSelectedCategory('payment'); }} className="text-left text-blue-700 hover:text-blue-900 hover:underline">
+            </Link>
+            <Link to="/help/formas-pagamento" className="text-left text-blue-700 hover:text-blue-900 hover:underline">
               → Quais formas de pagamento aceitas?
-            </button>
-            <button onClick={() => { setSearchQuery('combos'); setSelectedCategory('buying'); }} className="text-left text-blue-700 hover:text-blue-900 hover:underline">
+            </Link>
+            <Link to="/help/combos" className="text-left text-blue-700 hover:text-blue-900 hover:underline">
               → Como funcionam os combos?
-            </button>
-            <button onClick={() => { setSearchQuery('receber pagamento'); setSelectedCategory('selling'); }} className="text-left text-blue-700 hover:text-blue-900 hover:underline">
+            </Link>
+            <Link to="/help/receber-vendas" className="text-left text-blue-700 hover:text-blue-900 hover:underline">
               → Como recebo o dinheiro das vendas?
-            </button>
+            </Link>
           </div>
         </div>
       </div>
