@@ -83,11 +83,12 @@ const verifyConnection = async () => {
  */
 const sendEmail = async ({ to, subject, html, text, replyTo }) => {
   const fromEmail = process.env.EMAIL_FROM || 'EducaplayJA <ja.eduplay@gmail.com>';
+  const supportEmail = process.env.PLATFORM_SUPPORT_EMAIL || 'adao.joas2025@gmail.com';
 
   try {
     // Try SendGrid first
     if (useSendGrid && sgMail) {
-      logger.info('📤 Sending email via SendGrid...', { to, subject });
+      logger.info('Sending email via SendGrid...', { to, subject });
 
       const msg = {
         to,
@@ -96,11 +97,14 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
         text: text || subject,
         html,
         ...(replyTo && { replyTo }),
+        headers: {
+          'List-Unsubscribe': `<mailto:${supportEmail}?subject=unsubscribe>`,
+        },
       };
 
       const [response] = await sgMail.send(msg);
 
-      logger.info('✅ Email sent successfully via SendGrid', {
+      logger.info('Email sent successfully via SendGrid', {
         to,
         subject,
         statusCode: response.statusCode,
@@ -111,7 +115,7 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
 
     // Try Nodemailer
     if (useNodemailer && transporter) {
-      logger.info('📤 Sending email via Nodemailer...', { to, subject });
+      logger.info('Sending email via Nodemailer...', { to, subject });
 
       const mailOptions = {
         from: fromEmail,
@@ -120,11 +124,14 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
         text: text || subject,
         html,
         ...(replyTo && { replyTo }),
+        headers: {
+          'List-Unsubscribe': `<mailto:${supportEmail}?subject=unsubscribe>`,
+        },
       };
 
       const result = await transporter.sendMail(mailOptions);
 
-      logger.info('✅ Email sent successfully via Nodemailer', {
+      logger.info('Email sent successfully via Nodemailer', {
         to,
         subject,
         messageId: result.messageId,
@@ -135,7 +142,7 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
 
     throw new Error('No email service configured');
   } catch (error) {
-    logger.error('❌ Error sending email:', {
+    logger.error('Error sending email:', {
       error: error.message,
       to,
       subject,
