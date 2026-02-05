@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiMail, FiMessageCircle, FiSend, FiMapPin, FiClock, FiHelpCircle } from 'react-icons/fi';
+import { toast } from 'react-toastify';
+import api from '../services/api';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -34,12 +36,10 @@ export default function Contact() {
     e.preventDefault();
     setLoading(true);
 
-    // Simular envio de formulário
-    setTimeout(() => {
+    try {
+      await api.post('/contact', formData);
       setSubmitted(true);
-      setLoading(false);
 
-      // Limpar formulário
       setFormData({
         name: '',
         email: '',
@@ -48,9 +48,14 @@ export default function Contact() {
         message: ''
       });
 
-      // Reset após 5 segundos
+      toast.success('Mensagem enviada com sucesso!');
       setTimeout(() => setSubmitted(false), 5000);
-    }, 1500);
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Erro ao enviar mensagem. Tente novamente.';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const contactMethods = [
@@ -59,7 +64,7 @@ export default function Contact() {
       title: 'Email Principal',
       description: 'Envie sua mensagem por email',
       contact: 'ja.eduplay@gmail.com',
-      link: 'mailto:ja.eduplay@gmail.com',
+      link: 'https://mail.google.com/mail/?view=cm&to=ja.eduplay@gmail.com&su=Contato%20EducaplayJA',
       color: 'blue',
       responseTime: 'Resposta em até 24 horas'
     },
@@ -68,7 +73,7 @@ export default function Contact() {
       title: 'Email Alternativo',
       description: 'Outro canal de contato',
       contact: 'daiannemfarias@gmail.com',
-      link: 'mailto:daiannemfarias@gmail.com',
+      link: 'https://mail.google.com/mail/?view=cm&to=daiannemfarias@gmail.com&su=Contato%20EducaplayJA',
       color: 'purple',
       responseTime: 'Resposta em até 24 horas'
     },
