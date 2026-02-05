@@ -18,13 +18,23 @@ const { USER_ROLES, ORDER_STATUS, COMMISSION_STATUS } = require('../utils/consta
 /**
  * Calculate order amounts
  * @param {number} productPrice - Product price
+ * @param {string} paymentType - Payment type ('pix' or 'card')
  * @returns {Object} Calculated amounts
  */
-const calculateOrderAmounts = (productPrice) => {
-  const amount = productPrice;
+const calculateOrderAmounts = (productPrice, paymentType = 'pix') => {
+  const baseAmount = productPrice;
   const platformFeePercent = config.platform.feePercent;
-  const platformFee = (amount * platformFeePercent) / 100;
-  const producerAmount = amount - platformFee;
+  const platformFee = (baseAmount * platformFeePercent) / 100;
+  const producerAmount = baseAmount - platformFee;
+
+  let amount = baseAmount;
+
+  if (paymentType === 'card') {
+    const MP_CARD_FEE = 0.0499; // 4.99% Mercado Pago card fee
+    const EXTRA_FEE = 1.00;     // R$1.00 fixed service fee
+    amount = baseAmount + (baseAmount * MP_CARD_FEE) + EXTRA_FEE;
+    amount = Math.round(amount * 100) / 100;
+  }
 
   return {
     amount,
@@ -41,7 +51,7 @@ const calculateOrderAmounts = (productPrice) => {
  */
 const createOrder = async (buyerId, orderData) => {
   try {
-    const { productId, paymentMethod } = orderData;
+    const { productId, paymentMethod, paymentType } = orderData;
 
     // Verify buyer exists
     const buyer = await userRepository.findUserById(buyerId);
@@ -66,9 +76,11 @@ const createOrder = async (buyerId, orderData) => {
     }
 
     // Calculate amounts
-    const amounts = calculateOrderAmounts(product.price);
+    const amounts = calculateOrderAmounts(product.price, paymentType || 'pix');
 
     // Create order
+    const resolvedPaymentType = paymentType || 'pix';
+
     const order = await orderRepository.createOrder({
       id: crypto.randomUUID(),
       buyerId,
@@ -77,6 +89,7 @@ const createOrder = async (buyerId, orderData) => {
       platformFee: amounts.platformFee,
       producerAmount: amounts.producerAmount,
       paymentMethod,
+      metadata: { paymentType: resolvedPaymentType },
       status: ORDER_STATUS.PENDING,
     });
 

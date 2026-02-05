@@ -5,6 +5,45 @@ import axios from 'axios';
 import { API_URL } from '../config/api.config';
 import OrderBumpSuggestion from '../components/OrderBumpSuggestion';
 
+const MP_CARD_FEE = 0.0499; // 4.99% Mercado Pago card processing fee
+const EXTRA_FEE = 1.00;     // R$1.00 fixed service fee
+
+// Mercado Pago installment interest rates
+const INSTALLMENT_RATES = {
+  1: 0, 2: 0.0459, 3: 0.0597, 4: 0.0733,
+  5: 0.0866, 6: 0.0996, 7: 0.1124, 8: 0.1250,
+  9: 0.1373, 10: 0.1493, 11: 0.1612, 12: 0.1728
+};
+
+/**
+ * Calculate card total for a given base price and number of installments
+ */
+const calculateCardTotal = (basePrice, installments = 1) => {
+  const cardFee = basePrice * MP_CARD_FEE;
+  const installmentFee = basePrice * (INSTALLMENT_RATES[installments] || 0);
+  const total = basePrice + cardFee + installmentFee + EXTRA_FEE;
+  return Math.round(total * 100) / 100;
+};
+
+/**
+ * Generate installment options for a given base price
+ */
+const getInstallmentOptions = (basePrice) => {
+  const options = [];
+  for (let i = 1; i <= 12; i++) {
+    const total = calculateCardTotal(basePrice, i);
+    const perInstallment = Math.round((total / i) * 100) / 100;
+    options.push({
+      installments: i,
+      total,
+      perInstallment,
+      interestRate: INSTALLMENT_RATES[i],
+      noInterest: i === 1,
+    });
+  }
+  return options;
+};
+
 export default function Checkout() {
   const navigate = useNavigate();
   const { cart, clearCart } = useCart();
@@ -13,6 +52,7 @@ export default function Checkout() {
   const [user, setUser] = useState(null);
   const [orderBumps, setOrderBumps] = useState([]);
   const [bumpTotal, setBumpTotal] = useState(0);
+  const [paymentType, setPaymentType] = useState('pix');
 
   useEffect(() => {
     const userData = localStorage.getItem('userData');
@@ -39,13 +79,24 @@ export default function Checkout() {
     }
   };
 
-  const calculateTotal = () => {
-    return cart?.total || 0;
+  const calculateSubtotal = () => {
+    return (cart?.total || 0) + bumpTotal;
+  };
+
+  const calculateCardFee = () => {
+    const subtotal = calculateSubtotal();
+    return Math.round(subtotal * MP_CARD_FEE * 100) / 100;
   };
 
   const calculateFinalTotal = () => {
-    return calculateTotal() + bumpTotal;
+    const subtotal = calculateSubtotal();
+    if (paymentType === 'card') {
+      return calculateCardTotal(subtotal, 1);
+    }
+    return subtotal;
   };
+
+  const installmentOptions = getInstallmentOptions(calculateSubtotal());
 
   const handleCheckout = async () => {
     if (!user) {
@@ -63,20 +114,15 @@ export default function Checkout() {
 
     try {
       const token = localStorage.getItem('token');
-      console.log('🚀 Starting checkout process...');
-      console.log('🔑 Token:', token ? 'exists' : 'missing');
-      console.log('🛒 Cart items:', cart.items);
 
       // Criar pedido para cada produto no carrinho
       for (const item of cart.items) {
         const orderData = {
           productId: item.productId,
           amount: item.price * item.quantity,
-          paymentMethod: 'PIX' // Mercado Pago permite escolher o método na página de pagamento
+          paymentMethod: paymentType === 'pix' ? 'PIX' : 'CARD',
+          paymentType: paymentType,
         };
-
-        console.log('📦 Creating order with data:', orderData);
-        console.log('🌐 API URL:', `${API_URL}/orders`);
 
         const response = await axios.post(
           `${API_URL}/orders`,
@@ -88,13 +134,8 @@ export default function Checkout() {
           }
         );
 
-        console.log('✅ Order response:', response.data);
-
         if (response.data.success && response.data.data.paymentUrl) {
-          // Limpar carrinho
           clearCart();
-
-          // Redirecionar para página de pagamento do Mercado Pago
           window.location.href = response.data.data.paymentUrl;
           return;
         }
@@ -102,10 +143,7 @@ export default function Checkout() {
 
       setError('Erro ao processar pagamento. Tente novamente.');
     } catch (err) {
-      console.error('❌ Checkout error:', err);
-      console.error('❌ Error response:', err.response);
-      console.error('❌ Error data:', err.response?.data);
-      console.error('❌ Error message:', err.message);
+      console.error('Checkout error:', err);
       setError(err.response?.data?.message || err.message || 'Erro ao processar checkout. Tente novamente.');
     } finally {
       setLoading(false);
@@ -148,14 +186,17 @@ export default function Checkout() {
     );
   }
 
+  const subtotal = calculateSubtotal();
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-gray-800 mb-8">Finalizar Compra</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Resumo do Pedido */}
+          {/* Coluna Principal */}
           <div className="lg:col-span-2">
+            {/* Itens do Pedido */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
                 Itens do Pedido
@@ -194,7 +235,153 @@ export default function Checkout() {
               onAddBump={handleAddBump}
             />
 
-            {/* Informações do Comprador */}
+            {/* Forma de Pagamento */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                Escolha a Forma de Pagamento
+              </h2>
+
+              <div className="space-y-4">
+                {/* PIX Option */}
+                <button
+                  type="button"
+                  onClick={() => setPaymentType('pix')}
+                  className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
+                    paymentType === 'pix'
+                      ? 'border-green-500 bg-green-50 shadow-md'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        paymentType === 'pix' ? 'border-green-500' : 'border-gray-300'
+                      }`}>
+                        {paymentType === 'pix' && (
+                          <div className="w-3 h-3 rounded-full bg-green-500" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">💰</span>
+                          <span className="text-lg font-bold text-gray-800">PIX</span>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">Pagamento instantaneo - aprovacao imediata</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-green-600">
+                        R$ {subtotal.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-green-600 font-semibold">Melhor preco!</p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Card Option */}
+                <button
+                  type="button"
+                  onClick={() => setPaymentType('card')}
+                  className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
+                    paymentType === 'card'
+                      ? 'border-blue-500 bg-blue-50 shadow-md'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        paymentType === 'card' ? 'border-blue-500' : 'border-gray-300'
+                      }`}>
+                        {paymentType === 'card' && (
+                          <div className="w-3 h-3 rounded-full bg-blue-500" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">💳</span>
+                          <span className="text-lg font-bold text-gray-800">Cartao de Credito/Debito</span>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">Parcele em ate 12x - inclui taxas de processamento</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-blue-600">
+                        R$ {calculateCardTotal(subtotal, 1).toFixed(2)}
+                      </p>
+                      <p className="text-xs text-gray-500">a vista no cartao</p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Card Details - Expanded when card is selected */}
+                {paymentType === 'card' && (
+                  <div className="ml-10 mt-2 space-y-4">
+                    {/* Price Breakdown */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-gray-800 mb-3">Detalhamento do valor:</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between text-gray-600">
+                          <span>Produto(s)</span>
+                          <span>R$ {subtotal.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-600">
+                          <span>Taxa cartao (4,99%)</span>
+                          <span>R$ {calculateCardFee().toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-600">
+                          <span>Taxa de servico</span>
+                          <span>R$ {EXTRA_FEE.toFixed(2)}</span>
+                        </div>
+                        <div className="border-t border-blue-300 pt-2 mt-2">
+                          <div className="flex justify-between font-bold text-gray-800">
+                            <span>Total a vista</span>
+                            <span>R$ {calculateCardTotal(subtotal, 1).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Installment Table */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-gray-800 mb-3">Opcoes de parcelamento:</h4>
+                      <div className="space-y-1">
+                        {installmentOptions.map((option) => (
+                          <div
+                            key={option.installments}
+                            className={`flex justify-between items-center py-2 px-3 rounded text-sm ${
+                              option.installments === 1
+                                ? 'bg-green-50 font-semibold'
+                                : option.installments % 2 === 0
+                                ? 'bg-gray-50'
+                                : ''
+                            }`}
+                          >
+                            <span className="text-gray-700">
+                              {option.installments}x de R$ {option.perInstallment.toFixed(2)}
+                              {option.installments === 1 && (
+                                <span className="text-green-600 ml-2">(sem juros)</span>
+                              )}
+                            </span>
+                            <span className="text-gray-500">
+                              {option.installments > 1
+                                ? `Total: R$ ${option.total.toFixed(2)}`
+                                : `R$ ${option.total.toFixed(2)}`
+                              }
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-3">
+                        * Valores de parcelas podem ter pequena variacao no Mercado Pago. O numero de parcelas e definido no Mercado Pago.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Informacoes do Comprador */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
                 Dados do Comprador
@@ -222,7 +409,7 @@ export default function Checkout() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({cart.count} {cart.count === 1 ? 'item' : 'itens'})</span>
-                  <span>R$ {calculateTotal().toFixed(2)}</span>
+                  <span>R$ {(cart?.total || 0).toFixed(2)}</span>
                 </div>
                 {bumpTotal > 0 && (
                   <div className="flex justify-between text-green-600">
@@ -230,15 +417,29 @@ export default function Checkout() {
                     <span>+ R$ {bumpTotal.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-gray-600">
-                  <span>Desconto</span>
-                  <span>R$ 0.00</span>
-                </div>
+                {paymentType === 'card' && (
+                  <>
+                    <div className="flex justify-between text-orange-600 text-sm">
+                      <span>Taxa cartao (4,99%)</span>
+                      <span>+ R$ {calculateCardFee().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-orange-600 text-sm">
+                      <span>Taxa de servico</span>
+                      <span>+ R$ {EXTRA_FEE.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between text-lg font-bold text-gray-800">
                     <span>Total</span>
                     <span>R$ {calculateFinalTotal().toFixed(2)}</span>
                   </div>
+                  {paymentType === 'pix' && (
+                    <p className="text-xs text-green-600 mt-1">Via PIX - melhor preco!</p>
+                  )}
+                  {paymentType === 'card' && (
+                    <p className="text-xs text-gray-500 mt-1">Via cartao (a vista). Parcelas disponiveis no Mercado Pago.</p>
+                  )}
                 </div>
               </div>
 
@@ -251,7 +452,11 @@ export default function Checkout() {
               <button
                 onClick={handleCheckout}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-bold text-lg hover:from-green-600 hover:to-green-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`w-full text-white py-4 rounded-lg font-bold text-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                  paymentType === 'pix'
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+                    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
+                }`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -263,17 +468,24 @@ export default function Checkout() {
                   </span>
                 ) : (
                   <span className="flex items-center justify-center">
-                    <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Pagar com Mercado Pago
+                    {paymentType === 'pix' ? (
+                      <>
+                        <span className="mr-2 text-xl">💰</span>
+                        Pagar R$ {calculateFinalTotal().toFixed(2)} com PIX
+                      </>
+                    ) : (
+                      <>
+                        <span className="mr-2 text-xl">💳</span>
+                        Pagar R$ {calculateFinalTotal().toFixed(2)} com Cartao
+                      </>
+                    )}
                   </span>
                 )}
               </button>
 
               <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-xs text-green-800 text-center">
-                  <span className="font-semibold">🔒 Pagamento Seguro:</span> Você será redirecionado para o Mercado Pago. Aceita PIX, Cartão e Boleto.
+                  <span className="font-semibold">🔒 Pagamento Seguro:</span> Voce sera redirecionado para o Mercado Pago.
                 </p>
               </div>
 
@@ -292,30 +504,6 @@ export default function Checkout() {
               </Link>
             </div>
           </div>
-        </div>
-
-        {/* Formas de Pagamento Aceitas */}
-        <div className="bg-white rounded-lg shadow-md p-6 mt-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Formas de Pagamento Aceitas
-          </h2>
-          <div className="flex flex-wrap gap-4 items-center justify-center">
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
-              <span className="text-2xl">💳</span>
-              <span className="text-sm text-gray-600">Cartão de Crédito</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
-              <span className="text-2xl">💰</span>
-              <span className="text-sm text-gray-600">PIX</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
-              <span className="text-2xl">🏦</span>
-              <span className="text-sm text-gray-600">Boleto Bancário</span>
-            </div>
-          </div>
-          <p className="text-center text-sm text-gray-500 mt-4">
-            Você será redirecionado para o ambiente seguro do Mercado Pago
-          </p>
         </div>
       </div>
     </div>

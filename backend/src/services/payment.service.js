@@ -28,6 +28,31 @@ const createPaymentPreference = async (order) => {
     const firstName = nameParts[0] || 'Cliente';
     const lastName = nameParts.slice(1).join(' ') || 'EducaplayJA';
 
+    // Determine payment type from order metadata
+    const paymentType = (order.metadata && order.metadata.paymentType) || 'pix';
+
+    // Configure payment method restrictions
+    let paymentMethodsConfig = {};
+    if (paymentType === 'pix') {
+      paymentMethodsConfig = {
+        excluded_payment_types: [
+          { id: 'credit_card' },
+          { id: 'debit_card' },
+          { id: 'prepaid_card' },
+          { id: 'account_money' },
+          { id: 'ticket' },
+        ],
+      };
+    } else if (paymentType === 'card') {
+      paymentMethodsConfig = {
+        excluded_payment_types: [
+          { id: 'bank_transfer' },
+          { id: 'ticket' },
+        ],
+        installments: 12,
+      };
+    }
+
     const preferenceData = {
       items: [
         {
@@ -47,6 +72,7 @@ const createPaymentPreference = async (order) => {
         first_name: firstName,
         last_name: lastName,
       },
+      payment_methods: paymentMethodsConfig,
       back_urls: {
         success: `${config.frontend.url}/#/order/${order.id}/success`,
         failure: `${config.frontend.url}/#/order/${order.id}/failure`,
