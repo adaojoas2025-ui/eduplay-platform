@@ -53,6 +53,7 @@ export default function Checkout() {
   const [orderBumps, setOrderBumps] = useState([]);
   const [bumpTotal, setBumpTotal] = useState(0);
   const [paymentType, setPaymentType] = useState('pix');
+  const [selectedInstallments, setSelectedInstallments] = useState(1);
 
   useEffect(() => {
     const userData = localStorage.getItem('userData');
@@ -91,9 +92,14 @@ export default function Checkout() {
   const calculateFinalTotal = () => {
     const subtotal = calculateSubtotal();
     if (paymentType === 'card') {
-      return calculateCardTotal(subtotal, 1);
+      return calculateCardTotal(subtotal, selectedInstallments);
     }
     return subtotal;
+  };
+
+  // Get selected installment option
+  const getSelectedInstallmentOption = () => {
+    return installmentOptions.find(opt => opt.installments === selectedInstallments) || installmentOptions[0];
   };
 
   const installmentOptions = getInstallmentOptions(calculateSubtotal());
@@ -356,38 +362,53 @@ export default function Checkout() {
 
                     {/* Installment Table */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-800 mb-2">Opcoes de parcelamento disponiveis:</h4>
-                      <p className="text-xs text-blue-600 mb-3">Voce escolhera o numero de parcelas na tela do Mercado Pago</p>
+                      <h4 className="font-semibold text-gray-800 mb-2">Escolha o parcelamento:</h4>
+                      <p className="text-xs text-blue-600 mb-3">Clique para selecionar o numero de parcelas</p>
                       <div className="space-y-1">
                         {installmentOptions.map((option) => (
-                          <div
+                          <button
                             key={option.installments}
-                            className={`flex justify-between items-center py-2 px-3 rounded text-sm ${
-                              option.installments === 1
-                                ? 'bg-green-50 font-semibold'
-                                : option.installments % 2 === 0
-                                ? 'bg-gray-50'
-                                : ''
+                            type="button"
+                            onClick={() => setSelectedInstallments(option.installments)}
+                            className={`w-full flex justify-between items-center py-3 px-4 rounded-lg text-sm transition-all ${
+                              selectedInstallments === option.installments
+                                ? 'bg-blue-100 border-2 border-blue-500 font-semibold shadow-sm'
+                                : option.installments === 1
+                                ? 'bg-green-50 hover:bg-green-100 border border-transparent'
+                                : 'bg-gray-50 hover:bg-gray-100 border border-transparent'
                             }`}
                           >
-                            <span className="text-gray-700">
-                              {option.installments}x de R$ {option.perInstallment.toFixed(2)}
-                              {option.installments === 1 && (
-                                <span className="text-green-600 ml-2">(sem juros)</span>
-                              )}
+                            <span className="flex items-center gap-2">
+                              <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                selectedInstallments === option.installments
+                                  ? 'border-blue-500 bg-blue-500'
+                                  : 'border-gray-300'
+                              }`}>
+                                {selectedInstallments === option.installments && (
+                                  <span className="w-2 h-2 rounded-full bg-white"></span>
+                                )}
+                              </span>
+                              <span className={selectedInstallments === option.installments ? 'text-blue-800' : 'text-gray-700'}>
+                                {option.installments}x de R$ {option.perInstallment.toFixed(2)}
+                                {option.installments === 1 && (
+                                  <span className="text-green-600 ml-2">(sem juros)</span>
+                                )}
+                              </span>
                             </span>
-                            <span className="text-gray-500">
-                              {option.installments > 1
-                                ? `Total: R$ ${option.total.toFixed(2)}`
-                                : `R$ ${option.total.toFixed(2)}`
-                              }
+                            <span className={selectedInstallments === option.installments ? 'text-blue-700 font-bold' : 'text-gray-500'}>
+                              Total: R$ {option.total.toFixed(2)}
                             </span>
-                          </div>
+                          </button>
                         ))}
                       </div>
-                      <p className="text-xs text-gray-500 mt-3 bg-gray-50 p-2 rounded">
-                        * Ao clicar em "Pagar", voce sera redirecionado ao Mercado Pago onde podera escolher o numero de parcelas desejado.
-                      </p>
+                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800 font-semibold">
+                          Parcela selecionada: {selectedInstallments}x de R$ {getSelectedInstallmentOption().perInstallment.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          Total a pagar: R$ {getSelectedInstallmentOption().total.toFixed(2)}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -440,6 +461,12 @@ export default function Checkout() {
                       <span>Taxa de servico</span>
                       <span>+ R$ {EXTRA_FEE.toFixed(2)}</span>
                     </div>
+                    {selectedInstallments > 1 && (
+                      <div className="flex justify-between text-orange-600 text-sm">
+                        <span>Juros parcelamento</span>
+                        <span>+ R$ {(calculateFinalTotal() - calculateCardTotal(calculateSubtotal(), 1)).toFixed(2)}</span>
+                      </div>
+                    )}
                   </>
                 )}
                 <div className="border-t border-gray-200 pt-3">
@@ -451,7 +478,9 @@ export default function Checkout() {
                     <p className="text-xs text-green-600 mt-1">Via PIX - melhor preco!</p>
                   )}
                   {paymentType === 'card' && (
-                    <p className="text-xs text-gray-500 mt-1">Via cartao (a vista). Parcelas disponiveis no Mercado Pago.</p>
+                    <p className="text-xs text-blue-600 mt-1 font-semibold">
+                      {selectedInstallments}x de R$ {getSelectedInstallmentOption().perInstallment.toFixed(2)}
+                    </p>
                   )}
                 </div>
               </div>
@@ -480,16 +509,28 @@ export default function Checkout() {
                     Processando...
                   </span>
                 ) : (
-                  <span className="flex items-center justify-center">
+                  <span className="flex flex-col items-center justify-center">
                     {paymentType === 'pix' ? (
                       <>
-                        <span className="mr-2 text-xl">💰</span>
-                        Pagar R$ {calculateFinalTotal().toFixed(2)} com PIX
+                        <span className="flex items-center">
+                          <span className="mr-2 text-xl">💰</span>
+                          Pagar R$ {calculateFinalTotal().toFixed(2)} com PIX
+                        </span>
                       </>
                     ) : (
                       <>
-                        <span className="mr-2 text-xl">💳</span>
-                        Pagar R$ {calculateFinalTotal().toFixed(2)} com Cartao
+                        <span className="flex items-center">
+                          <span className="mr-2 text-xl">💳</span>
+                          {selectedInstallments === 1
+                            ? `Pagar R$ ${calculateFinalTotal().toFixed(2)} a vista`
+                            : `Pagar em ${selectedInstallments}x de R$ ${getSelectedInstallmentOption().perInstallment.toFixed(2)}`
+                          }
+                        </span>
+                        {selectedInstallments > 1 && (
+                          <span className="text-xs opacity-80 mt-1">
+                            Total: R$ {calculateFinalTotal().toFixed(2)}
+                          </span>
+                        )}
                       </>
                     )}
                   </span>
