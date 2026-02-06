@@ -1,14 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiDollarSign, FiChevronDown } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
-import useStore from '../store/useStore';
+import { useCart } from '../contexts/CartContext';
 import { toast } from 'react-toastify';
 import { getUser, isAuthenticated, clearAuth } from '../lib/auth';
-// v2.3 - Vender button redirects based on user permission
+// v2.4 - Cart count from CartContext (backend synced)
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const { cart } = useStore();
+  const { cart } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -128,9 +128,9 @@ export default function Navbar() {
               )}
               <Link to="/cart" className="relative text-xs font-semibold text-gray-700 hover:text-primary-500 px-3 py-1.5 whitespace-nowrap">
                 🛒
-                {cart.length > 0 && (
+                {cart.count > 0 && (
                   <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    {cart.length}
+                    {cart.count}
                   </span>
                 )}
               </Link>
@@ -267,9 +267,9 @@ export default function Navbar() {
                   )}
                   <Link to="/cart" className="relative text-gray-700 hover:text-primary-500 p-2 transition-colors">
                     <FiShoppingCart className="w-6 h-6" />
-                    {cart.length > 0 && (
+                    {cart.count > 0 && (
                       <span className="absolute top-0 right-0 bg-primary-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        {cart.length}
+                        {cart.count}
                       </span>
                     )}
                   </Link>
