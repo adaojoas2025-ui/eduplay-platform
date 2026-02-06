@@ -245,6 +245,20 @@ Body: {
 
 ## Histórico de Mudanças
 
+### 06/02/2026
+- **Seleção de parcelas no checkout**: Usuário pode escolher 1x a 12x antes de ir ao Mercado Pago
+  - Parcelas clicáveis com visual radio-button
+  - Total e botão atualizam dinamicamente
+  - Resumo mostra parcela selecionada e juros quando > 1x
+  - Botão mostra "Pagar em 3x de R$ X,XX" quando parcelado
+- **Contador do carrinho no header**: Badge mostra quantidade de itens no ícone do carrinho
+  - Navbar agora usa `useCart` (CartContext) em vez de `useStore` (local)
+  - Sincronizado com backend para mostrar contagem real
+- **Melhoria de mensagens de erro no checkout**:
+  - "Network Error" → "Servidor indisponivel. Verifique sua conexao..."
+  - Erro 404 → "Produto nao encontrado. Pode ter sido removido..."
+- **Correção ManageApps**: Removido alerta de erro ao clicar nos filtros quando não há apps
+
 ### 05/02/2026 (Noite 2)
 - **Páginas de ajuda individuais**: 6 artigos detalhados em `/help/:slug`
   - primeira-compra, comecar-a-vender, combos, reembolso, formas-pagamento, receber-vendas
