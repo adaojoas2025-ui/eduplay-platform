@@ -144,7 +144,19 @@ export default function Checkout() {
       setError('Erro ao processar pagamento. Tente novamente.');
     } catch (err) {
       console.error('Checkout error:', err);
-      setError(err.response?.data?.message || err.message || 'Erro ao processar checkout. Tente novamente.');
+
+      // Mensagem de erro mais informativa
+      let errorMessage = 'Erro ao processar checkout. Tente novamente.';
+
+      if (err.message === 'Network Error') {
+        errorMessage = 'Servidor indisponivel. Verifique sua conexao ou tente novamente em alguns minutos.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.status === 404) {
+        errorMessage = 'Produto nao encontrado. Pode ter sido removido. Limpe o carrinho e tente novamente.';
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -344,7 +356,8 @@ export default function Checkout() {
 
                     {/* Installment Table */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-800 mb-3">Opcoes de parcelamento:</h4>
+                      <h4 className="font-semibold text-gray-800 mb-2">Opcoes de parcelamento disponiveis:</h4>
+                      <p className="text-xs text-blue-600 mb-3">Voce escolhera o numero de parcelas na tela do Mercado Pago</p>
                       <div className="space-y-1">
                         {installmentOptions.map((option) => (
                           <div
@@ -372,8 +385,8 @@ export default function Checkout() {
                           </div>
                         ))}
                       </div>
-                      <p className="text-xs text-gray-400 mt-3">
-                        * Valores de parcelas podem ter pequena variacao no Mercado Pago. O numero de parcelas e definido no Mercado Pago.
+                      <p className="text-xs text-gray-500 mt-3 bg-gray-50 p-2 rounded">
+                        * Ao clicar em "Pagar", voce sera redirecionado ao Mercado Pago onde podera escolher o numero de parcelas desejado.
                       </p>
                     </div>
                   </div>
