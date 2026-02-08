@@ -26,7 +26,7 @@ const createProduct = async (producerId, productData) => {
       throw ApiError.notFound('Producer not found');
     }
 
-    if (producer.role !== USER_ROLES.PRODUCER) {
+    if (producer.role !== USER_ROLES.PRODUCER && producer.role !== USER_ROLES.ADMIN) {
       throw ApiError.forbidden('Only producers can create products');
     }
 
@@ -518,7 +518,7 @@ const getProducerProducts = async (producerId, filters = {}, pagination = {}) =>
       throw ApiError.notFound('Producer not found');
     }
 
-    if (producer.role !== USER_ROLES.PRODUCER) {
+    if (producer.role !== USER_ROLES.PRODUCER && producer.role !== USER_ROLES.ADMIN) {
       throw ApiError.badRequest('User is not a producer');
     }
 

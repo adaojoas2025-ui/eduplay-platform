@@ -106,7 +106,7 @@ const updatePixKey = async (userId, pixKey) => {
   try {
     // Only producers can have PIX keys
     const user = await userRepository.findUserById(userId);
-    if (user.role !== USER_ROLES.PRODUCER) {
+    if (user.role !== USER_ROLES.PRODUCER && user.role !== USER_ROLES.ADMIN) {
       throw ApiError.forbidden('Only producers can set PIX keys');
     }
 
@@ -313,7 +313,7 @@ const getProducerStats = async (producerId) => {
       throw ApiError.notFound('Producer not found');
     }
 
-    if (user.role !== USER_ROLES.PRODUCER) {
+    if (user.role !== USER_ROLES.PRODUCER && user.role !== USER_ROLES.ADMIN) {
       throw ApiError.badRequest('User is not a producer');
     }
 
@@ -488,8 +488,8 @@ const updateProducerSettings = async (userId, settingsData) => {
       throw ApiError.notFound('User not found');
     }
 
-    // Check if user is a producer
-    if (user.role !== USER_ROLES.PRODUCER) {
+    // Check if user is a producer or admin
+    if (user.role !== USER_ROLES.PRODUCER && user.role !== USER_ROLES.ADMIN) {
       throw ApiError.forbidden('Only producers can update these settings');
     }
 

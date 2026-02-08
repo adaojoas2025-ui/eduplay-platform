@@ -83,7 +83,7 @@ router.post(
 router.patch(
   '/pix-key',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   validate(userValidator.updatePixKeySchema),
   userController.updatePixKey
 );
@@ -96,7 +96,7 @@ router.patch(
 router.patch(
   '/producer-settings',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.updateProducerSettings
 );
 
@@ -112,7 +112,7 @@ router.patch(
 router.get(
   '/mercadopago/auth-url',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.getMercadoPagoAuthUrl
 );
 
@@ -134,7 +134,7 @@ router.get(
 router.get(
   '/mercadopago/status',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.getMercadoPagoStatus
 );
 
@@ -146,7 +146,7 @@ router.get(
 router.post(
   '/mercadopago/unlink',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.unlinkMercadoPago
 );
 
@@ -162,7 +162,7 @@ router.post(
 router.get(
   '/pix/config',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.getPixConfig
 );
 
@@ -174,7 +174,7 @@ router.get(
 router.post(
   '/pix/config',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.savePixConfig
 );
 
@@ -186,7 +186,7 @@ router.post(
 router.delete(
   '/pix/config',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.removePixConfig
 );
 
@@ -198,7 +198,7 @@ router.delete(
 router.post(
   '/pix/enable',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.enablePixAutoPayment
 );
 
@@ -210,7 +210,7 @@ router.post(
 router.post(
   '/pix/disable',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.disablePixAutoPayment
 );
 
@@ -222,7 +222,7 @@ router.post(
 router.get(
   '/pix/transfers',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.getPixTransferHistory
 );
 
@@ -234,7 +234,7 @@ router.get(
 router.get(
   '/pix/stats',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.getPixTransferStats
 );
 
@@ -246,7 +246,7 @@ router.get(
 router.get(
   '/pix/balance',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.getAvailableBalance
 );
 
@@ -258,7 +258,7 @@ router.get(
 router.post(
   '/pix/withdraw',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.requestWithdrawal
 );
 
@@ -270,7 +270,7 @@ router.post(
 router.delete(
   '/pix/restore-balance',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   userController.restoreBalance
 );
 

@@ -146,7 +146,7 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="text-3xl font-bold text-gray-800 mb-1">
-              {stats?.users?.total || 0}
+              {stats?.users?.totalUsers || 0}
             </div>
             <div className="text-sm text-gray-600">
               Total de usuários na plataforma
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="text-3xl font-bold text-gray-800 mb-1">
-              {stats?.orders?.total || 0}
+              {stats?.orders?.totalOrders || 0}
             </div>
             <div className="text-sm text-gray-600">
               Total de pedidos realizados
@@ -212,19 +212,19 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Clientes</span>
                 <span className="font-bold text-gray-800">
-                  {stats?.users?.byRole?.CUSTOMER || 0}
+                  {stats?.users?.byRole?.buyers || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Produtores</span>
                 <span className="font-bold text-gray-800">
-                  {stats?.users?.byRole?.PRODUCER || 0}
+                  {stats?.users?.byRole?.producers || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Admins</span>
                 <span className="font-bold text-gray-800">
-                  {stats?.users?.byRole?.ADMIN || 0}
+                  {stats?.users?.byRole?.admins || 0}
                 </span>
               </div>
             </div>
@@ -232,25 +232,25 @@ export default function AdminDashboard() {
 
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Status dos Pedidos
+              Receita da Plataforma
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Pendentes</span>
-                <span className="font-bold text-yellow-600">
-                  {stats?.orders?.byStatus?.PENDING || 0}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Completos</span>
+                <span className="text-gray-600">Receita Total</span>
                 <span className="font-bold text-green-600">
-                  {stats?.orders?.byStatus?.COMPLETED || 0}
+                  R$ {(stats?.orders?.totalRevenue || 0).toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Cancelados</span>
-                <span className="font-bold text-red-600">
-                  {stats?.orders?.byStatus?.CANCELLED || 0}
+                <span className="text-gray-600">Taxa Plataforma</span>
+                <span className="font-bold text-blue-600">
+                  R$ {(stats?.orders?.platformRevenue || 0).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Pago aos Produtores</span>
+                <span className="font-bold text-gray-800">
+                  R$ {(stats?.orders?.producerRevenue || 0).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -264,19 +264,19 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Pendentes</span>
                 <span className="font-bold text-yellow-600">
-                  {stats?.commissions?.byStatus?.PENDING || 0}
+                  {stats?.commissions?.byStatus?.PENDING?.count || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Pagas</span>
                 <span className="font-bold text-green-600">
-                  {stats?.commissions?.byStatus?.PAID || 0}
+                  {stats?.commissions?.byStatus?.PAID?.count || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Processando</span>
                 <span className="font-bold text-blue-600">
-                  {stats?.commissions?.byStatus?.PROCESSING || 0}
+                  {stats?.commissions?.byStatus?.PROCESSING?.count || 0}
                 </span>
               </div>
             </div>

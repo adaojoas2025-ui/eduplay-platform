@@ -80,7 +80,7 @@ router.get(
 router.post(
   '/',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   validate(productValidator.createProductSchema),
   productController.createProduct
 );
@@ -132,7 +132,7 @@ router.delete(
 router.post(
   '/:id/publish',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   validate(productValidator.publishProductSchema),
   productController.publishProduct
 );
@@ -158,7 +158,7 @@ router.post(
 router.post(
   '/:id/thumbnail',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   single('thumbnail'),
   validate(productValidator.uploadThumbnailSchema),
   productController.uploadThumbnail
@@ -172,7 +172,7 @@ router.post(
 router.post(
   '/:id/video',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   single('video'),
   productController.uploadVideo
 );
@@ -185,7 +185,7 @@ router.post(
 router.post(
   '/:id/files',
   authenticate,
-  authorize(USER_ROLES.PRODUCER),
+  authorize(USER_ROLES.PRODUCER, USER_ROLES.ADMIN),
   multiple('files', 10),
   validate(productValidator.uploadFilesSchema),
   productController.uploadFiles

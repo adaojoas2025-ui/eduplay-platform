@@ -85,9 +85,9 @@ const getProducerCommissions = async (userId, filters = {}) => {
 
     let producerId = userId;
 
-    // If admin is requesting, they can specify producer ID
-    if (user.role === USER_ROLES.ADMIN && filters.producerId) {
-      producerId = filters.producerId;
+    // If admin is requesting, they can specify producer ID or use their own
+    if (user.role === USER_ROLES.ADMIN) {
+      producerId = filters.producerId || userId;
     } else if (user.role !== USER_ROLES.PRODUCER) {
       throw ApiError.forbidden('Only producers can view commission summaries');
     }
@@ -111,7 +111,7 @@ const getProducerCommissions = async (userId, filters = {}) => {
 const getPendingCommissions = async (userId) => {
   try {
     const user = await userRepository.findUserById(userId);
-    if (user.role !== USER_ROLES.PRODUCER) {
+    if (user.role !== USER_ROLES.PRODUCER && user.role !== USER_ROLES.ADMIN) {
       throw ApiError.forbidden('Only producers can view pending commissions');
     }
 
@@ -290,7 +290,7 @@ const batchUpdateStatus = async (commissionIds, status, userId) => {
 const requestWithdrawal = async (userId) => {
   try {
     const user = await userRepository.findUserById(userId);
-    if (user.role !== USER_ROLES.PRODUCER) {
+    if (user.role !== USER_ROLES.PRODUCER && user.role !== USER_ROLES.ADMIN) {
       throw ApiError.forbidden('Only producers can request withdrawals');
     }
 
