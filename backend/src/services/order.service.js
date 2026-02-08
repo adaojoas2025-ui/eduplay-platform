@@ -195,14 +195,26 @@ const updateOrderStatus = async (orderId, status, additionalData = {}) => {
         // Product purchases: create commissions and increment sales
         await productRepository.incrementSales(order.productId);
 
-        // Create commission for producer
-        await commissionRepository.createCommission({
-          id: crypto.randomUUID(),
-          orderId: order.id,
-          producerId: order.product.producerId,
-          amount: order.producerAmount,
-          status: COMMISSION_STATUS.PENDING,
-        });
+        // Check if producer is ADMIN (platform product - no commission needed)
+        const producer = await userRepository.findUserById(order.product.producerId);
+        const isAdminProduct = producer && producer.role === USER_ROLES.ADMIN;
+
+        if (!isAdminProduct) {
+          // Create commission only for regular producers
+          await commissionRepository.createCommission({
+            id: crypto.randomUUID(),
+            orderId: order.id,
+            producerId: order.product.producerId,
+            amount: order.producerAmount,
+            status: COMMISSION_STATUS.PENDING,
+          });
+        } else {
+          logger.info('Admin product sold - no commission created (100% platform revenue)', {
+            orderId: order.id,
+            producerId: order.product.producerId,
+            amount: order.amount,
+          });
+        }
 
         // Award gamification points (don't await - fire and forget)
         gamificationService.handlePurchase(order.buyerId, order.id, order.amount).catch((err) => {
