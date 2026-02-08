@@ -2,7 +2,9 @@
 
 ## Visão Geral
 
-O sistema de transferência PIX permite que produtores solicitem saques de suas vendas. O dinheiro é transferido automaticamente via PIX para a chave cadastrada pelo produtor.
+O sistema de transferência PIX permite que produtores e administradores solicitem saques de suas vendas. O dinheiro é transferido automaticamente via PIX para a chave cadastrada pelo produtor.
+
+**Nota:** Produtos criados pelo ADMIN não geram comissão (100% receita da plataforma). Apenas produtos de produtores regulares (PRODUCER) geram comissão com split 90/10.
 
 O sistema suporta **saque de valor exato** com consumo parcial de pedidos. O produtor pode escolher qualquer valor dentro do saldo disponível, e o sistema consome os pedidos necessários (incluindo parcialmente) para atingir o valor solicitado.
 

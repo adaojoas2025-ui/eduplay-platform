@@ -47,7 +47,7 @@ EduplayJA é um marketplace que conecta produtores de conteúdo educacional com 
 - Sistema completo de venda de produtos digitais
 - Aprovação administrativa de produtos
 - Processamento de pagamentos via Mercado Pago (compras) e Asaas (saques PIX)
-- Sistema de comissões (90% produtor, 10% plataforma)
+- Sistema de comissões (90% produtor, 10% plataforma; produtos do admin: 100% plataforma)
 - Order Bump para aumentar ticket médio de vendas
 - Gamificação com pontos, níveis, badges e missões
 - Store de aplicativos/jogos educacionais
@@ -981,13 +981,14 @@ For each OrderItem:
     - producerAmount = price * 0.90 (90%)
     - platformFee = price * 0.10 (10%)
   ↓
-  Create Commission:
-    - orderId
-    - producerId
-    - amount = producerAmount
-    - percentage = 97.00
-    - platformFee
-    - status = PENDING
+  Check producer role:
+    - If ADMIN → Skip commission (100% platform revenue)
+    - If PRODUCER → Create Commission:
+      - orderId
+      - producerId
+      - amount = producerAmount
+      - platformFee
+      - status = PENDING
   ↓
   Producer can view in dashboard
   ↓
@@ -1424,7 +1425,7 @@ Upgrade de BUYER para PRODUCER
 Atualiza configurações do produtor (dados comerciais e bancários)
 
 **Auth Required:** Yes
-**Role Required:** PRODUCER
+**Role Required:** PRODUCER, ADMIN
 
 **Request Body:**
 ```json
@@ -2057,21 +2058,23 @@ const requireRole = (...allowedRoles) => {
 ```
 ADMIN (mais privilégios)
   ↓
-  - Acesso total ao sistema
+  - Acesso total ao sistema (todas as rotas e funcionalidades)
   - Aprovar/rejeitar produtos
-  - Ver todos usuários
-  - Ver todas comissões
-  - Ver todos pedidos
-  - Criar combos
-  - Criar apps
+  - Ver todos usuários, comissões e pedidos
+  - Criar combos e apps
+  - Criar e vender produtos (sem comissão - 100% receita plataforma)
+  - Configurar PIX e Mercado Pago
+  - Solicitar saques
+  - Acessar dashboard de vendedor e admin
 
 PRODUCER
   ↓
   - Criar produtos
-  - Ver próprios produtos
-  - Ver próprias vendas
-  - Ver próprias comissões
+  - Ver próprios produtos e vendas
+  - Ver próprias comissões (90% da venda)
   - Dashboard de vendas
+  - Configurar PIX e Mercado Pago
+  - Solicitar saques
 
 BUYER (menos privilégios)
   ↓
@@ -2481,20 +2484,30 @@ const handleWebhook = async (req, res) => {
 
 ### 💰 Commission Calculation
 
-```javascript
-// commissionService.js
-const calculateCommissions = (orderItems) => {
-  return orderItems.map(item => {
-    const productPrice = parseFloat(item.price);
-    const quantity = item.quantity;
-    const totalItemPrice = productPrice * quantity;
+**Regra de comissão por tipo de vendedor:**
 
-    return {
-      producerId: item.product.producerId,
-      producerAmount: totalItemPrice * 0.90, // 90%
-      platformFee: totalItemPrice * 0.10,     // 10%
-      percentage: 97.00
-    };
+| Cenário | Comissão Produtor | Receita Plataforma |
+|---------|-------------------|--------------------|
+| Produto de PRODUCER | 90% | 10% |
+| Produto de ADMIN | 0% (sem comissão) | 100% |
+| App purchase | 0% (sem comissão) | 100% |
+
+```javascript
+// order.service.js - updateOrderStatus()
+// Ao completar um pedido:
+// 1. Verifica se o produtor é ADMIN
+// 2. Se ADMIN: pula comissão (100% plataforma)
+// 3. Se PRODUCER: cria comissão (90% produtor / 10% plataforma)
+const producer = await userRepository.findUserById(order.product.producerId);
+const isAdminProduct = producer && producer.role === USER_ROLES.ADMIN;
+
+if (!isAdminProduct) {
+  await commissionRepository.createCommission({
+    id: crypto.randomUUID(),
+    orderId: order.id,
+    producerId: order.product.producerId,
+    amount: order.producerAmount, // 90%
+    status: COMMISSION_STATUS.PENDING,
   });
 };
 ```

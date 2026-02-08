@@ -1,5 +1,143 @@
 # CHANGELOG - EDUPLAYJA Platform
 
+## [2026-02-08] - Permissões ADMIN e Correção de Comissões
+
+### Resumo
+Correção completa das permissões do administrador para ter acesso total a todas as funcionalidades da plataforma. Correção do Admin Dashboard que apresentava tela branca (React Error #31). Ajuste no sistema de comissões para que produtos criados pelo ADMIN não gerem comissão (100% receita da plataforma).
+
+### 1. Permissões ADMIN - Acesso Total
+
+#### Problema
+O administrador (ja.eduplay@gmail.com) recebia erros "Insufficient permissions" ao acessar o painel de vendedor e diversas funcionalidades de produtor. O middleware `authorize()` não incluía o role `ADMIN` nas rotas de produtor.
+
+#### Correções Aplicadas
+
+##### Rotas (authorize middleware)
+
+| Arquivo | Rotas Corrigidas | Alteração |
+|---------|-----------------|-----------|
+| `backend/src/api/routes/user.routes.js` | 15 rotas PIX/Mercado Pago | `authorize(PRODUCER)` → `authorize(PRODUCER, ADMIN)` |
+| `backend/src/api/routes/product.routes.js` | 5 rotas de produto | `authorize(PRODUCER)` → `authorize(PRODUCER, ADMIN)` |
+
+**Rotas PIX corrigidas:**
+- `PATCH /users/pix-key` - Atualizar chave PIX
+- `PATCH /users/producer-settings` - Configurações do produtor
+- `GET/POST/DELETE /users/pix/config` - Configuração PIX
+- `POST /users/pix/enable` - Ativar PIX automático
+- `POST /users/pix/disable` - Desativar PIX automático
+- `GET /users/pix/transfers` - Histórico de transferências
+- `GET /users/pix/stats` - Estatísticas PIX
+- `GET /users/pix/balance` - Saldo disponível
+- `POST /users/pix/withdraw` - Solicitar saque
+- `DELETE /users/pix/restore-balance` - Restaurar saldo
+- `GET /users/mercadopago/auth-url` - URL de autenticação MP
+- `GET /users/mercadopago/status` - Status da conta MP
+- `POST /users/mercadopago/unlink` - Desvincular MP
+
+**Rotas de produto corrigidas:**
+- `POST /products` - Criar produto
+- `POST /products/:id/publish` - Publicar produto
+- `POST /products/:id/thumbnail` - Upload de thumbnail
+- `POST /products/:id/video` - Upload de vídeo
+- `POST /products/:id/files` - Upload de arquivos
+
+##### Services (verificações de role internas)
+
+| Arquivo | Função | Alteração |
+|---------|--------|-----------|
+| `backend/src/services/product.service.js` | `createProduct()` | ADMIN pode criar produtos |
+| `backend/src/services/product.service.js` | `getProducerProducts()` | ADMIN pode ver produtos |
+| `backend/src/services/user.service.js` | `updatePixKey()` | ADMIN pode configurar PIX |
+| `backend/src/services/user.service.js` | `getProducerStats()` | ADMIN pode ver estatísticas |
+| `backend/src/services/user.service.js` | `updateProducerSettings()` | ADMIN pode atualizar configurações |
+| `backend/src/services/commission.service.js` | `getProducerCommissions()` | ADMIN pode ver comissões |
+| `backend/src/services/commission.service.js` | `getPendingCommissions()` | ADMIN pode ver pendentes |
+| `backend/src/services/commission.service.js` | `requestWithdrawal()` | ADMIN pode solicitar saque |
+
+---
+
+### 2. Admin Dashboard - Correção React Error #31
+
+#### Problema
+O Admin Dashboard (`/admin/dashboard`) apresentava tela branca com erro "Objects are not valid as a React child" (React Error #31).
+
+#### Causa Raiz
+Incompatibilidade entre os nomes de campos retornados pelo backend e os esperados pelo frontend:
+
+| Frontend Esperava | Backend Retornava | Tipo de Erro |
+|-------------------|-------------------|--------------|
+| `stats.users.total` | `stats.users.totalUsers` | Campo inexistente |
+| `stats.orders.total` | `stats.orders.totalOrders` | Campo inexistente |
+| `stats.users.byRole.CUSTOMER` | `stats.users.byRole.buyers` | Campo inexistente |
+| `stats.commissions.byStatus.PENDING` (como número) | `stats.commissions.byStatus.PENDING` (como `{count, amount}`) | Objeto renderizado como React child |
+
+#### Correção
+
+**Arquivo:** `frontend/src/pages/AdminDashboard.jsx`
+
+- Corrigidos todos os nomes de campo para corresponder ao backend
+- Acessado `.count` dos objetos de status de comissão
+- Substituída seção "Status dos Pedidos" (sem dados no backend) por "Receita da Plataforma" com `totalRevenue`, `platformRevenue`, `producerRevenue`
+
+---
+
+### 3. Comissões - Produtos do ADMIN sem Comissão
+
+#### Problema
+Quando o ADMIN criava um produto e alguém comprava, o sistema criava uma comissão (90% produtor / 10% plataforma) como se fosse um produtor normal. Isso estava errado porque o ADMIN **é** a plataforma.
+
+#### Solução
+
+**Arquivo:** `backend/src/services/order.service.js` - Função `updateOrderStatus()`
+
+Adicionada verificação antes de criar comissão:
+1. Busca o produtor do produto (`userRepository.findUserById`)
+2. Verifica se o role é `ADMIN`
+3. Se for ADMIN: pula criação de comissão, loga como "100% platform revenue"
+4. Se for PRODUCER normal: cria comissão normalmente (90/10)
+
+```javascript
+// Lógica adicionada
+const producer = await userRepository.findUserById(order.product.producerId);
+const isAdminProduct = producer && producer.role === USER_ROLES.ADMIN;
+
+if (!isAdminProduct) {
+  // Cria comissão para produtores normais
+  await commissionRepository.createCommission({ ... });
+} else {
+  // Produto do admin - 100% receita da plataforma
+  logger.info('Admin product sold - no commission created');
+}
+```
+
+#### Regra de Negócio Atualizada
+
+| Cenário | Comissão | Receita Plataforma |
+|---------|----------|--------------------|
+| Produto de PRODUCER | 90% produtor / 10% plataforma | 10% |
+| Produto de ADMIN | Sem comissão | 100% |
+| App purchase | Sem comissão | 100% |
+
+---
+
+### Arquivos Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `backend/src/api/routes/user.routes.js` | 15 rotas: ADMIN adicionado ao authorize |
+| `backend/src/api/routes/product.routes.js` | 5 rotas: ADMIN adicionado ao authorize |
+| `backend/src/services/product.service.js` | 2 verificações de role: ADMIN permitido |
+| `backend/src/services/user.service.js` | 3 verificações de role: ADMIN permitido |
+| `backend/src/services/commission.service.js` | 3 verificações de role: ADMIN permitido |
+| `frontend/src/pages/AdminDashboard.jsx` | Corrigidos nomes de campos e React Error #31 |
+| `backend/src/services/order.service.js` | Pular comissão para produtos do ADMIN |
+
+### Commits Relacionados
+- `fix: Grant ADMIN full access to PIX/MP routes and fix Admin Dashboard crash` (3fbf11e)
+- `fix: Skip commission creation for admin-created products` (7f80483)
+
+---
+
 ## [2026-01-28] - Configuração de Pagamento Real com Mercado Pago
 
 ### Resumo
@@ -45,7 +183,8 @@ Configuração completa do sistema de pagamento real utilizando Mercado Pago em 
 5. Cliente paga (PIX, Cartão ou Boleto)
 6. Mercado Pago envia webhook para o backend
 7. Backend atualiza status do pedido para COMPLETED
-8. Sistema cria comissão para o produtor
+8. Se produtor for PRODUCER: cria comissão (90% produtor / 10% plataforma)
+   Se produtor for ADMIN: 100% receita plataforma (sem comissão)
 9. Cliente é redirecionado para página de sucesso
 ```
 
