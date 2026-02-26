@@ -86,6 +86,13 @@ router.patch('/orders/:id/status', adminController.updateOrderStatus);
 router.patch('/users/:id/role', adminController.updateUserRole);
 
 /**
+ * @route   GET /api/v1/admin/products
+ * @desc    List all products (all statuses, all users)
+ * @access  Private (Admin)
+ */
+router.get('/products', adminController.listAllProducts);
+
+/**
  * @route   GET /api/v1/admin/products/pending
  * @desc    List products pending approval
  * @access  Private (Admin)

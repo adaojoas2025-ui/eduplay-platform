@@ -221,6 +221,37 @@ const listProductsPendingApproval = asyncHandler(async (req, res) => {
 });
 
 /**
+ * List all products (Admin only — all statuses, all users)
+ * @route GET /api/v1/admin/products
+ * @access Private (Admin)
+ */
+const listAllProducts = asyncHandler(async (req, res) => {
+  const { page, limit, sortBy, order, status } = req.query;
+
+  const filters = {};
+  if (status && status !== 'ALL') {
+    filters.status = status;
+  }
+
+  const pagination = {
+    page: parseInt(page) || 1,
+    limit: parseInt(limit) || 50,
+  };
+  const sorting = { sortBy: sortBy || 'createdAt', order: order || 'desc' };
+
+  const result = await productService.listProducts(filters, pagination, sorting);
+
+  return ApiResponse.paginated(
+    res,
+    result.products,
+    result.pagination.page,
+    result.pagination.limit,
+    result.pagination.total,
+    'All products retrieved successfully'
+  );
+});
+
+/**
  * Approve product
  * @route POST /api/v1/admin/products/:id/approve
  * @access Private (Admin)
@@ -274,6 +305,7 @@ module.exports = {
   updateOrderStatus,
   getPlatformStats,
   updateUserRole,
+  listAllProducts,
   listProductsPendingApproval,
   approveProduct,
   rejectProduct,

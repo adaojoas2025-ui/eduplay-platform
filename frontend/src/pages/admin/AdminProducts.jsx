@@ -22,15 +22,8 @@ const AdminProducts = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      let endpoint = '/products';
-
-      if (filter === 'PENDING_APPROVAL') {
-        endpoint = '/admin/products/pending';
-      } else if (filter !== 'ALL') {
-        endpoint = `/products?status=${filter}`;
-      }
-
-      const response = await api.get(endpoint);
+      const statusParam = filter === 'ALL' ? '' : `?status=${filter}`;
+      const response = await api.get(`/admin/products${statusParam}`);
       const productsData = response.data.data?.items || response.data.data || [];
       setProducts(Array.isArray(productsData) ? productsData : []);
     } catch (error) {
