@@ -61,12 +61,12 @@ export default function ProductCard({ product }) {
   return (
     <Link to={`/product/${product.slug}`} className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-200 group overflow-hidden">
       {/* Image */}
-      <div className="relative overflow-hidden h-32 bg-gray-200">
+      <div className="relative overflow-hidden h-32 bg-white">
         {product.thumbnailUrl ? (
           <img
             src={product.thumbnailUrl}
             alt={product.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-3xl">
