@@ -21,7 +21,10 @@ const { ORDER_STATUS } = require('../utils/constants');
  */
 const createPaymentPreference = async (order) => {
   try {
-    const product = await productRepository.findProductById(order.productId);
+    const product = order.product;
+    if (!product) {
+      throw ApiError.notFound('Product not found for this order');
+    }
 
     // Split name into first and last name
     const nameParts = (order.buyer.name || '').trim().split(' ');

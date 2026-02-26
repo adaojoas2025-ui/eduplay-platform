@@ -180,6 +180,23 @@ const createPixPayoutAlternative = async (data) => {
 };
 
 /**
+ * Create refund for a payment
+ * @param {string} paymentId - Payment ID to refund
+ * @param {Object} data - Refund data (optional amount)
+ * @returns {Promise<Object>} Refund response
+ */
+const createRefund = async (paymentId, data = {}) => {
+  try {
+    const refund = await paymentAPI.refund({ id: paymentId, body: data });
+    logger.info('Refund created', { paymentId, refundId: refund.id });
+    return refund;
+  } catch (error) {
+    logger.error('Error creating refund:', error);
+    throw error;
+  }
+};
+
+/**
  * Get account balance from Mercado Pago
  * @returns {Promise<Object>} Balance information
  */
@@ -206,6 +223,7 @@ module.exports = {
   paymentAPI,
   createPreference,
   getPayment,
+  createRefund,
   createPixPayout,
   getAccountBalance,
   publicKey: config.mercadopago.publicKey,
