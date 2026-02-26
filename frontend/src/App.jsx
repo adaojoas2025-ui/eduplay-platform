@@ -181,8 +181,16 @@ const ProductDetails = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid md:grid-cols-2 gap-12">
         {/* Image */}
-        <div className="h-96 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center text-white text-9xl">
-          📚
+        <div className="h-96 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl overflow-hidden flex items-center justify-center">
+          {product.thumbnailUrl ? (
+            <img
+              src={product.thumbnailUrl}
+              alt={product.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-white text-9xl">📚</span>
+          )}
         </div>
 
         {/* Details */}
