@@ -42,7 +42,6 @@ const createPaymentPreference = async (order) => {
           { id: 'credit_card' },
           { id: 'debit_card' },
           { id: 'prepaid_card' },
-          { id: 'account_money' },
           { id: 'ticket' },
         ],
       };
