@@ -4,7 +4,10 @@ const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET |
 export const uploadToCloudinary = async (file, type = 'image') => {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  const uploadPreset = (type === 'apk' || type === 'file')
+    ? (import.meta.env.VITE_CLOUDINARY_RAW_UPLOAD_PRESET || 'eduplay_raw_files')
+    : CLOUDINARY_UPLOAD_PRESET;
+  formData.append('upload_preset', uploadPreset);
   formData.append('folder', `eduplay/${type}s`);
 
   try {
