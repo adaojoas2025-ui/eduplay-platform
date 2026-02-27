@@ -22,6 +22,8 @@ const uploadToSupabase = async (file) => {
     throw new Error('Supabase not configured');
   }
 
+  console.log('Supabase upload — url:', SUPABASE_URL, 'key_len:', SUPABASE_KEY?.length, 'bucket:', SUPABASE_BUCKET);
+
   const ext = path.extname(file.originalname) || '.apk';
   const fileName = `${crypto.randomUUID()}${ext}`;
   const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${fileName}`;
