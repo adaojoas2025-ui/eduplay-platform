@@ -231,6 +231,7 @@ const purchaseApp = async (appId, userId, version, price) => {
     // Create order for app purchase (same as products - payment will be done via test payment)
     // NOTE: App purchases don't have commissions - 100% revenue goes to administrator
     const order = await orderRepository.createOrder({
+      id: crypto.randomUUID(),
       buyerId: userId,
       productId: null, // App purchases don't use productId
       amount: price,
