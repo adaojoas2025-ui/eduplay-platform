@@ -186,7 +186,7 @@ export default function AppForm() {
       alert('APK gratuito enviado com sucesso!');
     } catch (error) {
       console.error('Error uploading free APK:', error);
-      alert('Erro ao enviar APK gratuito. Tente novamente.');
+      alert('Erro ao enviar APK gratuito: ' + error.message);
     } finally {
       setUploadingFreeApk(false);
     }
@@ -215,7 +215,7 @@ export default function AppForm() {
       alert('APK pago enviado com sucesso!');
     } catch (error) {
       console.error('Error uploading paid APK:', error);
-      alert('Erro ao enviar APK pago. Tente novamente.');
+      alert('Erro ao enviar APK pago: ' + error.message);
     } finally {
       setUploadingPaidApk(false);
     }
