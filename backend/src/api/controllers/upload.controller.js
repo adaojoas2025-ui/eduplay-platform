@@ -21,7 +21,7 @@ const uploadToSupabase = async (file) => {
 
   const ext = path.extname(file.originalname) || '.apk';
   const fileName = `${crypto.randomUUID()}${ext}`;
-  const bucket = 'apks';
+  const bucket = 'Apks';
 
   const { error } = await supabase.storage
     .from(bucket)
