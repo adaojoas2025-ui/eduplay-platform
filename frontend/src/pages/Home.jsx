@@ -1,7 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { FiSearch, FiShoppingBag, FiDollarSign, FiStar, FiPackage, FiArrowRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useEffect, useState, useRef } from 'react';
+import axios from 'axios';
 import api from '../services/api';
+import { API_URL } from '../config/api.config';
 import ProductCard from '../components/ProductCard';
 import { useCart } from '../contexts/CartContext';
 import { getUser, isAuthenticated } from '../lib/auth';
@@ -10,12 +12,14 @@ export default function Home() {
   const navigate = useNavigate();
   const { fetchCart } = useCart();
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [featuredApps, setFeaturedApps] = useState([]);
   const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [user, setUser] = useState(null);
   const productsScrollRef = useRef(null);
+  const appsScrollRef = useRef(null);
 
   // Função para scroll dos produtos
   const scrollProducts = (direction) => {
@@ -24,6 +28,16 @@ export default function Home() {
       productsScrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
+      });
+    }
+  };
+
+  // Função para scroll dos apps
+  const scrollApps = (direction) => {
+    if (appsScrollRef.current) {
+      appsScrollRef.current.scrollBy({
+        left: direction === 'left' ? -240 : 240,
+        behavior: 'smooth',
       });
     }
   };
@@ -86,6 +100,7 @@ export default function Home() {
       setUser(JSON.parse(userData));
     }
     fetchFeaturedProducts();
+    fetchFeaturedApps();
     fetchCombos();
   }, []);
 
@@ -109,6 +124,17 @@ export default function Home() {
       console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFeaturedApps = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/apps`, {
+        params: { limit: 6, sortBy: 'downloads', order: 'desc' },
+      });
+      setFeaturedApps(response.data.data.items || []);
+    } catch (error) {
+      console.error('Error fetching apps:', error);
     }
   };
 
@@ -429,6 +455,77 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Featured Apps */}
+      {featuredApps.length > 0 && (
+        <section className="py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-4xl font-bold">Apps em Destaque</h2>
+              <Link to="/apps" className="text-primary-500 font-semibold hover:underline">
+                Ver todos →
+              </Link>
+            </div>
+
+            <div className="relative">
+              {/* Seta Esquerda */}
+              <button
+                onClick={() => scrollApps('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100 transition-colors"
+              >
+                <FiChevronLeft className="text-2xl text-gray-600" />
+              </button>
+
+              {/* Container de Apps */}
+              <div
+                ref={appsScrollRef}
+                className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory mx-12"
+              >
+                {featuredApps.map((app) => (
+                  <Link
+                    key={app.id}
+                    to={`/apps/${app.slug}`}
+                    className="flex-shrink-0 w-[160px] snap-start bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 flex flex-col items-center gap-2 text-center"
+                  >
+                    {app.iconUrl ? (
+                      <img
+                        src={app.iconUrl}
+                        alt={app.title}
+                        className="w-20 h-20 rounded-2xl object-cover"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-2xl bg-blue-100 flex items-center justify-center text-4xl">
+                        🎮
+                      </div>
+                    )}
+                    <p className="text-sm font-semibold text-gray-900 line-clamp-2 leading-tight">{app.title}</p>
+                    <p className="text-xs text-gray-500 line-clamp-1">{app.developer}</p>
+                    <div className="flex items-center gap-1 text-xs text-gray-600">
+                      <FiStar className="text-yellow-400 fill-yellow-400" size={12} />
+                      <span>{app.rating?.toFixed(1) || '0.0'}</span>
+                    </div>
+                    {app.freeWithAdsUrl ? (
+                      <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">GRÁTIS</span>
+                    ) : app.paidNoAdsActive && app.paidNoAdsPrice > 0 ? (
+                      <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+                        R$ {app.paidNoAdsPrice.toFixed(2)}
+                      </span>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+
+              {/* Seta Direita */}
+              <button
+                onClick={() => scrollApps('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100 transition-colors"
+              >
+                <FiChevronRight className="text-2xl text-gray-600" />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary-500 to-secondary-500 text-white">
