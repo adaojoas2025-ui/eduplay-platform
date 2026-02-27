@@ -194,7 +194,11 @@
       "Bash(git show:*)",
       "WebFetch(domain:docs.asaas.com)",
       "Bash(nslookup:*)",
-      "Bash(dig:*)"
+      "Bash(dig:*)",
+      "WebFetch(domain:www.mercadopago.com.br)",
+      "WebFetch(domain:www.calculadoradetaxas.com.br)",
+      "Bash(set \"DATABASE_URL=postgresql://eduplay_5rjn_user:nIbDLtzPaXGnieArVz4TbRvowJcb0e7J@dpg-d5a4te1r0fns7385cop0-a.oregon-postgres.render.com/eduplay_5rjn?sslmode=require\")",
+      "Bash(set \"DATABASE_URL=postgresql://eduplay_db_yhu2_user:PASSWORD@dpg-d5jtmvvgi27c73e2uqqg-a.oregon-postgres.render.com/eduplay_db_yhu2?sslmode=require\")"
     ],
     "deny": [],
     "ask": []

@@ -1,8 +1,8 @@
 const { cloudinary } = require('../../config/cloudinary');
-const { bucket } = require('../../config/firebase');
+const { supabase } = require('../../config/supabase');
 const multer = require('multer');
-const path = require('path');
 const crypto = require('crypto');
+const path = require('path');
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -12,25 +12,29 @@ const upload = multer({
 });
 
 /**
- * Upload APK to Firebase Storage
+ * Upload APK to Supabase Storage
  */
-const uploadToFirebase = async (file, type) => {
-  if (!bucket) {
-    throw new Error('Firebase Storage not configured');
+const uploadToSupabase = async (file) => {
+  if (!supabase) {
+    throw new Error('Supabase not configured');
   }
 
   const ext = path.extname(file.originalname) || '.apk';
-  const uniqueName = `eduplay/${type}s/${crypto.randomUUID()}${ext}`;
-  const fileRef = bucket.file(uniqueName);
+  const fileName = `${crypto.randomUUID()}${ext}`;
+  const bucket = 'apks';
 
-  await fileRef.save(file.buffer, {
-    metadata: { contentType: file.mimetype || 'application/vnd.android.package-archive' },
-  });
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(fileName, file.buffer, {
+      contentType: file.mimetype || 'application/vnd.android.package-archive',
+      upsert: false,
+    });
 
-  await fileRef.makePublic();
+  if (error) throw new Error(error.message);
 
-  const url = `https://storage.googleapis.com/${bucket.name}/${uniqueName}`;
-  return { url, publicId: uniqueName };
+  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
+
+  return { url: data.publicUrl, publicId: fileName };
 };
 
 /**
@@ -48,9 +52,9 @@ const uploadFile = async (req, res) => {
 
     const { type = 'image' } = req.body;
 
-    // APK/raw files → Firebase Storage (no size limit issues)
+    // APK/raw files → Supabase Storage (no size limit issues)
     if (type === 'apk' || type === 'file') {
-      const result = await uploadToFirebase(req.file, type);
+      const result = await uploadToSupabase(req.file);
       return res.json({ success: true, data: result });
     }
 
@@ -72,7 +76,7 @@ const uploadFile = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Upload error:', error.message || JSON.stringify(error));
+    console.error('Upload error:', error.message);
     res.status(500).json({
       success: false,
       message: error.message || 'Upload failed',
