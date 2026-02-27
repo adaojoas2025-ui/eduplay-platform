@@ -5,16 +5,15 @@
  */
 
 const cloudinary = require('cloudinary').v2;
-const config = require('./env');
 const logger = require('../utils/logger');
 
 /**
  * Configure Cloudinary - com fallback para valores diretos
  */
 cloudinary.config({
-  cloud_name: config.cloudinary.cloudName || 'dexlzykqm',
-  api_key: config.cloudinary.apiKey || '761719984596219',
-  api_secret: config.cloudinary.apiSecret || 'QkAyuumJD-_EslezBPd2UQVYKew',
+  cloud_name: 'dexlzykqm',
+  api_key: '761719984596219',
+  api_secret: 'QkAyuumJD-_EslezBPd2UQVYKew',
   secure: true,
 });
 
