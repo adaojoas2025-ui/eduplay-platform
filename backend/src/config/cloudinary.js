@@ -12,8 +12,8 @@ const logger = require('../utils/logger');
  */
 cloudinary.config({
   cloud_name: 'dexlzykqm',
-  api_key: '761719984596219',
-  api_secret: 'QkAyuumJD-_EslezBPd2UQVYKew',
+  api_key: '915819541386718',
+  api_secret: 'XZKW5DwOEzrwindclMB1HnRhvkM',
   secure: true,
 });
 
