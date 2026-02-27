@@ -1,5 +1,4 @@
 const { cloudinary } = require('../../config/cloudinary');
-const { supabase } = require('../../config/supabase');
 const multer = require('multer');
 const crypto = require('crypto');
 const path = require('path');
@@ -11,30 +10,39 @@ const upload = multer({
   limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
 });
 
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_BUCKET = 'Apks';
+
 /**
- * Upload APK to Supabase Storage
+ * Upload APK to Supabase Storage via REST API
  */
 const uploadToSupabase = async (file) => {
-  if (!supabase) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
     throw new Error('Supabase not configured');
   }
 
   const ext = path.extname(file.originalname) || '.apk';
   const fileName = `${crypto.randomUUID()}${ext}`;
-  const bucket = 'Apks';
+  const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${fileName}`;
 
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(fileName, file.buffer, {
-      contentType: file.mimetype || 'application/vnd.android.package-archive',
-      upsert: false,
-    });
+  const response = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'apikey': SUPABASE_KEY,
+      'Content-Type': file.mimetype || 'application/vnd.android.package-archive',
+    },
+    body: file.buffer,
+  });
 
-  if (error) throw new Error(error.message);
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || `Supabase upload failed: ${response.status}`);
+  }
 
-  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
-
-  return { url: data.publicUrl, publicId: fileName };
+  const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${fileName}`;
+  return { url: publicUrl, publicId: fileName };
 };
 
 /**
