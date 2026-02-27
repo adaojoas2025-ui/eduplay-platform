@@ -17,7 +17,7 @@ const findAppById = async (appId) => {
     return await prisma.apps.findUnique({
       where: { id: appId },
       include: {
-        reviews: {
+        app_reviews: {
           take: 10,
           orderBy: { createdAt: 'desc' },
         },
@@ -34,7 +34,7 @@ const findAppBySlug = async (slug) => {
     return await prisma.apps.findUnique({
       where: { slug },
       include: {
-        reviews: {
+        app_reviews: {
           take: 10,
           orderBy: { createdAt: 'desc' },
         },
@@ -99,7 +99,7 @@ const findAllApps = async (filters = {}, pagination = {}) => {
         orderBy: { [sortBy]: order },
         include: {
           _count: {
-            select: { reviews: true },
+            select: { app_reviews: true },
           },
         },
       }),
