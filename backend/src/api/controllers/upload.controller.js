@@ -22,43 +22,31 @@ const uploadFile = async (req, res) => {
     }
 
     const { type = 'image' } = req.body;
-    const resourceType = (type === 'apk' || type === 'file') ? 'raw' : type;
+    const resourceType = (type === 'apk' || type === 'file') ? 'raw' : 'auto';
 
-    // Upload to Cloudinary (images and raw/APK files via signed upload — 100MB limit)
-    const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: `eduplay/${type}s`,
-          resource_type: resourceType,
-        },
-        (error, result) => {
-          if (error) {
-            console.error('Cloudinary upload error:', JSON.stringify(error));
-            return res.status(500).json({
-              success: false,
-              message: error.message || 'Upload failed',
-              error: error.message,
-              http_code: error.http_code,
-            });
-          }
+    // Convert buffer to base64 data URI — more reliable than upload_stream with pipe
+    const b64 = req.file.buffer.toString('base64');
+    const mimeType = type === 'apk' ? 'application/vnd.android.package-archive' : (req.file.mimetype || 'application/octet-stream');
+    const dataURI = `data:${mimeType};base64,${b64}`;
 
-          res.json({
-            success: true,
-            data: {
-              url: result.secure_url,
-              publicId: result.public_id,
-            },
-          });
-        }
-      );
+    const result = await cloudinary.uploader.upload(dataURI, {
+      folder: `eduplay/${type}s`,
+      resource_type: resourceType,
+    });
 
-    // Pipe the file buffer to Cloudinary
-    require('stream').Readable.from(req.file.buffer).pipe(uploadStream);
+    res.json({
+      success: true,
+      data: {
+        url: result.secure_url,
+        publicId: result.public_id,
+      },
+    });
   } catch (error) {
-    console.error('Upload controller error:', error);
+    console.error('Upload error:', JSON.stringify(error));
     res.status(500).json({
       success: false,
-      message: 'Upload failed',
-      error: error.message,
+      message: error.message || 'Upload failed',
+      http_code: error.http_code,
     });
   }
 };

@@ -11,14 +11,10 @@ const logger = require('../utils/logger');
 /**
  * Configure Cloudinary - com fallback para valores diretos
  */
-if (!config.cloudinary.cloudName || !config.cloudinary.apiKey || !config.cloudinary.apiSecret) {
-  logger.error('❌ Cloudinary credentials not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET env vars.');
-}
-
 cloudinary.config({
-  cloud_name: config.cloudinary.cloudName,
-  api_key: config.cloudinary.apiKey,
-  api_secret: config.cloudinary.apiSecret,
+  cloud_name: config.cloudinary.cloudName || 'dexlzykqm',
+  api_key: config.cloudinary.apiKey || '761719984596219',
+  api_secret: config.cloudinary.apiSecret || 'QkAyuumJD-_EslezBPd2UQVYKew',
   secure: true,
 });
 
