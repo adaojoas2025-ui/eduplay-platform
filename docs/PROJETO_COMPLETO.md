@@ -4375,3 +4375,94 @@ Este documento representa o estado atual completo do projeto **EduplayJA**, um m
 ---
 
 *Documentação gerada com ❤️ por [Claude Code](https://claude.com/claude-code)*
+
+---
+
+## 🔑 Credenciais e Serviços (atualizado 27/02/2026)
+
+### Cloudinary (Storage para Imagens)
+- **Cloud name**: `dexlzykqm`
+- **API Key**: `915819541386718` (key "Untitled", criada 27/02/2026)
+- **API Secret**: `XZKW5DwOEzrwindclMB1HnRhvkM`
+- **Uso**: Upload de imagens/screenshots (unsigned preset `eduplay_apps` no frontend)
+
+### Supabase (Storage para APKs)
+- **Projeto**: EducaplayJA (criado 27/02/2026)
+- **Senha do banco**: ver painel do Render / Supabase
+- **Project URL**: `https://ssjeotuuqlmkyeiihqxw.supabase.co`
+- **Publishable key (anon)**: configurada no Render como `SUPABASE_URL`
+- **Secret key (service_role)**: configurada no Render como `SUPABASE_SERVICE_ROLE_KEY`
+- **Bucket**: `Apks` (público, limite 50MB) ← nome com A maiúsculo
+- **Uso**: Upload de APKs via backend (REST API direto, sem JS client)
+
+### Variáveis de Ambiente no Render (Backend)
+- `SUPABASE_URL` = URL do projeto Supabase
+- `SUPABASE_SERVICE_ROLE_KEY` = service_role key (ver painel Supabase)
+- `CLOUDINARY_API_KEY` = `915819541386718`
+- `CLOUDINARY_API_SECRET` = ver painel Cloudinary ← não usado (hardcoded no código)
+- `CLOUDINARY_CLOUD_NAME` = `dexlzykqm` ← não usado (hardcoded)
+
+---
+
+## 📝 Changelog — 26 e 27/02/2026
+
+### 27/02/2026 — Upload de APK corrigido (depois de muita investigação)
+
+**Problema**: Upload de APK falhava com "Invalid Signature" do Cloudinary.
+
+**Investigação**:
+1. `upload_stream` + pipe causava assinatura incorreta no SDK → substituído por `upload()` com base64 data URI
+2. Render tinha `CLOUDINARY_API_SECRET` com uppercase 'I' errado → restaurado fallback
+3. O fallback `||` nunca executa quando env var está definida (mesmo errada) → hardcode direto
+4. Com hardcode, assinatura bate mas Cloudinary ainda rejeita → api_secret do Root key estava com problema no dashboard
+5. Gerado novo par de credenciais (key "Untitled") → assinatura aceita, mas novo erro: **arquivo 13MB > limite 10MB do Cloudinary free**
+6. Migração para **Firebase Storage** → requer plano pago (Blaze)
+7. Migração para **Supabase Storage** → gratuito, sem limite por arquivo, funciona
+
+**Arquivos modificados**:
+- `backend/src/api/controllers/upload.controller.js` — APKs → Supabase REST API; imagens → Cloudinary
+- `backend/src/config/cloudinary.js` — credenciais hardcoded (sem env vars)
+- `backend/src/config/supabase.js` — criado (cliente Supabase, usado apenas para configuração)
+
+**Fluxo de upload atual**:
+- **Imagens** (screenshots, ícones): frontend → Cloudinary diretamente (unsigned preset `eduplay_apps`)
+- **APKs**: frontend → backend `/api/v1/upload` → Supabase Storage bucket `Apks`
+
+### 27/02/2026 — Correções no sistema de Apps
+
+**Problemas corrigidos**:
+- `prisma.app` → `prisma.apps` (nome correto do modelo)
+- `prisma.appReview` → `prisma.app_reviews`
+- `prisma.appDownload` → `app_downloads`
+- Relação `reviews` → `app_reviews` nos includes
+- UUID não gerado ao criar app → adicionado `crypto.randomUUID()`
+
+**Arquivos modificados**:
+- `backend/src/repositories/app.repository.js`
+- `backend/src/services/app.service.js`
+
+### 27/02/2026 — Apps em Destaque na Homepage
+
+**Funcionalidade**: Apps publicados agora aparecem na homepage (`/`) na seção "Apps em Destaque", abaixo de "Produtos em Destaque".
+
+**Comportamento**:
+- Seção só aparece quando há ao menos um app com `status: PUBLISHED`
+- Exibe até 6 apps ordenados por downloads (desc)
+- Card de app: ícone arredondado, título, developer, rating ⭐, badge GRÁTIS/preço
+- Scroll horizontal com setas (igual a "Produtos em Destaque")
+- Link "Ver todos →" aponta para `/apps`
+- Clique no card navega para `/apps/{slug}`
+
+**Detalhe técnico**: `fetchFeaturedApps` usa `axios.get(`${API_URL}/apps`)` diretamente (igual ao AppsStore.jsx), não o wrapper `api` — o wrapper `api` tem `baseURL: VITE_API_URL` sem `/api/v1`, enquanto `API_URL` (de `api.config.js`) sempre inclui `/api/v1`.
+
+**Arquivos modificados**:
+- `frontend/src/pages/Home.jsx` — estado `featuredApps`, ref `appsScrollRef`, função `fetchFeaturedApps`, seção JSX "Apps em Destaque"
+
+---
+
+### 26/02/2026 — Correções diversas
+
+- Permissões de admin corrigidas
+- Lógica de comissões ajustada (90%/10%, produtos do admin = 100% plataforma)
+- Admin Dashboard: corrigido React Error #31 (objeto renderizado como filho JSX)
+- APK upload migrado de unsigned (limite 10MB) para signed via backend (limite 100MB multer)
