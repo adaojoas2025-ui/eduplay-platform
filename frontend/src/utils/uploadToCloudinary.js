@@ -18,7 +18,7 @@ export const uploadToCloudinary = async (file, type = 'image') => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Upload failed');
+      throw new Error(errorData.message || errorData.error || 'Upload failed');
     }
 
     const result = await response.json();

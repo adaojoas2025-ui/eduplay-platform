@@ -32,11 +32,12 @@ const uploadFile = async (req, res) => {
         },
         (error, result) => {
           if (error) {
-            console.error('Cloudinary upload error:', error);
+            console.error('Cloudinary upload error:', JSON.stringify(error));
             return res.status(500).json({
               success: false,
-              message: 'Upload failed',
+              message: error.message || 'Upload failed',
               error: error.message,
+              http_code: error.http_code,
             });
           }
 
