@@ -29,6 +29,9 @@ const uploadFile = async (req, res) => {
     const mimeType = type === 'apk' ? 'application/vnd.android.package-archive' : (req.file.mimetype || 'application/octet-stream');
     const dataURI = `data:${mimeType};base64,${b64}`;
 
+    const cfg = cloudinary.config();
+    console.log('Cloudinary cfg — cloud_name:', cfg.cloud_name, 'api_key:', cfg.api_key, 'secret_len:', cfg.api_secret?.length);
+
     const result = await cloudinary.uploader.upload(dataURI, {
       folder: `eduplay/${type}s`,
       resource_type: resourceType,
