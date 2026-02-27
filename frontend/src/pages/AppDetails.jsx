@@ -158,8 +158,8 @@ export default function AppDetails() {
 
   if (!app) return null;
 
-  // Se usuário selecionou versão paga MAS já comprou, não mostrar checkout
-  if (selectedVersion === 'PAID_NO_ADS' && !hasPurchased) {
+  // Só mostrar checkout quando usuário clicar em "Comprar"
+  if (showCheckout && selectedVersion === 'PAID_NO_ADS' && !hasPurchased) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-4xl mx-auto px-4">
@@ -252,7 +252,7 @@ export default function AppDetails() {
                   </svg>
                   <span>Pagamento seguro via Mercado Pago</span>
                 </div>
-                <button onClick={() => window.location.reload()} className="block w-full text-center text-blue-600 hover:underline mt-4">← Voltar às opções</button>
+                <button onClick={() => setShowCheckout(false)} className="block w-full text-center text-blue-600 hover:underline mt-4">← Voltar às opções</button>
               </div>
             </div>
           </div>
@@ -325,6 +325,11 @@ export default function AppDetails() {
               {selectedVersion === 'PAID_NO_ADS' && hasPurchased && (
                 <button onClick={handleDownload} className="mt-4 w-full px-12 py-4 bg-green-600 text-white text-lg font-bold rounded-lg hover:bg-green-700 transition shadow-lg">
                   📱 Baixar Versão Sem Propaganda
+                </button>
+              )}
+              {selectedVersion === 'PAID_NO_ADS' && !hasPurchased && (
+                <button onClick={() => setShowCheckout(true)} className="mt-4 w-full px-12 py-4 bg-purple-600 text-white text-lg font-bold rounded-lg hover:bg-purple-700 transition shadow-lg">
+                  Comprar - R$ {app.paidNoAdsPrice.toFixed(2)}
                 </button>
               )}
             </div>
