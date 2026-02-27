@@ -3,7 +3,7 @@ const logger = require('../utils/logger');
 
 const createApp = async (appData) => {
   try {
-    return await prisma.app.create({
+    return await prisma.apps.create({
       data: appData,
     });
   } catch (error) {
@@ -14,7 +14,7 @@ const createApp = async (appData) => {
 
 const findAppById = async (appId) => {
   try {
-    return await prisma.app.findUnique({
+    return await prisma.apps.findUnique({
       where: { id: appId },
       include: {
         reviews: {
@@ -31,7 +31,7 @@ const findAppById = async (appId) => {
 
 const findAppBySlug = async (slug) => {
   try {
-    return await prisma.app.findUnique({
+    return await prisma.apps.findUnique({
       where: { slug },
       include: {
         reviews: {
@@ -92,7 +92,7 @@ const findAllApps = async (filters = {}, pagination = {}) => {
     }
 
     const [apps, total] = await Promise.all([
-      prisma.app.findMany({
+      prisma.apps.findMany({
         where,
         skip,
         take: limit,
@@ -103,7 +103,7 @@ const findAllApps = async (filters = {}, pagination = {}) => {
           },
         },
       }),
-      prisma.app.count({ where }),
+      prisma.apps.count({ where }),
     ]);
 
     return {
@@ -123,7 +123,7 @@ const findAllApps = async (filters = {}, pagination = {}) => {
 
 const updateApp = async (appId, updateData) => {
   try {
-    return await prisma.app.update({
+    return await prisma.apps.update({
       where: { id: appId },
       data: updateData,
     });
@@ -135,7 +135,7 @@ const updateApp = async (appId, updateData) => {
 
 const deleteApp = async (appId) => {
   try {
-    return await prisma.app.delete({
+    return await prisma.apps.delete({
       where: { id: appId },
     });
   } catch (error) {
@@ -146,7 +146,7 @@ const deleteApp = async (appId) => {
 
 const incrementDownloads = async (appId) => {
   try {
-    return await prisma.app.update({
+    return await prisma.apps.update({
       where: { id: appId },
       data: {
         downloads: { increment: 1 },
@@ -160,19 +160,19 @@ const incrementDownloads = async (appId) => {
 
 const createAppReview = async (reviewData) => {
   try {
-    const review = await prisma.appReview.create({
+    const review = await prisma.app_reviews.create({
       data: reviewData,
     });
 
     // Update app rating
-    const reviews = await prisma.appReview.findMany({
+    const reviews = await prisma.app_reviews.findMany({
       where: { appId: reviewData.appId },
       select: { rating: true },
     });
 
     const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
 
-    await prisma.app.update({
+    await prisma.apps.update({
       where: { id: reviewData.appId },
       data: {
         rating: avgRating,
@@ -189,7 +189,7 @@ const createAppReview = async (reviewData) => {
 
 const recordDownload = async (downloadData) => {
   try {
-    return await prisma.appDownload.create({
+    return await prisma.app_downloads.create({
       data: downloadData,
     });
   } catch (error) {
