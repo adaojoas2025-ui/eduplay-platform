@@ -1,5 +1,8 @@
 const { cloudinary } = require('../../config/cloudinary');
+const { bucket } = require('../../config/firebase');
 const multer = require('multer');
+const path = require('path');
+const crypto = require('crypto');
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -9,7 +12,29 @@ const upload = multer({
 });
 
 /**
- * Upload file to Cloudinary
+ * Upload APK to Firebase Storage
+ */
+const uploadToFirebase = async (file, type) => {
+  if (!bucket) {
+    throw new Error('Firebase Storage not configured');
+  }
+
+  const ext = path.extname(file.originalname) || '.apk';
+  const uniqueName = `eduplay/${type}s/${crypto.randomUUID()}${ext}`;
+  const fileRef = bucket.file(uniqueName);
+
+  await fileRef.save(file.buffer, {
+    metadata: { contentType: file.mimetype || 'application/vnd.android.package-archive' },
+  });
+
+  await fileRef.makePublic();
+
+  const url = `https://storage.googleapis.com/${bucket.name}/${uniqueName}`;
+  return { url, publicId: uniqueName };
+};
+
+/**
+ * Upload file
  * POST /api/v1/upload
  */
 const uploadFile = async (req, res) => {
@@ -22,19 +47,21 @@ const uploadFile = async (req, res) => {
     }
 
     const { type = 'image' } = req.body;
-    const resourceType = (type === 'apk' || type === 'file') ? 'raw' : 'auto';
 
-    // Convert buffer to base64 data URI — more reliable than upload_stream with pipe
+    // APK/raw files → Firebase Storage (no size limit issues)
+    if (type === 'apk' || type === 'file') {
+      const result = await uploadToFirebase(req.file, type);
+      return res.json({ success: true, data: result });
+    }
+
+    // Images → Cloudinary
     const b64 = req.file.buffer.toString('base64');
-    const mimeType = type === 'apk' ? 'application/vnd.android.package-archive' : (req.file.mimetype || 'application/octet-stream');
+    const mimeType = req.file.mimetype || 'application/octet-stream';
     const dataURI = `data:${mimeType};base64,${b64}`;
-
-    const cfg = cloudinary.config();
-    console.log('Cloudinary cfg — cloud_name:', cfg.cloud_name, 'api_key:', cfg.api_key, 'secret_len:', cfg.api_secret?.length);
 
     const result = await cloudinary.uploader.upload(dataURI, {
       folder: `eduplay/${type}s`,
-      resource_type: resourceType,
+      resource_type: 'auto',
     });
 
     res.json({
@@ -45,11 +72,10 @@ const uploadFile = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Upload error:', JSON.stringify(error));
+    console.error('Upload error:', error.message || JSON.stringify(error));
     res.status(500).json({
       success: false,
       message: error.message || 'Upload failed',
-      http_code: error.http_code,
     });
   }
 };
