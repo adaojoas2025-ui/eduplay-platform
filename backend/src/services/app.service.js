@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const appRepository = require('../repositories/app.repository');
 const { APP_STATUS } = require('../constants/app.constants');
 const logger = require('../utils/logger');
@@ -12,6 +13,7 @@ const createApp = async (appData) => {
 
     const app = await appRepository.createApp({
       ...appData,
+      id: crypto.randomUUID(),
       slug,
       status: 'PUBLISHED', // Auto-publish apps created by admin
     });
