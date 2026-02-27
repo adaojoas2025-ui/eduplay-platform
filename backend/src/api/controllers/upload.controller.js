@@ -1,7 +1,5 @@
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
 
 // Configure Cloudinary
 cloudinary.config({
@@ -33,35 +31,8 @@ const uploadFile = async (req, res) => {
     const { type = 'image' } = req.body;
     const resourceType = (type === 'apk' || type === 'file') ? 'raw' : type;
 
-    // For APK files (large files), save to server's public/uploads directory
-    if (resourceType === 'raw') {
-      // Create uploads directory if it doesn't exist
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'apks');
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
-
-      // Generate unique filename
-      const filename = `${Date.now()}-${req.file.originalname}`;
-      const filePath = path.join(uploadsDir, filename);
-
-      // Save file to server
-      fs.writeFileSync(filePath, req.file.buffer);
-
-      // Generate public URL
-      const baseUrl = process.env.BACKEND_URL || 'http://localhost:3000';
-      const publicUrl = `${baseUrl}/uploads/apks/${filename}`;
-
-      return res.json({
-        success: true,
-        data: {
-          url: publicUrl,
-          publicId: filename,
-        },
-      });
-    } else {
-      // For images, continue using Cloudinary
-      const uploadStream = cloudinary.uploader.upload_stream(
+    // Upload to Cloudinary (images and raw/APK files via signed upload — 100MB limit)
+    const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: `eduplay/${type}s`,
           resource_type: resourceType,
@@ -86,9 +57,8 @@ const uploadFile = async (req, res) => {
         }
       );
 
-      // Pipe the file buffer to Cloudinary
-      require('stream').Readable.from(req.file.buffer).pipe(uploadStream);
-    }
+    // Pipe the file buffer to Cloudinary
+    require('stream').Readable.from(req.file.buffer).pipe(uploadStream);
   } catch (error) {
     console.error('Upload controller error:', error);
     res.status(500).json({
