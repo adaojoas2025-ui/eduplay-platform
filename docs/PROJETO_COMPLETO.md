@@ -4441,6 +4441,37 @@ Este documento representa o estado atual completo do projeto **EduplayJA**, um m
 - `backend/src/repositories/app.repository.js`
 - `backend/src/services/app.service.js`
 
+### 28/02/2026 — Pagamento real via Mercado Pago para compra de apps
+
+**Problema**: Ao clicar em "Pagar Agora" na compra de app, o pagamento era aprovado instantaneamente via `/test/approve-payment` sem passar pelo Mercado Pago. Usuário recebia o app sem pagar.
+
+**Causa raiz**: `handlePurchaseApp()` no frontend chamava sequencialmente `POST /apps/:id/purchase` e `POST /test/approve-payment/:orderId` (modo de teste automático).
+
+**Solução**: Integração completa com Mercado Pago, idêntica ao fluxo dos produtos.
+
+**Fluxo implementado**:
+1. Usuário clica "Pagar Agora" → frontend chama `POST /apps/:id/purchase`
+2. Backend cria pedido + cria preferência no Mercado Pago (`createAppPaymentPreference`)
+3. Backend retorna `paymentUrl` (init_point do Mercado Pago)
+4. Frontend redireciona para `window.location.href = paymentUrl`
+5. Usuário paga (PIX ou cartão) no Mercado Pago
+6. Mercado Pago chama webhook `POST /api/v1/payments/webhook`
+7. Webhook atualiza pedido para COMPLETED (sem comissão — 100% para plataforma)
+8. Usuário é redirecionado de volta para `/apps/{slug}` e pode baixar
+
+**Correções adicionais**:
+- `purchaseApp` em `app.service.js` recebia pedido sem `id` → adicionado `id: crypto.randomUUID()`
+- Webhook `processPaymentWebhook` tentava enviar email de produto para pedidos de app (productId null) → adicionado `if (order.productId)` antes do email
+- `AppDetails.jsx` não mostrava detalhes antes do checkout → corrigido: checkout só aparece ao clicar "Comprar", não na entrada da página
+
+**Arquivos modificados**:
+- `backend/src/services/payment.service.js` — nova função `createAppPaymentPreference(order, app)`; fix no webhook
+- `backend/src/services/app.service.js` — `purchaseApp()` chama `createAppPaymentPreference`, retorna `paymentUrl`
+- `backend/src/api/controllers/app.controller.js` — resposta inclui `paymentUrl`
+- `frontend/src/pages/AppDetails.jsx` — `handlePurchaseApp()` redireciona para `paymentUrl`; checkout só exibido com `showCheckout === true`
+
+---
+
 ### 27/02/2026 — Apps em Destaque na Homepage
 
 **Funcionalidade**: Apps publicados agora aparecem na homepage (`/`) na seção "Apps em Destaque", abaixo de "Produtos em Destaque".
