@@ -113,19 +113,16 @@ export default function AppDetails() {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      console.log('🔄 Criando pedido do app...');
-      const orderResponse = await axios.post(`${API_URL}/apps/${app.id}/purchase`, { version: selectedVersion, price: app.paidNoAdsPrice }, { headers: { Authorization: `Bearer ${token}` } });
-      const orderId = orderResponse.data.data.orderId;
-      console.log('✅ Pedido criado:', orderId);
-      console.log('💰 Aprovando pagamento de teste...');
-      await axios.post(`${API_URL}/test/approve-payment/${orderId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
-      console.log('✅ Pagamento aprovado!');
-      alert(`Compra aprovada com sucesso! Pedido: ${orderId}\n\nRedirecionando para Meus Produtos...`);
-      navigate('/my-products');
+      const orderResponse = await axios.post(
+        `${API_URL}/apps/${app.id}/purchase`,
+        { version: selectedVersion, price: app.paidNoAdsPrice },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const { paymentUrl } = orderResponse.data.data;
+      window.location.href = paymentUrl;
     } catch (err) {
       console.error('❌ Erro na compra:', err);
       setError(err.response?.data?.message || 'Erro ao processar compra. Tente novamente.');
-    } finally {
       setLoading(false);
     }
   };

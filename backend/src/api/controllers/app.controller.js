@@ -259,7 +259,7 @@ const purchaseApp = asyncHandler(async (req, res) => {
     message: 'Purchase order created successfully',
     data: {
       orderId: result.order.id,
-      initPoint: result.initPoint,
+      paymentUrl: result.paymentUrl,
       status: result.order.status,
     },
   });

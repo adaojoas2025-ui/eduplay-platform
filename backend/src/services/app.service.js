@@ -205,6 +205,7 @@ const purchaseApp = async (appId, userId, version, price) => {
   try {
     const orderRepository = require('../repositories/order.repository');
     const userRepository = require('../repositories/user.repository');
+    const paymentService = require('./payment.service');
 
     // Get app details
     const app = await appRepository.findAppById(appId);
@@ -248,16 +249,19 @@ const purchaseApp = async (appId, userId, version, price) => {
       },
     });
 
-    logger.info('App purchase order created (test payment mode)', {
+    logger.info('App purchase order created', {
       appId: app.id,
       orderId: order.id,
       userId: user.id,
       price,
     });
 
+    // Create Mercado Pago payment preference (same flow as products)
+    const preference = await paymentService.createAppPaymentPreference(order, app);
+
     return {
       order,
-      // No initPoint - will use test payment approval like products
+      paymentUrl: preference.initPoint,
     };
   } catch (error) {
     logger.error('Error in purchaseApp service:', error);

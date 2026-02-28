@@ -111,6 +111,80 @@ const createPaymentPreference = async (order) => {
 };
 
 /**
+ * Create payment preference for app order
+ * @param {Object} order - Order object (with buyer included)
+ * @param {Object} app - App object
+ * @returns {Promise<Object>} Payment preference
+ */
+const createAppPaymentPreference = async (order, app) => {
+  try {
+    const nameParts = (order.buyer.name || '').trim().split(' ');
+    const firstName = nameParts[0] || 'Cliente';
+    const lastName = nameParts.slice(1).join(' ') || 'EducaplayJA';
+
+    const preferenceData = {
+      items: [
+        {
+          id: app.id,
+          title: app.title.substring(0, 256),
+          description: app.shortDescription
+            ? app.shortDescription.substring(0, 256)
+            : app.title.substring(0, 256),
+          picture_url: app.iconUrl || `${config.frontend.url}/logo.png`,
+          category_id: 'others',
+          quantity: 1,
+          currency_id: 'BRL',
+          unit_price: Number(order.amount),
+        },
+      ],
+      payer: {
+        email: order.buyer.email,
+        name: order.buyer.name,
+        first_name: firstName,
+        last_name: lastName,
+      },
+      payment_methods: {
+        excluded_payment_types: [
+          { id: 'ticket' },
+        ],
+        installments: 12,
+      },
+      back_urls: {
+        success: `${config.frontend.url}/#/apps/${app.slug}`,
+        failure: `${config.frontend.url}/#/apps/${app.slug}`,
+        pending: `${config.frontend.url}/#/apps/${app.slug}`,
+      },
+      auto_return: 'approved',
+      notification_url: `${config.backend.url}/api/v1/payments/webhook`,
+      external_reference: order.id,
+      statement_descriptor: 'EDUCAPLAYJA',
+      binary_mode: false,
+    };
+
+    const preference = await mercadopago.createPreference(preferenceData);
+
+    await orderRepository.updateOrder(order.id, {
+      paymentId: preference.id,
+    });
+
+    logger.info('App payment preference created', {
+      orderId: order.id,
+      appId: app.id,
+      preferenceId: preference.id,
+    });
+
+    return {
+      preferenceId: preference.id,
+      initPoint: preference.init_point,
+      sandboxInitPoint: preference.sandbox_init_point,
+    };
+  } catch (error) {
+    logger.error('Error creating app payment preference:', error);
+    throw error;
+  }
+};
+
+/**
  * Process payment webhook notification
  * @param {Object} notification - Webhook notification data
  * @returns {Promise<void>}
@@ -191,11 +265,15 @@ const processPaymentWebhook = async (notification) => {
 
     // If payment approved, send product access email and process PIX transfer
     if (payment.status === 'approved') {
-      // Send product access email
+      // Send product access email (skip for app purchases)
       try {
-        const product = await productRepository.findProductById(order.productId);
-        await emailService.sendProductAccessEmail(order.buyer, product, order);
-        logger.info('Product access email sent', { orderId: order.id, buyerEmail: order.buyer.email });
+        if (order.productId) {
+          const product = await productRepository.findProductById(order.productId);
+          await emailService.sendProductAccessEmail(order.buyer, product, order);
+          logger.info('Product access email sent', { orderId: order.id, buyerEmail: order.buyer.email });
+        } else {
+          logger.info('App purchase approved via webhook — no product email', { orderId: order.id });
+        }
       } catch (emailError) {
         logger.error('Failed to send product access email', { error: emailError, orderId: order.id });
         // Don't throw - order is still processed successfully
@@ -358,6 +436,7 @@ const getOrderPaymentDetails = async (orderId, userId) => {
 
 module.exports = {
   createPaymentPreference,
+  createAppPaymentPreference,
   processPaymentWebhook,
   verifyPaymentStatus,
   createRefund,
