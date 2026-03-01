@@ -109,6 +109,7 @@ const updateApp = asyncHandler(async (req, res) => {
   const {
     id: appId,
     reviews,
+    app_reviews,
     createdAt,
     updatedAt,
     downloads,
