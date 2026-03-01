@@ -238,8 +238,8 @@ const ProductDetails = () => {
 
 // LOGIN
 const Login = () => {
-  const [email, setEmail] = useState('teste@exemplo.com');
-  const [password, setPassword] = useState('Senha123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -434,12 +434,6 @@ const Login = () => {
               Criar conta grátis
             </Link>
           </p>
-        </div>
-
-        <div className="mt-6 text-xs text-gray-500 bg-gray-50 p-3 rounded">
-          <p className="font-semibold mb-1">Credenciais de teste:</p>
-          <p><strong>Vendedor:</strong> teste@exemplo.com / Senha123</p>
-          <p><strong>Admin:</strong> admin@eduplay.com.br / admin123</p>
         </div>
 
         <Link to="/" className="text-purple-600 hover:underline mt-4 inline-block">← Voltar para Home</Link>
