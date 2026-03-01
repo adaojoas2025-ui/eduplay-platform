@@ -58,4 +58,16 @@ router.post('/clear-financial-data', authenticate, async (req, res) => {
   }
 });
 
+// TEMPORARY: Delete all non-admin users
+router.post('/clear-users', authenticate, async (req, res) => {
+  try {
+    const deleted = await prisma.users.deleteMany({
+      where: { role: { not: 'ADMIN' } },
+    });
+    res.json({ success: true, message: `${deleted.count} usuário(s) removido(s) com sucesso` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
