@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 
 export default function MyProducts() {
   const [purchases, setPurchases] = useState([]);
+  const [appDetails, setAppDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -22,7 +23,21 @@ export default function MyProducts() {
       });
 
       if (response.data.success) {
-        setPurchases(response.data.data);
+        const data = response.data.data;
+        setPurchases(data);
+
+        // Fetch icon for app purchases
+        const appPurchases = data.filter(p => p.metadata?.type === 'APP_PURCHASE' && p.metadata?.appId);
+        if (appPurchases.length > 0) {
+          const detailsMap = {};
+          await Promise.all(appPurchases.map(async (p) => {
+            try {
+              const appRes = await axios.get(`${API_URL}/apps/${p.metadata.appId}`);
+              detailsMap[p.metadata.appId] = appRes.data.data;
+            } catch (e) {}
+          }));
+          setAppDetails(detailsMap);
+        }
       }
     } catch (err) {
       console.error('Error fetching purchases:', err);
@@ -86,8 +101,9 @@ export default function MyProducts() {
               const isApp = !purchase.product && purchase.metadata && purchase.metadata.type === 'APP_PURCHASE';
               const title = isApp ? purchase.metadata.appTitle : purchase.product?.title;
               const description = isApp ? `App - ${purchase.metadata.appTitle}` : purchase.product?.description;
+              const appIcon = isApp ? appDetails[purchase.metadata.appId]?.iconUrl : null;
               const thumbnailUrl = isApp
-                ? 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%234F46E5" width="400" height="225"/%3E%3Ctext fill="white" font-family="sans-serif" font-size="60" dy="3.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E📱%3C/text%3E%3C/svg%3E'
+                ? (appIcon || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%234F46E5" width="400" height="225"/%3E%3Ctext fill="white" font-family="sans-serif" font-size="60" dy="3.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E📱%3C/text%3E%3C/svg%3E')
                 : (purchase.product?.thumbnailUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%23ddd" width="400" height="225"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="20" dy="3.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3ESem Imagem%3C/text%3E%3C/svg%3E');
 
               return (
@@ -98,7 +114,7 @@ export default function MyProducts() {
                   <img
                     src={thumbnailUrl}
                     alt={title}
-                    className="w-full h-48 object-cover"
+                    className={`w-full h-48 ${isApp && appIcon ? 'object-contain bg-indigo-50 p-4' : 'object-cover'}`}
                   />
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-2">
