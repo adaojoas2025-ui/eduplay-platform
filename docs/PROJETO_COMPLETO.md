@@ -4491,6 +4491,44 @@ Este documento representa o estado atual completo do projeto **EduplayJA**, um m
 
 ---
 
+### 01/03/2026 — Remoção de usuários no painel admin
+
+**Funcionalidade**: Administrador agora pode remover usuários (exceto outros admins) diretamente pelo painel `/admin/users`.
+
+**Comportamento**:
+- Botão "Remover" (vermelho, ícone de lixeira) aparece para todos os usuários exceto `role === 'ADMIN'`
+- Confirmação via `confirm()` antes de deletar (exibe nome do usuário)
+- Backend bloqueia deleção de usuários com `role === 'ADMIN'` (retorna 403)
+
+**Correção incluída**: `adminAPI` estava `undefined` em `api.js` (bug pré-existente) — todos os botões do painel de usuários (Aprovar, Rejeitar, Suspender) não funcionavam. Corrigido adicionando o objeto `adminAPI` ao `api.js`.
+
+**Arquivos modificados**:
+- `frontend/src/services/api.js` — adicionado `adminAPI` com métodos `getUsers`, `approveProducer`, `rejectProducer`, `suspendUser`, `deleteUser`
+- `frontend/src/pages/admin/Users.jsx` — adicionado `handleDelete()`, botão "Remover", import `FiTrash2`
+
+---
+
+### 01/03/2026 — Rotas de limpeza de dados de teste
+
+**Funcionalidade**: Rotas temporárias para limpar dados de teste no ambiente de produção.
+
+**Endpoints** (requerem autenticação):
+- `POST /api/v1/test/clear-financial-data` — deleta todos os `orders` (cascade: `commissions`, `pix_transfers`)
+- `POST /api/v1/test/clear-users` — deleta todos os usuários com `role !== 'ADMIN'`
+
+**Como usar** (console do navegador, logado como admin):
+```js
+fetch('https://eduplay-platform.onrender.com/api/v1/test/clear-financial-data', {
+  method: 'POST',
+  headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token'), 'Content-Type': 'application/json' }
+}).then(r => r.json()).then(console.log)
+```
+
+**Arquivos modificados**:
+- `backend/src/api/routes/test.routes.js` — duas novas rotas de limpeza
+
+---
+
 ### 26/02/2026 — Correções diversas
 
 - Permissões de admin corrigidas
