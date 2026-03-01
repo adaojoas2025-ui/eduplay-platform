@@ -117,4 +117,13 @@ export const userAPI = {
   upgradeToProducer: (data) => api.post('/users/upgrade-to-producer', data),
 };
 
+// Admin API endpoints
+export const adminAPI = {
+  getUsers: (params) => api.get('/users', { params }),
+  approveProducer: (id) => api.patch(`/users/${id}`, { status: 'APPROVED' }),
+  rejectProducer: (id) => api.patch(`/users/${id}`, { status: 'REJECTED' }),
+  suspendUser: (id) => api.post(`/users/${id}/suspend`),
+  deleteUser: (id) => api.delete(`/users/${id}`),
+};
+
 export default api;

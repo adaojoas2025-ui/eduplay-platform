@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api';
-import { FiCheck, FiX, FiSlash } from 'react-icons/fi';
+import { FiCheck, FiX, FiSlash, FiTrash2 } from 'react-icons/fi';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -55,6 +55,18 @@ export default function AdminUsers() {
       alert('Usuário suspenso');
     } catch (error) {
       alert('Erro ao suspender usuário');
+    }
+  }
+
+  async function handleDelete(id, name) {
+    if (!confirm(`Tem certeza que deseja remover o usuário "${name}"? Esta ação não pode ser desfeita.`)) return;
+
+    try {
+      await adminAPI.deleteUser(id);
+      fetchUsers();
+      alert('Usuário removido com sucesso');
+    } catch (error) {
+      alert('Erro ao remover usuário');
     }
   }
 
@@ -146,6 +158,15 @@ export default function AdminUsers() {
                       >
                         <FiSlash className="h-4 w-4 mr-1" />
                         Suspender
+                      </button>
+                    )}
+                    {user.role !== 'ADMIN' && (
+                      <button
+                        onClick={() => handleDelete(user.id, user.name)}
+                        className="btn bg-red-600 text-white hover:bg-red-700 flex items-center text-sm px-2 py-1"
+                      >
+                        <FiTrash2 className="h-4 w-4 mr-1" />
+                        Remover
                       </button>
                     )}
                   </div>

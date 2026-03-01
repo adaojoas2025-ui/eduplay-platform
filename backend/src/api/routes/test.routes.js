@@ -48,4 +48,14 @@ router.post('/publish-product/:productId', async (req, res) => {
   }
 });
 
+// TEMPORARY: Clear all financial data (orders, commissions, pix_transfers via cascade)
+router.post('/clear-financial-data', authenticate, async (req, res) => {
+  try {
+    const deleted = await prisma.orders.deleteMany({});
+    res.json({ success: true, message: `${deleted.count} pedido(s) removido(s) com sucesso` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
