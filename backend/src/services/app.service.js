@@ -158,6 +158,7 @@ const downloadApp = async (appId, version, userId = null) => {
 
     // Record download
     await appRepository.recordDownload({
+      id: crypto.randomUUID(),
       appId,
       version,
       userId,
