@@ -636,6 +636,37 @@ const sendGuestPurchaseCredentials = async (user, tempPassword) => {
   }
 };
 
+const sendLoginReminderEmail = async (user) => {
+  try {
+    const loginUrl = `${config.frontend.url}/#/login`;
+    const resetUrl = `${config.frontend.url}/#/reset-password`;
+
+    await emailConfig.sendEmail({
+      to: user.email,
+      subject: 'Seu pedido foi recebido — EducaplayJA',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #4F46E5;">Olá, ${user.name}!</h2>
+          <p>Recebemos seu pedido na EducaplayJA.</p>
+          <p>Após a confirmação do pagamento, seu produto estará disponível na sua conta.</p>
+          <a href="${loginUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; margin: 16px 0;">
+            Acessar Minha Conta
+          </a>
+          <p style="color: #6B7280; font-size: 14px;">
+            Caso tenha esquecido sua senha,
+            <a href="${resetUrl}" style="color: #4F46E5;">clique aqui para redefini-la</a>.
+          </p>
+          <p style="color: #6B7280; font-size: 14px;">Equipe EducaplayJA</p>
+        </div>
+      `,
+    });
+    logger.info('Login reminder email sent', { userId: user.id });
+  } catch (error) {
+    logger.error('Error sending login reminder email', { error: error.message });
+    throw error;
+  }
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendVerificationEmail,
@@ -650,4 +681,5 @@ module.exports = {
   sendProductRejectedEmail,
   sendProductPendingApprovalEmail,
   sendGuestPurchaseCredentials,
+  sendLoginReminderEmail,
 };

@@ -65,12 +65,13 @@ const { user, isAuthenticated } = useAuth();
         paymentType: 'pix',
       });
 
-      const { paymentUrl, accessToken, refreshToken, isNewUser } = res.data.data;
+      const { paymentUrl, accessToken, refreshToken, isNewUser, user } = res.data.data;
 
-      // Auto-login with the returned tokens
+      // Auto-login with the returned tokens and user data
       if (accessToken) {
         localStorage.setItem('token', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
+        if (user) localStorage.setItem('user', JSON.stringify(user));
       }
 
       // Save guest info so OrderSuccess can show personalized instructions

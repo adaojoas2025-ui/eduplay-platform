@@ -65,16 +65,20 @@ function OrderPending() {
     );
   }
 
+  const isCompleted = order?.status === 'COMPLETED' || order?.status === 'APPROVED';
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-2xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="text-yellow-500 text-6xl mb-4">⏳</div>
+          <div className={`text-6xl mb-4 ${isCompleted ? 'text-green-500' : 'text-yellow-500'}`}>
+            {isCompleted ? '✓' : '⏳'}
+          </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Pagamento Pendente
+            {isCompleted ? 'Pagamento Confirmado!' : 'Pagamento Pendente'}
           </h1>
           <p className="text-gray-600 mb-8">
-            Seu pagamento está sendo processado
+            {isCompleted ? 'Seu pagamento foi processado com sucesso' : 'Seu pagamento está sendo processado'}
           </p>
 
           {order && (
@@ -137,10 +141,10 @@ function OrderPending() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/orders"
+              to="/my-products"
               className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
             >
-              Ver Meus Pedidos
+              📦 Acessar Meus Produtos
             </Link>
             <Link
               to="/marketplace"
@@ -153,7 +157,7 @@ function OrderPending() {
           <div className="mt-6 pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-600">
               Precisa de ajuda?{' '}
-              <Link to="/support" className="text-blue-600 hover:underline">
+              <Link to="/contact" className="text-blue-600 hover:underline">
                 Entre em contato com o suporte
               </Link>
             </p>

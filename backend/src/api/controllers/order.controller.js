@@ -212,7 +212,7 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   // 3. Create Mercado Pago payment preference
   const paymentPreference = await paymentService.createPaymentPreference(order);
 
-  // 4. If new user: initialize gamification and send credentials email
+  // 4. Send emails based on whether user is new or existing
   if (isNewUser) {
     gamificationService.initializeUser(user.id).catch((err) =>
       logger.error('Failed to initialize gamification for guest user', { error: err.message })
@@ -222,6 +222,11 @@ const createGuestOrder = asyncHandler(async (req, res) => {
         logger.error('Failed to send guest credentials email', { error: err.message })
       );
     }
+  } else {
+    // Existing user: send login reminder so they know how to access their product
+    emailService.sendLoginReminderEmail(user).catch((err) =>
+      logger.error('Failed to send login reminder email', { error: err.message })
+    );
   }
 
   return ApiResponse.success(res, 201, {
@@ -230,6 +235,7 @@ const createGuestOrder = asyncHandler(async (req, res) => {
     accessToken,
     refreshToken,
     isNewUser,
+    user,
   }, 'Order created successfully');
 });
 
