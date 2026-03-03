@@ -10,6 +10,7 @@ function OrderPending() {
   const [error, setError] = useState(null);
   const [guestEmail, setGuestEmail] = useState('');
   const [guestIsNew, setGuestIsNew] = useState(false);
+  const [guestTempPassword, setGuestTempPassword] = useState('');
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -39,11 +40,16 @@ function OrderPending() {
 
     const email = sessionStorage.getItem('guestEmail');
     const isNew = sessionStorage.getItem('guestIsNew') === 'true';
+    const pwd = sessionStorage.getItem('guestTempPassword');
     if (email) {
       setGuestEmail(email);
       setGuestIsNew(isNew);
       sessionStorage.removeItem('guestEmail');
       sessionStorage.removeItem('guestIsNew');
+    }
+    if (pwd) {
+      setGuestTempPassword(pwd);
+      sessionStorage.removeItem('guestTempPassword');
     }
   }, [id]);
 
@@ -125,18 +131,35 @@ function OrderPending() {
           )}
 
           {/* Credentials info for completed guest orders */}
-          {isCompleted && guestEmail && (
+          {isCompleted && guestEmail && guestIsNew && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 text-left">
-              <p className="text-green-800 font-semibold mb-1">
-                {guestIsNew ? '🎉 Sua conta foi criada!' : '✅ Compra realizada!'}
+              <p className="text-green-800 font-semibold mb-2">🎉 Sua conta foi criada!</p>
+              <p className="text-green-700 text-sm mb-3">
+                Use esses dados para fazer login e acessar seu produto:
               </p>
-              <p className="text-green-700 text-sm mb-2">
-                {guestIsNew
-                  ? `Uma senha provisória foi enviada para ${guestEmail}. Verifique também a pasta de spam.`
-                  : `Confirmação de compra enviada para ${guestEmail}.`}
+              <div className="bg-white border border-green-300 rounded-lg p-3 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 text-sm">E-mail:</span>
+                  <span className="font-semibold text-gray-800 text-sm">{guestEmail}</span>
+                </div>
+                {guestTempPassword && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 text-sm">Senha provisória:</span>
+                    <span className="font-bold text-purple-700 text-lg tracking-widest">{guestTempPassword}</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-green-600 text-xs mt-2">
+                📧 Esses dados também foram enviados para {guestEmail}. Verifique a pasta de spam.
               </p>
-              <p className="text-green-700 text-sm">
-                Use seu e-mail e essa senha para fazer login e acessar seus produtos.
+            </div>
+          )}
+
+          {isCompleted && guestEmail && !guestIsNew && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
+              <p className="text-blue-800 font-semibold mb-1">✅ Compra realizada!</p>
+              <p className="text-blue-700 text-sm">
+                Confirmação enviada para {guestEmail}. Use suas credenciais normais para acessar.
               </p>
             </div>
           )}

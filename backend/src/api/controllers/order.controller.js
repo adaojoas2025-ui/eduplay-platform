@@ -236,6 +236,7 @@ const createGuestOrder = asyncHandler(async (req, res) => {
     refreshToken,
     isNewUser,
     user,
+    tempPassword: isNewUser ? tempPassword : null,
   }, 'Order created successfully');
 });
 

@@ -10,6 +10,7 @@ function OrderSuccess() {
   const [error, setError] = useState(null);
   const [guestEmail, setGuestEmail] = useState('');
   const [guestIsNew, setGuestIsNew] = useState(false);
+  const [guestTempPassword, setGuestTempPassword] = useState('');
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -39,11 +40,16 @@ function OrderSuccess() {
 
     const email = sessionStorage.getItem('guestEmail');
     const isNew = sessionStorage.getItem('guestIsNew') === 'true';
+    const pwd = sessionStorage.getItem('guestTempPassword');
     if (email) {
       setGuestEmail(email);
       setGuestIsNew(isNew);
       sessionStorage.removeItem('guestEmail');
       sessionStorage.removeItem('guestIsNew');
+    }
+    if (pwd) {
+      setGuestTempPassword(pwd);
+      sessionStorage.removeItem('guestTempPassword');
     }
   }, [id]);
 
@@ -120,24 +126,39 @@ function OrderSuccess() {
             </div>
           )}
 
-          {guestEmail ? (
+          {guestEmail && guestIsNew ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8 text-left">
-              <p className="text-green-800 font-semibold mb-1">
-                {guestIsNew ? '🎉 Sua conta foi criada!' : '✅ Compra realizada!'}
+              <p className="text-green-800 font-semibold mb-2">🎉 Sua conta foi criada!</p>
+              <p className="text-green-700 text-sm mb-3">
+                Use esses dados para fazer login e acessar seu produto:
               </p>
-              <p className="text-green-700 text-sm mb-2">
-                {guestIsNew
-                  ? `Uma senha temporária foi enviada para ${guestEmail}. Verifique também a pasta de spam.`
-                  : `Confirmação de compra enviada para ${guestEmail}.`}
+              <div className="bg-white border border-green-300 rounded-lg p-3 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 text-sm">E-mail:</span>
+                  <span className="font-semibold text-gray-800 text-sm">{guestEmail}</span>
+                </div>
+                {guestTempPassword && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 text-sm">Senha provisória:</span>
+                    <span className="font-bold text-purple-700 text-lg tracking-widest">{guestTempPassword}</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-green-600 text-xs mt-2">
+                📧 Esses dados também foram enviados para {guestEmail}. Verifique a pasta de spam.
               </p>
-              <p className="text-green-700 text-sm">
-                Após a confirmação do pagamento, seu produto estará disponível em <strong>Meus Produtos</strong>.
+            </div>
+          ) : guestEmail ? (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 text-left">
+              <p className="text-blue-800 font-semibold mb-1">✅ Compra realizada!</p>
+              <p className="text-blue-700 text-sm">
+                Confirmação enviada para {guestEmail}. Use suas credenciais normais para acessar.
               </p>
             </div>
           ) : (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
               <p className="text-blue-800 text-sm">
-                📧 Você receberá um e-mail com os detalhes do pedido e instruções de acesso ao curso.
+                📧 Você receberá um e-mail com os detalhes do pedido e instruções de acesso ao produto.
               </p>
             </div>
           )}
@@ -158,14 +179,17 @@ function OrderSuccess() {
           </div>
 
           {guestEmail && (
-            <p className="mt-4 text-center">
+            <div className="mt-4 space-y-2">
               <Link
                 to="/login?redirect=/my-products"
-                className="text-sm text-blue-600 hover:underline"
+                className="block w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition font-semibold text-sm"
               >
-                Já recebi minhas credenciais → Fazer Login
+                🔐 Fazer Login e Acessar
               </Link>
-            </p>
+              <Link to="/reset-password" className="block text-sm text-gray-500 hover:underline">
+                Não recebi o e-mail / Esqueci minha senha
+              </Link>
+            </div>
           )}
         </div>
       </div>

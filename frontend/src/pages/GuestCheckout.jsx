@@ -65,7 +65,7 @@ const { user, isAuthenticated } = useAuth();
         paymentType: 'pix',
       });
 
-      const { paymentUrl, accessToken, refreshToken, isNewUser, user } = res.data.data;
+      const { paymentUrl, accessToken, refreshToken, isNewUser, user, tempPassword } = res.data.data;
 
       // Auto-login with the returned tokens and user data
       if (accessToken) {
@@ -74,9 +74,10 @@ const { user, isAuthenticated } = useAuth();
         if (user) localStorage.setItem('user', JSON.stringify(user));
       }
 
-      // Save guest info so OrderSuccess can show personalized instructions
+      // Save guest info so OrderPending can show personalized instructions
       sessionStorage.setItem('guestEmail', formData.email.trim().toLowerCase());
       sessionStorage.setItem('guestIsNew', isNewUser ? 'true' : 'false');
+      if (tempPassword) sessionStorage.setItem('guestTempPassword', tempPassword);
 
       window.location.href = paymentUrl;
     } catch (err) {
