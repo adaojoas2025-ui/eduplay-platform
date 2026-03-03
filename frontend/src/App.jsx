@@ -152,14 +152,9 @@ const ProductDetails = () => {
     }
   };
 
-  const handleBuyNow = async () => {
+  const handleBuyNow = () => {
     if (!product) return;
-    setAddingToCart(true);
-    const success = await addToCart(product.id);
-    setAddingToCart(false);
-    if (success) {
-      navigate('/cart');
-    }
+    navigate(`/checkout/${product.id}`);
   };
 
   if (loading) {
