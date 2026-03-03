@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { orderAPI, productAPI } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { FiDollarSign, FiPackage, FiTrendingUp, FiPlus } from 'react-icons/fi';
 
 export default function ProducerDashboard() {
