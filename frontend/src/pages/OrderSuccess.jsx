@@ -8,6 +8,8 @@ function OrderSuccess() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestIsNew, setGuestIsNew] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -34,6 +36,15 @@ function OrderSuccess() {
     };
 
     fetchOrder();
+
+    const email = sessionStorage.getItem('guestEmail');
+    const isNew = sessionStorage.getItem('guestIsNew') === 'true';
+    if (email) {
+      setGuestEmail(email);
+      setGuestIsNew(isNew);
+      sessionStorage.removeItem('guestEmail');
+      sessionStorage.removeItem('guestIsNew');
+    }
   }, [id]);
 
   if (loading) {
@@ -109,11 +120,27 @@ function OrderSuccess() {
             </div>
           )}
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-            <p className="text-blue-800 text-sm">
-              📧 Você receberá um e-mail com os detalhes do pedido e instruções de acesso ao curso.
-            </p>
-          </div>
+          {guestEmail ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8 text-left">
+              <p className="text-green-800 font-semibold mb-1">
+                {guestIsNew ? '🎉 Sua conta foi criada!' : '✅ Compra realizada!'}
+              </p>
+              <p className="text-green-700 text-sm mb-2">
+                {guestIsNew
+                  ? `Uma senha temporária foi enviada para ${guestEmail}. Verifique também a pasta de spam.`
+                  : `Confirmação de compra enviada para ${guestEmail}.`}
+              </p>
+              <p className="text-green-700 text-sm">
+                Após a confirmação do pagamento, seu produto estará disponível em <strong>Meus Produtos</strong>.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+              <p className="text-blue-800 text-sm">
+                📧 Você receberá um e-mail com os detalhes do pedido e instruções de acesso ao curso.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -129,6 +156,17 @@ function OrderSuccess() {
               Voltar ao Marketplace
             </Link>
           </div>
+
+          {guestEmail && (
+            <p className="mt-4 text-center">
+              <Link
+                to="/login?redirect=/my-products"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Já recebi minhas credenciais → Fazer Login
+              </Link>
+            </p>
+          )}
         </div>
       </div>
     </div>

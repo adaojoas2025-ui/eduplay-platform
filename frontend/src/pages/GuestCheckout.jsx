@@ -66,13 +66,17 @@ export default function GuestCheckout() {
         paymentType: 'pix',
       });
 
-      const { paymentUrl, accessToken, refreshToken } = res.data.data;
+      const { paymentUrl, accessToken, refreshToken, isNewUser } = res.data.data;
 
       // Auto-login with the returned tokens
       if (accessToken) {
         localStorage.setItem('token', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
       }
+
+      // Save guest info so OrderSuccess can show personalized instructions
+      sessionStorage.setItem('guestEmail', formData.email.trim().toLowerCase());
+      sessionStorage.setItem('guestIsNew', isNewUser ? 'true' : 'false');
 
       window.location.href = paymentUrl;
     } catch (err) {
