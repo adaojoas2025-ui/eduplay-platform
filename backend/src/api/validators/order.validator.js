@@ -18,6 +18,19 @@ const createOrderSchema = Joi.object({
 });
 
 /**
+ * Guest checkout order validation schema (no auth required)
+ */
+const createGuestOrderSchema = Joi.object({
+  body: Joi.object({
+    productId: Joi.string().uuid().required(),
+    name: Joi.string().min(2).max(100).trim().required(),
+    email: Joi.string().email().lowercase().trim().required(),
+    paymentMethod: Joi.string().valid('CREDIT_CARD', 'PIX', 'BOLETO', 'CARD').default('PIX'),
+    paymentType: Joi.string().valid('pix', 'card').default('pix'),
+  }),
+});
+
+/**
  * Get order by ID validation schema
  */
 const getOrderSchema = Joi.object({
@@ -178,6 +191,7 @@ const requestInvoiceSchema = Joi.object({
 
 module.exports = {
   createOrderSchema,
+  createGuestOrderSchema,
   getOrderSchema,
   listOrdersSchema,
   cancelOrderSchema,

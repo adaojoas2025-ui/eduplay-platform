@@ -451,6 +451,49 @@ const validatePassword = async (userId, password) => {
   }
 };
 
+/**
+ * Find existing user by email or create a new one with a temp password.
+ * Used for guest/transparent checkout flow.
+ * @param {string} name - Full name (used only for new accounts)
+ * @param {string} email - Email address
+ * @returns {Promise<Object>} { user, isNewUser, tempPassword, accessToken, refreshToken }
+ */
+const registerOrGet = async (name, email) => {
+  try {
+    const existing = await userRepository.findUserByEmail(email);
+
+    if (existing) {
+      delete existing.password;
+      const tokens = generateTokens(existing);
+      return { user: existing, isNewUser: false, tempPassword: null, ...tokens };
+    }
+
+    // Generate a random 8-char temp password (uppercase alphanumeric)
+    const tempPassword = Math.random().toString(36).slice(-8).toUpperCase();
+    const hashedPassword = await bcrypt.hash(tempPassword, config.security.bcryptRounds);
+
+    const user = await userRepository.createUser({
+      id: crypto.randomUUID(),
+      name,
+      email,
+      password: hashedPassword,
+      role: USER_ROLES.BUYER,
+      status: USER_STATUS.ACTIVE,
+      emailVerified: false,
+    });
+
+    delete user.password;
+    const tokens = generateTokens(user);
+
+    logger.info('Guest user created', { userId: user.id, email: user.email });
+
+    return { user, isNewUser: true, tempPassword, ...tokens };
+  } catch (error) {
+    logger.error('Error in registerOrGet service:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -464,4 +507,5 @@ module.exports = {
   updateLastLogin,
   upgradeToProducer,
   validatePassword,
+  registerOrGet,
 };

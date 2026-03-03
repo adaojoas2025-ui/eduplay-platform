@@ -14,6 +14,17 @@ const orderValidator = require('../validators/order.validator');
 const { USER_ROLES } = require('../../utils/constants');
 
 /**
+ * @route   POST /api/v1/orders/guest
+ * @desc    Guest checkout — create order without prior authentication
+ * @access  Public
+ */
+router.post(
+  '/guest',
+  validate(orderValidator.createGuestOrderSchema),
+  orderController.createGuestOrder
+);
+
+/**
  * @route   POST /api/v1/orders
  * @desc    Create order
  * @access  Private (Buyer)

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { productAPI, orderAPI } from '../../services/api';
+import { productAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { FiUser, FiShoppingCart, FiFileText } from 'react-icons/fi';
 
@@ -27,25 +27,8 @@ export default function ProductDetail() {
     }
   }
 
-  async function handlePurchase() {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-
-    try {
-      setPurchasing(true);
-      const response = await orderAPI.create({
-        productId: id,
-        payerInfo: {},
-      });
-
-      // Redirect to Mercado Pago checkout
-      window.location.href = response.data.initPoint;
-    } catch (error) {
-      alert(error.response?.data?.error || 'Erro ao criar pedido');
-      setPurchasing(false);
-    }
+  function handlePurchase() {
+    navigate(`/checkout/${id}`);
   }
 
   if (loading) {

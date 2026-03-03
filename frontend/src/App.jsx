@@ -11,6 +11,7 @@ import OrderSuccess from './pages/OrderSuccess';
 import OrderFailure from './pages/OrderFailure';
 import OrderPending from './pages/OrderPending';
 import Checkout from './pages/Checkout';
+import GuestCheckout from './pages/GuestCheckout';
 import MyProducts from './pages/MyProducts';
 import SellerDashboard from './pages/SellerDashboard';
 import SellerProducts from './pages/SellerProducts';
@@ -899,6 +900,7 @@ function App() {
         <Route path="/product/:slug" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/checkout/:productId" element={<GuestCheckout />} />
 
         {/* Help & Legal Pages */}
         <Route path="/help" element={<HelpCenter />} />

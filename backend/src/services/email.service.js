@@ -595,6 +595,47 @@ const sendProductPendingApprovalEmail = async (adminEmail, data) => {
   }
 };
 
+/**
+ * Send temporary credentials to a guest buyer whose account was auto-created at checkout
+ * @param {Object} user - User object { id, name, email }
+ * @param {string} tempPassword - Plaintext temporary password
+ */
+const sendGuestPurchaseCredentials = async (user, tempPassword) => {
+  try {
+    const loginUrl = `${config.frontend.url}/#/login`;
+    const resetUrl = `${config.frontend.url}/#/reset-password`;
+
+    await emailConfig.sendEmail({
+      to: user.email,
+      subject: 'Sua conta foi criada — EducaplayJA',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #4F46E5;">Bem-vindo(a) à EducaplayJA, ${user.name}!</h2>
+          <p>Sua compra foi iniciada e criamos uma conta automaticamente para você.</p>
+          <div style="background: #F3F4F6; border-radius: 8px; padding: 16px; margin: 20px 0;">
+            <p style="margin: 4px 0;"><strong>E-mail:</strong> ${user.email}</p>
+            <p style="margin: 4px 0;"><strong>Senha temporária:</strong> <code style="background: #E5E7EB; padding: 2px 6px; border-radius: 4px;">${tempPassword}</code></p>
+          </div>
+          <p>Após o pagamento ser confirmado, acesse seus produtos em:</p>
+          <a href="${loginUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; margin: 8px 0;">
+            Acessar Minha Conta
+          </a>
+          <p style="margin-top: 20px; color: #6B7280; font-size: 14px;">
+            Por segurança, recomendamos que você
+            <a href="${resetUrl}" style="color: #4F46E5;">altere sua senha</a>
+            após o primeiro acesso.
+          </p>
+          <p style="color: #6B7280; font-size: 14px;">Equipe EducaplayJA</p>
+        </div>
+      `,
+    });
+    logger.info('Guest credentials email sent', { userId: user.id });
+  } catch (error) {
+    logger.error('Error sending guest credentials email', { error: error.message });
+    throw error;
+  }
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendVerificationEmail,
@@ -608,4 +649,5 @@ module.exports = {
   sendProductApprovedEmail,
   sendProductRejectedEmail,
   sendProductPendingApprovalEmail,
+  sendGuestPurchaseCredentials,
 };

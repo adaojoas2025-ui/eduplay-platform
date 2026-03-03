@@ -7,6 +7,8 @@
 const orderService = require('../../services/order.service');
 const paymentService = require('../../services/payment.service');
 const emailService = require('../../services/email.service');
+const authService = require('../../services/auth.service');
+const gamificationService = require('../../services/gamification.service');
 const ApiResponse = require('../../utils/ApiResponse');
 const asyncHandler = require('../../utils/asyncHandler');
 const logger = require('../../utils/logger');
@@ -192,8 +194,48 @@ const getOrdersByStatusCount = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 200, counts, 'Order status counts retrieved successfully');
 });
 
+/**
+ * Guest checkout — create order without prior authentication
+ * @route POST /api/v1/orders/guest
+ * @access Public
+ */
+const createGuestOrder = asyncHandler(async (req, res) => {
+  const { productId, name, email, paymentMethod = 'PIX', paymentType = 'pix' } = req.body;
+
+  // 1. Find or create user account
+  const { user, isNewUser, tempPassword, accessToken, refreshToken } =
+    await authService.registerOrGet(name, email);
+
+  // 2. Create order (existing service already checks for duplicate purchases)
+  const order = await orderService.createOrder(user.id, { productId, paymentMethod, paymentType });
+
+  // 3. Create Mercado Pago payment preference
+  const paymentPreference = await paymentService.createPaymentPreference(order);
+
+  // 4. If new user: initialize gamification and send credentials email
+  if (isNewUser) {
+    gamificationService.initializeUser(user.id).catch((err) =>
+      logger.error('Failed to initialize gamification for guest user', { error: err.message })
+    );
+    if (tempPassword) {
+      emailService.sendGuestPurchaseCredentials(user, tempPassword).catch((err) =>
+        logger.error('Failed to send guest credentials email', { error: err.message })
+      );
+    }
+  }
+
+  return ApiResponse.success(res, 201, {
+    order,
+    paymentUrl: paymentPreference?.initPoint,
+    accessToken,
+    refreshToken,
+    isNewUser,
+  }, 'Order created successfully');
+});
+
 module.exports = {
   createOrder,
+  createGuestOrder,
   getOrderById,
   listOrders,
   cancelOrder,
