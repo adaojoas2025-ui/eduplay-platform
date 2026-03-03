@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config/api.config';
 import { useAuth } from '../hooks/useAuth';
@@ -7,8 +7,7 @@ import { orderAPI } from '../services/api';
 
 export default function GuestCheckout() {
   const { productId } = useParams();
-  const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+const { user, isAuthenticated } = useAuth();
 
   const [product, setProduct] = useState(null);
   const [loadingProduct, setLoadingProduct] = useState(true);
@@ -123,7 +122,7 @@ export default function GuestCheckout() {
           </div>
 
           <div className="p-6">
-            {isAuthenticated ? (
+            {isAuthenticated && !!user?.email ? (
               // Logged-in flow: just confirm and pay
               <div className="space-y-4">
                 <p className="text-gray-600">
