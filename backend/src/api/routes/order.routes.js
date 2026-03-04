@@ -125,6 +125,18 @@ router.post(
 );
 
 /**
+ * @route   POST /api/v1/orders/:id/resend-email
+ * @desc    Resend product access email to buyer
+ * @access  Private (Admin)
+ */
+router.post(
+  '/:id/resend-email',
+  authenticate,
+  authorize(USER_ROLES.ADMIN),
+  orderController.resendProductEmail
+);
+
+/**
  * @route   GET /api/v1/orders/:id/payment/status
  * @desc    Verify payment status
  * @access  Private (Buyer, Producer, Admin)

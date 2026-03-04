@@ -240,6 +240,28 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   }, 'Order created successfully');
 });
 
+/**
+ * Resend product access email to buyer
+ * @route POST /api/v1/orders/:id/resend-email
+ * @access Private (Admin)
+ */
+const resendProductEmail = asyncHandler(async (req, res) => {
+  const order = await orderService.getOrderById(req.params.id, req.user.id);
+
+  if (!order.productId) {
+    return ApiResponse.error(res, 400, 'Este pedido não é uma compra de produto');
+  }
+
+  if (order.status !== 'COMPLETED') {
+    return ApiResponse.error(res, 400, `Pedido não está concluído (status: ${order.status})`);
+  }
+
+  await emailService.sendProductAccessEmail(order.buyer, order.product, order);
+  logger.info('Product access email resent by admin', { orderId: order.id, buyerEmail: order.buyer.email, adminId: req.user.id });
+
+  return ApiResponse.success(res, 200, { orderId: order.id, sentTo: order.buyer.email }, 'Email reenviado com sucesso');
+});
+
 module.exports = {
   createOrder,
   createGuestOrder,
@@ -253,4 +275,5 @@ module.exports = {
   getOrderPaymentDetails,
   getRecentOrders,
   getOrdersByStatusCount,
+  resendProductEmail,
 };
