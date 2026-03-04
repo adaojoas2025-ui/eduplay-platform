@@ -71,7 +71,11 @@ const { user, isAuthenticated } = useAuth();
       if (accessToken) {
         localStorage.setItem('token', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
-        if (user) localStorage.setItem('user', JSON.stringify(user));
+        // Save under both keys: 'user' (Zustand/ProtectedRoute) and 'userData' (Navbar/lib/auth.js)
+        if (user) {
+          localStorage.setItem('user', JSON.stringify(user));
+          localStorage.setItem('userData', JSON.stringify(user));
+        }
       }
 
       // Save guest info so OrderPending can show personalized instructions

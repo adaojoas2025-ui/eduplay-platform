@@ -468,8 +468,13 @@ const registerOrGet = async (name, email) => {
       return { user: existing, isNewUser: false, tempPassword: null, ...tokens };
     }
 
-    // Generate a random 8-char temp password (uppercase alphanumeric)
-    const tempPassword = Math.random().toString(36).slice(-8).toUpperCase();
+    // Generate 8-char temp password using only visually unambiguous characters
+    // Excluded: 0/O (look alike), 1/I/L (look alike), 5/S (look alike), 8/B (look alike)
+    const unambiguousChars = 'ABCDEFGHJKMNPQRTUVWXY234679';
+    let tempPassword = '';
+    for (let i = 0; i < 8; i++) {
+      tempPassword += unambiguousChars[Math.floor(Math.random() * unambiguousChars.length)];
+    }
     const hashedPassword = await bcrypt.hash(tempPassword, config.security.bcryptRounds);
 
     const user = await userRepository.createUser({

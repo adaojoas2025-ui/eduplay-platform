@@ -11,6 +11,7 @@ function OrderSuccess() {
   const [guestEmail, setGuestEmail] = useState('');
   const [guestIsNew, setGuestIsNew] = useState(false);
   const [guestTempPassword, setGuestTempPassword] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -128,9 +129,9 @@ function OrderSuccess() {
 
           {guestEmail && guestIsNew ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8 text-left">
-              <p className="text-green-800 font-semibold mb-2">🎉 Sua conta foi criada!</p>
+              <p className="text-green-800 font-semibold mb-2">🎉 Sua conta foi criada! Você já está logado.</p>
               <p className="text-green-700 text-sm mb-3">
-                Use esses dados para fazer login e acessar seu produto:
+                Anote esses dados para acessar futuramente:
               </p>
               <div className="bg-white border border-green-300 rounded-lg p-3 space-y-2">
                 <div className="flex justify-between items-center">
@@ -140,7 +141,19 @@ function OrderSuccess() {
                 {guestTempPassword && (
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 text-sm">Senha provisória:</span>
-                    <span className="font-bold text-purple-700 text-lg tracking-widest">{guestTempPassword}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-purple-700 text-xl font-mono">{guestTempPassword}</span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(guestTempPassword);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded hover:bg-purple-200 transition"
+                      >
+                        {copied ? '✓ Copiado' : 'Copiar'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -181,10 +194,10 @@ function OrderSuccess() {
           {guestEmail && (
             <div className="mt-4 space-y-2">
               <Link
-                to="/login?redirect=/my-products"
+                to="/my-products"
                 className="block w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition font-semibold text-sm"
               >
-                🔐 Fazer Login e Acessar
+                🔐 Acessar Minha Conta Agora
               </Link>
               <Link to="/reset-password" className="block text-sm text-gray-500 hover:underline">
                 Não recebi o e-mail / Esqueci minha senha
