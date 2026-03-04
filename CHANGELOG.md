@@ -1,5 +1,45 @@
 # CHANGELOG - EDUPLAYJA Platform
 
+## [2026-03-04] - Email de Acesso ao Produto após Compra + Endpoint de Re-envio
+
+### Resumo
+Confirmação que o sistema já enviava email com links de download após compra (via webhook MP). O envio estava falhando silenciosamente porque o email service estava quebrado. Agora que o email está funcionando (Gmail SMTP fallback), futuras compras recebem o email automaticamente. Adicionado endpoint de re-envio para admin.
+
+---
+
+### 1. Fluxo de Email após Compra (já existia, agora funcionando)
+
+Após pagamento aprovado pelo Mercado Pago:
+1. MP envia webhook → `POST /api/v1/payments/webhook`
+2. `payment.service.js` chama `sendProductAccessEmail(buyer, product, order)`
+3. Comprador recebe email com links de download de todos os arquivos do produto
+
+---
+
+### 2. Novo Endpoint: Re-enviar Email de Acesso
+
+**Arquivo:** `backend/src/api/controllers/order.controller.js`
+**Arquivo:** `backend/src/api/routes/order.routes.js`
+
+```
+POST /api/v1/orders/:id/resend-email  (ADMIN only)
+```
+
+- Busca pedido pelo ID
+- Valida que status é `COMPLETED` e tem `productId`
+- Reenvia `sendProductAccessEmail` para o comprador
+- Útil para reenviar emails de compras que ocorreram enquanto o email estava quebrado
+
+---
+
+### Commits
+
+| Hash | Descrição |
+|------|-----------|
+| `1cca628` | feat: Add POST /orders/:id/resend-email endpoint for admin to resend product access email |
+
+---
+
 ## [2026-03-04] - Navbar: Ícones + Meus Cursos no Mobile + Renomeação
 
 ### Resumo
