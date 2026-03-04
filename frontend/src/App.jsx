@@ -257,6 +257,7 @@ const Login = () => {
         localStorage.setItem('token', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('userData', JSON.stringify(user));
+        localStorage.setItem('user', JSON.stringify(user));
 
         alert('Login realizado com sucesso!');
 
@@ -459,6 +460,7 @@ const Register = () => {
         localStorage.setItem('token', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('userData', JSON.stringify(user));
+        localStorage.setItem('user', JSON.stringify(user));
 
         alert('Conta criada com sucesso!');
 
