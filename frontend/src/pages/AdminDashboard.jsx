@@ -9,6 +9,24 @@ export default function AdminDashboard() {
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('all'); // all, week, month, year
   const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [cleanupOrdersLoading, setCleanupOrdersLoading] = useState(false);
+
+  const handleCleanupOrders = async () => {
+    if (!window.confirm('Remover TODOS os pedidos, comissões e transferências? Esta ação não pode ser desfeita.')) return;
+    setCleanupOrdersLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(`${API_URL}/admin/cleanup/all-orders`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert(`✅ ${response.data.message}`);
+      fetchDashboardStats();
+    } catch (err) {
+      alert('❌ Erro: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setCleanupOrdersLoading(false);
+    }
+  };
 
   const handleCleanupUsers = async () => {
     if (!window.confirm('Remover TODOS os usuários não-admin? Esta ação não pode ser desfeita.')) return;
@@ -107,13 +125,22 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
             <p className="text-gray-600 mt-1">Visão geral da plataforma</p>
           </div>
-          <button
-            onClick={handleCleanupUsers}
-            disabled={cleanupLoading}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition"
-          >
-            {cleanupLoading ? 'Removendo...' : '🗑️ Remover usuários de teste'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleCleanupOrders}
+              disabled={cleanupOrdersLoading}
+              className="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-orange-700 disabled:opacity-50 transition"
+            >
+              {cleanupOrdersLoading ? 'Removendo...' : '🗑️ Limpar pedidos'}
+            </button>
+            <button
+              onClick={handleCleanupUsers}
+              disabled={cleanupLoading}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition"
+            >
+              {cleanupLoading ? 'Removendo...' : '🗑️ Remover usuários de teste'}
+            </button>
+          </div>
 
           {/* Time Range Filter */}
           <div className="flex gap-2">
