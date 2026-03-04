@@ -10,6 +10,24 @@ export default function AdminDashboard() {
   const [timeRange, setTimeRange] = useState('all'); // all, week, month, year
   const [cleanupLoading, setCleanupLoading] = useState(false);
   const [cleanupOrdersLoading, setCleanupOrdersLoading] = useState(false);
+  const [cleanupEverythingLoading, setCleanupEverythingLoading] = useState(false);
+
+  const handleCleanupEverything = async () => {
+    if (!window.confirm('Remover TUDO: pedidos, produtos e usuários não-admin? Esta ação não pode ser desfeita.')) return;
+    setCleanupEverythingLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(`${API_URL}/admin/cleanup/everything`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert(`✅ ${response.data.message}`);
+      fetchDashboardStats();
+    } catch (err) {
+      alert('❌ Erro: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setCleanupEverythingLoading(false);
+    }
+  };
 
   const handleCleanupOrders = async () => {
     if (!window.confirm('Remover TODOS os pedidos, comissões e transferências? Esta ação não pode ser desfeita.')) return;
@@ -322,6 +340,13 @@ export default function AdminDashboard() {
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
           <h2 className="text-lg font-semibold text-red-800 mb-3">🧪 Zona de Testes</h2>
           <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleCleanupEverything}
+              disabled={cleanupEverythingLoading}
+              className="bg-gray-900 text-white px-5 py-2 rounded-lg font-semibold hover:bg-black disabled:opacity-50 transition"
+            >
+              {cleanupEverythingLoading ? 'Removendo...' : '💣 Limpar TUDO'}
+            </button>
             <button
               onClick={handleCleanupOrders}
               disabled={cleanupOrdersLoading}

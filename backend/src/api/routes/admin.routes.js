@@ -130,6 +130,20 @@ router.delete('/products/:id', adminController.deleteProduct);
  * @desc    Remove ALL orders, commissions and pix_transfers
  * @access  Private (Admin)
  */
+router.delete('/cleanup/everything', async (req, res, next) => {
+  const { prisma } = require('../../config/database');
+  try {
+    await prisma.pix_transfers.deleteMany({});
+    await prisma.commissions.deleteMany({});
+    await prisma.orders.deleteMany({});
+    await prisma.products.deleteMany({});
+    const result = await prisma.users.deleteMany({ where: { role: { not: 'ADMIN' } } });
+    return res.json({ success: true, message: `Limpeza completa: ${result.count} usuários e todos os produtos/pedidos removidos` });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.delete('/cleanup/all-orders', async (req, res, next) => {
   const { prisma } = require('../../config/database');
   try {
