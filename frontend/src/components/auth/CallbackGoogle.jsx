@@ -50,15 +50,16 @@ export default function CallbackGoogle() {
             console.log('User data received:', data);
 
             if (data.success && data.data) {
-              // Save user data to localStorage (using 'userData' key to match lib/auth.js)
+              // Save user data to both localStorage keys
               localStorage.setItem('userData', JSON.stringify(data.data));
+              localStorage.setItem('user', JSON.stringify(data.data));
               setStatus('success');
 
               console.log('Login successful, redirecting to homepage');
 
               // Redirect to homepage after successful login (force page reload to update auth state)
               setTimeout(() => {
-                window.location.href = '/#/';
+                window.location.href = '/';
               }, 1000);
             } else {
               throw new Error('Failed to fetch user data');
