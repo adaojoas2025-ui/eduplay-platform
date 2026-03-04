@@ -26,8 +26,8 @@ if (process.env.SENDGRID_API_KEY) {
   }
 }
 
-// If no SendGrid, try Nodemailer with Gmail SMTP
-if (!useSendGrid && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+// Nodemailer Gmail SMTP — fallback (always initialized if vars are set)
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
   try {
     transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
