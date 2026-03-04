@@ -1,5 +1,117 @@
 # CHANGELOG - EDUPLAYJA Platform
 
+## [2026-03-03] - Checkout Transparente (Compra sem Login) + Email + Auto-login + Navbar
+
+### Resumo
+Implementação completa do fluxo de compra sem login (checkout de convidado), com auto-login automático após a compra, exibição da senha provisória na tela de confirmação e envio por e-mail. Correção crítica do serviço de e-mail (fallback quebrado). Correção do auto-login (incompatibilidade de chaves no localStorage). Melhoria na geração de senha (caracteres sem ambiguidade visual). Reorganização da navbar com "Cursos Adquiridos" na barra superior.
+
+---
+
+### 1. Checkout Transparente — Compra sem Login
+
+**Arquivo:** `frontend/src/pages/GuestCheckout.jsx`
+
+- Novo formulário de checkout para usuários não autenticados
+- Redireciona para Mercado Pago sem exigir cadastro prévio
+- Salva `guestEmail`, `guestIsNew` e `guestTempPassword` no `sessionStorage` para sobreviver ao redirect do MP
+- Após resposta da API, salva token + usuário em **ambas** as chaves `'user'` e `'userData'` no `localStorage` (compatibilidade com os dois sistemas de auth da app)
+
+**Arquivo:** `backend/src/api/controllers/order.controller.js`
+
+- Função `registerOrGet` cria conta automaticamente se o e-mail não existir
+- Retorna `tempPassword` na resposta da API quando `isNewUser === true`
+- Retorna `accessToken`, `refreshToken` e dados do usuário para auto-login
+
+---
+
+### 2. Exibição da Senha Provisória na Tela de Confirmação
+
+**Arquivos:** `frontend/src/pages/OrderSuccess.jsx`, `frontend/src/pages/OrderPending.jsx`
+
+- Lê `guestTempPassword` do `sessionStorage` e exibe na tela em destaque (`font-mono`, roxo)
+- Botão "Copiar" com feedback visual (`✓ Copiado`)
+- Remove os dados do `sessionStorage` após leitura (segurança)
+- Mensagem instrucional: _"Esses dados também foram enviados para {email}. Verifique a pasta de spam."_
+- Botão "Acessar Minha Conta Agora" leva diretamente para `/my-products` (usuário já está logado)
+
+---
+
+### 3. Correção Crítica do Serviço de E-mail
+
+**Arquivo:** `backend/src/config/email.js`
+
+**Problema:** O SendGrid era marcado como `useSendGrid = true` na inicialização (sem validar a chave via API). O Gmail SMTP só era inicializado `if (!useSendGrid)` — nunca sendo alcançado quando o SendGrid falhava no envio.
+
+**Solução:**
+- Adicionado suporte completo ao **Resend** (pacote `resend@^6.8.0` já estava instalado)
+- Todos os provedores agora são inicializados **independentemente** (sem `if/else` entre eles)
+- `sendEmail()` agora tenta o próximo provedor ao falhar: **Resend → SendGrid → Gmail SMTP**
+- Prioridade: `RESEND_API_KEY` (1º) → `SENDGRID_API_KEY` (2º) → `EMAIL_USER/EMAIL_PASS` (3º)
+- Variáveis de ambiente para o Render:
+  - `RESEND_API_KEY` — chave da API do Resend (resend.com/api-keys)
+  - `RESEND_FROM` — remetente (ex: `onboarding@resend.dev` para testes)
+
+---
+
+### 4. Correção do Auto-login após Compra
+
+**Arquivo:** `frontend/src/pages/GuestCheckout.jsx`
+
+**Problema:** Após a compra, a navbar exibia "Entrar" mesmo com o usuário autenticado.
+**Causa:** `GuestCheckout` salvava o usuário na chave `'user'`, mas `lib/auth.js` (usado pela Navbar) lia a chave `'userData'`.
+
+**Solução:** Salvar o usuário em ambas as chaves:
+```js
+localStorage.setItem('user', JSON.stringify(user));
+localStorage.setItem('userData', JSON.stringify(user));
+```
+
+---
+
+### 5. Senhas Provisórias sem Caracteres Ambíguos
+
+**Arquivo:** `backend/src/services/auth.service.js`
+
+**Problema:** `Math.random().toString(36)` gerava caracteres como `5`/`S`, `0`/`O`, `1`/`I`/`L`, `8`/`B` que o usuário confundia ao digitar.
+
+**Solução:** Geração com charset explícito sem ambiguidade:
+```js
+const unambiguousChars = 'ABCDEFGHJKMNPQRTUVWXY234679';
+let tempPassword = '';
+for (let i = 0; i < 8; i++) {
+  tempPassword += unambiguousChars[Math.floor(Math.random() * unambiguousChars.length)];
+}
+```
+
+---
+
+### 6. Navbar — "Cursos Adquiridos" na Barra Superior
+
+**Arquivo:** `frontend/src/components/Navbar.jsx`
+
+- "Cursos Adquiridos" movido do **dropdown do usuário** para a **barra de navegação superior** (desktop)
+- Aparece entre "Apps Educativos" e "Vender", visível apenas para usuários autenticados
+- No mobile, permanece no menu dropdown do usuário (comportamento inalterado)
+
+---
+
+### Commits do Dia
+
+| Hash | Descrição |
+|------|-----------|
+| `8f5c12a` | feat: Implement transparent checkout (guest purchase without login) |
+| `e631457` | fix: Correct gamification.service import path in order.controller |
+| `f0fdd07` | fix: Redirect 'Comprar Agora' on product page to guest checkout |
+| `4e05322` | fix: Fix useAuth import - use Zustand hook instead of broken Context |
+| `33dc5f9` | feat: Show personalized instructions to guest buyers on success page |
+| `68e41f7` | fix: Fix product access flow after guest checkout |
+| `eb55843` | feat: Show guest credentials info on confirmation page |
+| `92507ac` | feat: Show temp password on confirmation page + fix email fallback chain |
+| `80acf91` | fix: Fix auto-login after guest checkout + unambiguous password chars |
+| `aca80ac` | feat: Move 'Cursos Adquiridos' to top navbar for authenticated users |
+
+---
+
 ## [2026-02-08] - Permissões ADMIN e Correção de Comissões
 
 ### Resumo
