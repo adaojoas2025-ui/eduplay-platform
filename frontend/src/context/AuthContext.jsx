@@ -22,6 +22,7 @@ export function AuthProvider({ children }) {
       console.error('Auth check failed:', error);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('userData');
     } finally {
       setLoading(false);
     }
@@ -34,6 +35,7 @@ export function AuthProvider({ children }) {
 
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('userData', JSON.stringify(user));
       setUser(user);
 
       return { success: true, user };
@@ -52,6 +54,7 @@ export function AuthProvider({ children }) {
 
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('userData', JSON.stringify(user));
       setUser(user);
 
       return { success: true, user };
@@ -66,6 +69,7 @@ export function AuthProvider({ children }) {
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('userData');
     setUser(null);
     window.location.href = '/';
   }

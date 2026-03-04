@@ -15,6 +15,7 @@ export const useAuthStore = create((set, get) => ({
       localStorage.setItem('token', data.token);
       localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('userData', JSON.stringify(data.user));
 
       set({
         user: data.user,
@@ -38,6 +39,7 @@ export const useAuthStore = create((set, get) => ({
       localStorage.setItem('token', data.token);
       localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('userData', JSON.stringify(data.user));
 
       set({
         user: data.user,
@@ -61,6 +63,7 @@ export const useAuthStore = create((set, get) => ({
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
+      localStorage.removeItem('userData');
 
       set({
         user: null,
@@ -74,6 +77,7 @@ export const useAuthStore = create((set, get) => ({
   updateUser: (userData) => {
     const updatedUser = { ...get().user, ...userData };
     localStorage.setItem('user', JSON.stringify(updatedUser));
+    localStorage.setItem('userData', JSON.stringify(updatedUser));
     set({ user: updatedUser });
   },
 
@@ -94,6 +98,7 @@ export const useAuthStore = create((set, get) => ({
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
+      localStorage.removeItem('userData');
       return false;
     }
   },
