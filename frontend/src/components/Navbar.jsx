@@ -239,6 +239,11 @@ export default function Navbar() {
                 <Link to="/admin/apps" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   Apps Educativos
                 </Link>
+                {authenticated && (
+                  <Link to="/my-products" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                    Cursos Adquiridos
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -281,9 +286,6 @@ export default function Navbar() {
                     </button>
                     {userMenuOpen && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                        <Link to="/my-products" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
-                          Cursos Adquiridos
-                        </Link>
                         <Link to="/seller/products" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setUserMenuOpen(false)}>
                           Meus Produtos
                         </Link>
