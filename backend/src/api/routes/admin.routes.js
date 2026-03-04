@@ -152,11 +152,15 @@ router.delete('/cleanup/non-admin-users', async (req, res, next) => {
     if (nonAdminProductIds.length > 0) {
       await prisma.orders.deleteMany({ where: { productId: { in: nonAdminProductIds } } });
     }
+    // Delete ALL remaining orders (admin's own test purchases)
+    await prisma.pix_transfers.deleteMany({});
+    await prisma.commissions.deleteMany({});
+    await prisma.orders.deleteMany({});
     await prisma.users.deleteMany({ where: { id: { in: nonAdminIds } } });
 
     return res.json({
       success: true,
-      message: `${nonAdmins.length} usuários removidos`,
+      message: `${nonAdmins.length} usuários e todos os pedidos removidos`,
       removed: nonAdmins.length,
       users: nonAdmins.map(u => ({ email: u.email, role: u.role })),
     });
