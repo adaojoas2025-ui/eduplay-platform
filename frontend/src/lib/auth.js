@@ -4,12 +4,14 @@ export function saveAuth(user, accessToken, refreshToken) {
   localStorage.setItem('token', accessToken);
   localStorage.setItem('refreshToken', refreshToken);
   localStorage.setItem('userData', JSON.stringify(user));
+  localStorage.setItem('user', JSON.stringify(user));
 }
 
 export function clearAuth() {
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('userData');
+  localStorage.removeItem('user');
 }
 
 export function getUser() {
