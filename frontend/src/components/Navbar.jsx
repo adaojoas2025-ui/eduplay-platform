@@ -236,15 +236,15 @@ export default function Navbar() {
               </Link>
 
               <div className="hidden md:flex items-center space-x-4">
-                <Link to="/marketplace" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  Marketplace
+                <Link to="/marketplace" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1">
+                  🏪 Marketplace
                 </Link>
-                <Link to="/admin/apps" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  Apps Educativos
+                <Link to="/admin/apps" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1">
+                  📱 Apps Educativos
                 </Link>
                 {authenticated && (
-                  <Link to="/my-products" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                    Cursos Adquiridos
+                  <Link to="/my-products" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1">
+                    📚 Meus Cursos
                   </Link>
                 )}
               </div>
