@@ -125,23 +125,6 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
             <p className="text-gray-600 mt-1">Visão geral da plataforma</p>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleCleanupOrders}
-              disabled={cleanupOrdersLoading}
-              className="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-orange-700 disabled:opacity-50 transition"
-            >
-              {cleanupOrdersLoading ? 'Removendo...' : '🗑️ Limpar pedidos'}
-            </button>
-            <button
-              onClick={handleCleanupUsers}
-              disabled={cleanupLoading}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition"
-            >
-              {cleanupLoading ? 'Removendo...' : '🗑️ Remover usuários de teste'}
-            </button>
-          </div>
-
           {/* Time Range Filter */}
           <div className="flex gap-2">
             <button
@@ -332,6 +315,27 @@ export default function AdminDashboard() {
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Zona de Testes */}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+          <h2 className="text-lg font-semibold text-red-800 mb-3">🧪 Zona de Testes</h2>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleCleanupOrders}
+              disabled={cleanupOrdersLoading}
+              className="bg-orange-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-orange-700 disabled:opacity-50 transition"
+            >
+              {cleanupOrdersLoading ? 'Removendo...' : '🗑️ Limpar todos os pedidos'}
+            </button>
+            <button
+              onClick={handleCleanupUsers}
+              disabled={cleanupLoading}
+              className="bg-red-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 transition"
+            >
+              {cleanupLoading ? 'Removendo...' : '🗑️ Remover usuários de teste'}
+            </button>
           </div>
         </div>
 

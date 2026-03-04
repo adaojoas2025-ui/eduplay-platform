@@ -206,8 +206,8 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   const { user, isNewUser, tempPassword, accessToken, refreshToken } =
     await authService.registerOrGet(name, email);
 
-  // 2. Create order (existing service already checks for duplicate purchases)
-  const order = await orderService.createOrder(user.id, { productId, paymentMethod, paymentType });
+  // 2. Create order (guest checkout bypasses duplicate check — user may be re-testing)
+  const order = await orderService.createOrder(user.id, { productId, paymentMethod, paymentType, bypassDuplicateCheck: true });
 
   // 3. Create Mercado Pago payment preference
   const paymentPreference = await paymentService.createPaymentPreference(order);

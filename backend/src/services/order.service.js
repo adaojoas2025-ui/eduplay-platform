@@ -51,7 +51,7 @@ const calculateOrderAmounts = (productPrice, paymentType = 'pix') => {
  */
 const createOrder = async (buyerId, orderData) => {
   try {
-    const { productId, paymentMethod, paymentType } = orderData;
+    const { productId, paymentMethod, paymentType, bypassDuplicateCheck } = orderData;
 
     // Verify buyer exists
     const buyer = await userRepository.findUserById(buyerId);
@@ -69,8 +69,8 @@ const createOrder = async (buyerId, orderData) => {
       throw ApiError.badRequest('Product is not available for purchase');
     }
 
-    // Check if user already purchased this product (admins bypass this for testing)
-    if (buyer.role !== USER_ROLES.ADMIN) {
+    // Check if user already purchased this product
+    if (!bypassDuplicateCheck) {
       const hasPurchased = await orderRepository.hasUserPurchasedProduct(buyerId, productId);
       if (hasPurchased) {
         throw ApiError.badRequest('You have already purchased this product');
