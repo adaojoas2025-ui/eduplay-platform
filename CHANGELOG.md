@@ -1,5 +1,60 @@
 # CHANGELOG - EDUPLAYJA Platform
 
+## [2026-03-04] - Correção de Email (Gmail SMTP Fallback) + Correção de Auth (ProtectedRoute)
+
+### Resumo
+Correção do serviço de email que parou de funcionar após expiração do trial do SendGrid (2/3/2026). Implementação de Gmail SMTP como fallback real com per-provider try-catch. Correção do redirecionamento para login em rotas protegidas após login/registro via formulário direto.
+
+---
+
+### 1. Correção Crítica do Serviço de E-mail
+
+**Arquivo:** `backend/src/config/email.js`
+
+**Problema:**
+1. Trial do SendGrid de 60 dias expirou em 2/3/2026 → "Maximum credits exceeded" em todos os envios
+2. Código anterior tinha `if (!useSendGrid && EMAIL_USER)` — Nodemailer nunca inicializava quando SendGrid estava configurado
+3. Single try-catch englobando todos os provedores — SendGrid falhava → catch rethrowava → Nodemailer nunca tentado
+
+**Solução:**
+- Nodemailer agora inicializa **independentemente** do SendGrid (removido `!useSendGrid`)
+- `sendEmail()` agora tem **try-catch por provedor**: SendGrid falha → avisa → tenta Nodemailer
+- SendGrid permanece no plano free (100 emails/dia, reseta à meia-noite UTC)
+- Gmail SMTP configurado como fallback real no Render: `EMAIL_USER=ja.eduplay@gmail.com` + `EMAIL_PASS=<App Password>`
+
+**Variáveis no Render (backend):**
+- `EMAIL_USER` = `ja.eduplay@gmail.com`
+- `EMAIL_PASS` = App Password de 16 chars (gerado em myaccount.google.com/apppasswords — requer 2FA ativo)
+
+---
+
+### 2. Correção do Redirecionamento em Rotas Protegidas
+
+**Arquivo:** `frontend/src/App.jsx`
+
+**Problema:** Após login ou registro via formulário (`Login` e `Register` components em `App.jsx`), o usuário era redirecionado para `/login` ao tentar acessar "Cursos Adquiridos" ou outras rotas protegidas.
+
+**Causa:** O componente `Login` em `App.jsx` usava axios diretamente (bypassando o authStore) e salvava o usuário apenas na chave `'userData'`. O `ProtectedRoute` verifica a chave `'user'` — que estava vazia.
+
+**Solução:** Salvar em ambas as chaves no `handleSubmit` do Login e Register:
+```js
+localStorage.setItem('userData', JSON.stringify(user));
+localStorage.setItem('user', JSON.stringify(user)); // adicionado
+```
+
+---
+
+### Commits do Dia
+
+| Hash | Descrição |
+|------|-----------|
+| `3a8cd0c` | fix: Save user to 'user' key in Login and Register (fixes ProtectedRoute redirect) |
+| `5c3b4db` | fix: Revert email.js to clean working state (remove Resend residuals) |
+| `9589884` | fix: Initialize Nodemailer independently as true fallback when SendGrid fails |
+| `d7a08b0` | fix: Per-provider try-catch so SendGrid failure falls through to Nodemailer |
+
+---
+
 ## [2026-03-03] - Checkout Transparente (Compra sem Login) + Email + Auto-login + Navbar
 
 ### Resumo
