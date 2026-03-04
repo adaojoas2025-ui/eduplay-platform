@@ -41,6 +41,7 @@ const { user, isAuthenticated } = useAuth();
     try {
       const response = await orderAPI.create({ productId, paymentType: 'pix' });
       const paymentUrl = response.data.data?.paymentUrl || response.data.paymentUrl || response.data.initPoint || response.data.data?.initPoint;
+      if (!paymentUrl) throw new Error('URL de pagamento não retornada pelo servidor.');
       window.location.href = paymentUrl;
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao criar pedido. Tente novamente.');
