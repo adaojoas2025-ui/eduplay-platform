@@ -1,5 +1,43 @@
 # CHANGELOG - EDUPLAYJA Platform
 
+## [2026-03-04] - Navbar: Ícones + Meus Cursos no Mobile + Renomeação
+
+### Resumo
+Adição de ícones emoji nos links da navbar desktop. Renomeação de "Cursos Adquiridos" para "Meus Cursos" (desktop e mobile). Adição de "📚 Meus Cursos" na barra horizontal do mobile (antes só existia no dropdown). Substituição do ícone cifrão por 💰 no botão "Vender" desktop.
+
+---
+
+### 1. Navbar Desktop — Ícones e Renomeação
+
+**Arquivo:** `frontend/src/components/Navbar.jsx`
+
+- 🏪 Marketplace (era "Marketplace" sem ícone)
+- 📱 Apps Educativos (era "Apps Educativos" sem ícone)
+- 📚 Meus Cursos (era "Cursos Adquiridos" sem ícone)
+- 💰 Vender (era ícone FiDollarSign do react-icons)
+
+---
+
+### 2. Navbar Mobile — "Meus Cursos" na Barra Superior
+
+**Arquivo:** `frontend/src/components/Navbar.jsx`
+
+- "📚 Meus Cursos" adicionado na barra horizontal scrollável do mobile
+- Aparece entre "📱 Apps" e "💰 Vender" para usuários autenticados
+- Antes, o link só existia no dropdown do usuário (menos visível)
+
+---
+
+### Commits
+
+| Hash | Descrição |
+|------|-----------|
+| `1de708b` | feat: Add 'Meus Cursos' link to mobile navbar horizontal bar |
+| `9eaee77` | feat: Add icons to desktop navbar links and rename 'Cursos Adquiridos' to 'Meus Cursos' |
+| `5abd5e7` | feat: Replace dollar icon with money bag emoji on desktop Vender button |
+
+---
+
 ## [2026-03-04] - Correção de Email (Gmail SMTP Fallback) + Correção de Auth (ProtectedRoute)
 
 ### Resumo
