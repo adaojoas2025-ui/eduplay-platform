@@ -1,6 +1,6 @@
 /**
  * Email Configuration
- * Supports SendGrid (primary), Gmail SMTP (secondary), Resend (tertiary)
+ * Email service using SendGrid or Nodemailer (Gmail SMTP)
  * @module config/email
  */
 
@@ -9,27 +9,25 @@ const nodemailer = require('nodemailer');
 
 logger.info('📧 Initializing email service...');
 
-let useResend = false;
 let useSendGrid = false;
 let useNodemailer = false;
-let resendClient = null;
 let sgMail = null;
 let transporter = null;
 
-// 1. SendGrid (highest priority — already configured on Render)
+// Try SendGrid first
 if (process.env.SENDGRID_API_KEY) {
   try {
     sgMail = require('@sendgrid/mail');
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
     useSendGrid = true;
-    logger.info('✅ SendGrid configured');
+    logger.info('✅ Using SendGrid for email service');
   } catch (error) {
-    logger.error('❌ SendGrid init failed:', error.message);
+    logger.error('❌ Failed to initialize SendGrid:', error.message);
   }
 }
 
-// 2. Nodemailer Gmail SMTP (second priority)
-if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+// If no SendGrid, try Nodemailer with Gmail SMTP
+if (!useSendGrid && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
   try {
     transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
@@ -41,20 +39,14 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
       },
     });
     useNodemailer = true;
-    logger.info('✅ Nodemailer (Gmail SMTP) configured');
+    logger.info('✅ Using Nodemailer (Gmail SMTP) for email service');
   } catch (error) {
-    logger.error('❌ Nodemailer init failed:', error.message);
+    logger.error('❌ Failed to initialize Nodemailer:', error.message);
   }
 }
 
 if (!useSendGrid && !useNodemailer) {
   logger.warn('⚠️  No email service configured');
-} else {
-  const active = [
-    useSendGrid && 'SendGrid',
-    useNodemailer && 'Nodemailer',
-  ].filter(Boolean);
-  logger.info(`📧 Email providers available: ${active.join(' → ')}`);
 }
 
 /**
@@ -62,10 +54,6 @@ if (!useSendGrid && !useNodemailer) {
  */
 const verifyConnection = async () => {
   try {
-    if (useResend) {
-      logger.info('✅ Email service ready (Resend)');
-      return true;
-    }
     if (useSendGrid) {
       logger.info('✅ Email service ready (SendGrid)');
       return true;
@@ -84,7 +72,7 @@ const verifyConnection = async () => {
 };
 
 /**
- * Send email with automatic fallback: Resend → SendGrid → Nodemailer
+ * Send email
  * @param {Object} options - Email options
  * @param {string} options.to - Recipient email
  * @param {string} options.subject - Email subject
@@ -96,41 +84,64 @@ const verifyConnection = async () => {
 const sendEmail = async ({ to, subject, html, text, replyTo }) => {
   const fromEmail = process.env.EMAIL_FROM || 'EducaplayJA <ja.eduplay@gmail.com>';
 
-  // 1. Try SendGrid
-  if (useSendGrid && sgMail) {
-    try {
+  try {
+    // Try SendGrid first
+    if (useSendGrid && sgMail) {
       logger.info('📤 Sending email via SendGrid...', { to, subject });
-      const [response] = await sgMail.send({
+
+      const msg = {
         to,
         from: fromEmail,
         subject,
         text: text || subject,
         html,
         ...(replyTo && { replyTo }),
-      });
-      logger.info('✅ Email sent via SendGrid', { to, subject, statusCode: response.statusCode });
-      return response;
-    } catch (error) {
-      logger.warn('⚠️ SendGrid failed, trying Nodemailer...', { error: error.message });
-    }
-  }
+      };
 
-  // 2. Try Gmail SMTP
-  if (useNodemailer && transporter) {
-    logger.info('📤 Sending email via Nodemailer...', { to, subject });
-    const result = await transporter.sendMail({
-      from: fromEmail,
+      const [response] = await sgMail.send(msg);
+
+      logger.info('✅ Email sent successfully via SendGrid', {
+        to,
+        subject,
+        statusCode: response.statusCode,
+      });
+
+      return response;
+    }
+
+    // Try Nodemailer
+    if (useNodemailer && transporter) {
+      logger.info('📤 Sending email via Nodemailer...', { to, subject });
+
+      const mailOptions = {
+        from: fromEmail,
+        to,
+        subject,
+        text: text || subject,
+        html,
+        ...(replyTo && { replyTo }),
+      };
+
+      const result = await transporter.sendMail(mailOptions);
+
+      logger.info('✅ Email sent successfully via Nodemailer', {
+        to,
+        subject,
+        messageId: result.messageId,
+      });
+
+      return result;
+    }
+
+    throw new Error('No email service configured');
+  } catch (error) {
+    logger.error('❌ Error sending email:', {
+      error: error.message,
       to,
       subject,
-      text: text || subject,
-      html,
-      ...(replyTo && { replyTo }),
     });
-    logger.info('✅ Email sent via Nodemailer', { to, subject, messageId: result.messageId });
-    return result;
+    throw error;
   }
-
-  throw new Error('No email service available — configure SENDGRID_API_KEY or EMAIL_USER/EMAIL_PASS');
 };
 
 /**
@@ -146,6 +157,8 @@ module.exports = {
   verifyConnection,
   sendEmail,
   getActiveService,
+  usingBrevo: false,
+  usingResend: false,
   usingSendGrid: useSendGrid,
   usingNodemailer: useNodemailer,
 };
