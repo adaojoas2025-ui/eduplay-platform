@@ -116,6 +116,9 @@ export default function Navbar() {
               <Link to="/admin/apps" className="text-xs font-semibold text-gray-700 hover:text-primary-500 px-3 py-1.5 whitespace-nowrap">
                 📱 Apps
               </Link>
+              <Link to="/my-products" className="text-xs font-semibold text-gray-700 hover:text-primary-500 px-3 py-1.5 whitespace-nowrap">
+                📚 Meus Cursos
+              </Link>
               <button onClick={handleSellClick} className="text-xs font-semibold text-primary-600 hover:text-primary-700 px-3 py-1.5 whitespace-nowrap flex items-center gap-1">
                 💰 Vender
                 <FiChevronDown className="w-3 h-3 -rotate-90" />
