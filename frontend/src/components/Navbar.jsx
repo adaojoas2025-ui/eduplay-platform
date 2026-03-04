@@ -263,7 +263,7 @@ export default function Navbar() {
               ) : (
                 <>
                   <button onClick={handleSellClick} className="flex items-center space-x-1 text-primary-600 hover:text-primary-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                    <FiDollarSign className="w-4 h-4" />
+                    <span>💰</span>
                     <span>Vender</span>
                     <FiChevronDown className="w-4 h-4 -rotate-90" />
                   </button>
