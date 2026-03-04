@@ -4,6 +4,7 @@
  */
 
 const emailService = require('../../services/email.service');
+const emailConfig = require('../../config/email');
 const userRepository = require('../../repositories/user.repository');
 const { USER_ROLES } = require('../../utils/constants');
 const ApiResponse = require('../../utils/ApiResponse');
@@ -82,14 +83,13 @@ const testEmailToAdmin = asyncHandler(async (req, res) => {
       admins: admins.length,
       results,
       emailConfig: {
+        activeProvider: emailConfig.getActiveService(),
+        useResend: !!process.env.RESEND_API_KEY,
+        resendFrom: process.env.RESEND_FROM || 'não configurado',
         usingSendGrid: !!process.env.SENDGRID_API_KEY,
-        usingSmtp: !process.env.SENDGRID_API_KEY,
-        smtpHost: process.env.EMAIL_HOST,
-        smtpPort: process.env.EMAIL_PORT,
-        smtpSecure: process.env.EMAIL_SECURE,
-        smtpUser: process.env.EMAIL_USER,
+        smtpUser: process.env.EMAIL_USER || 'não configurado',
         hasSmtpPass: !!process.env.EMAIL_PASS,
-        emailFrom: process.env.EMAIL_FROM
+        emailFrom: process.env.EMAIL_FROM || 'não configurado',
       }
     }, 'Teste de email concluído');
 
@@ -102,6 +102,26 @@ const testEmailToAdmin = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * Status público dos provedores de email (sem autenticação, sem enviar email)
+ */
+const getEmailStatus = (_req, res) => {
+  const active = emailConfig.getActiveService();
+  return ApiResponse.success(res, 200, {
+    activeProvider: active,
+    isWorking: active !== 'none',
+    providers: {
+      resend: !!process.env.RESEND_API_KEY,
+      sendgrid: !!process.env.SENDGRID_API_KEY,
+      smtp: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS),
+    },
+  }, active === 'none'
+    ? 'Nenhum provedor de email configurado no Render'
+    : `Email ativo via: ${active}`
+  );
+};
+
 module.exports = {
-  testEmailToAdmin
+  testEmailToAdmin,
+  getEmailStatus,
 };
