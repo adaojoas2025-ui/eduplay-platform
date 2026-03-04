@@ -136,9 +136,8 @@ router.delete('/cleanup/everything', async (req, res, next) => {
     await prisma.pix_transfers.deleteMany({});
     await prisma.commissions.deleteMany({});
     await prisma.orders.deleteMany({});
-    await prisma.products.deleteMany({});
     const result = await prisma.users.deleteMany({ where: { role: { not: 'ADMIN' } } });
-    return res.json({ success: true, message: `Limpeza completa: ${result.count} usuários e todos os produtos/pedidos removidos` });
+    return res.json({ success: true, message: `Limpeza completa: ${result.count} usuários e todos os pedidos removidos` });
   } catch (error) {
     next(error);
   }
