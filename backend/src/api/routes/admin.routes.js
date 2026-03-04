@@ -120,4 +120,49 @@ router.post('/products/:id/reject', adminController.rejectProduct);
  */
 router.delete('/products/:id', adminController.deleteProduct);
 
+/**
+ * @route   DELETE /api/v1/admin/cleanup/non-admin-users
+ * @desc    Remove all non-admin users and their data
+ * @access  Private (Admin)
+ */
+router.delete('/cleanup/non-admin-users', async (req, res, next) => {
+  const { prisma } = require('../../config/database');
+  try {
+    // Find non-admin users
+    const nonAdmins = await prisma.users.findMany({
+      where: { role: { not: 'ADMIN' } },
+      select: { id: true, email: true, name: true, role: true },
+    });
+
+    if (nonAdmins.length === 0) {
+      return res.json({ success: true, message: 'Nenhum usuário para remover', removed: 0 });
+    }
+
+    const nonAdminIds = nonAdmins.map(u => u.id);
+
+    const nonAdminProducts = await prisma.products.findMany({
+      where: { producerId: { in: nonAdminIds } },
+      select: { id: true },
+    });
+    const nonAdminProductIds = nonAdminProducts.map(p => p.id);
+
+    await prisma.pix_transfers.deleteMany({ where: { producerId: { in: nonAdminIds } } });
+    await prisma.commissions.deleteMany({ where: { producerId: { in: nonAdminIds } } });
+    await prisma.orders.deleteMany({ where: { buyerId: { in: nonAdminIds } } });
+    if (nonAdminProductIds.length > 0) {
+      await prisma.orders.deleteMany({ where: { productId: { in: nonAdminProductIds } } });
+    }
+    await prisma.users.deleteMany({ where: { id: { in: nonAdminIds } } });
+
+    return res.json({
+      success: true,
+      message: `${nonAdmins.length} usuários removidos`,
+      removed: nonAdmins.length,
+      users: nonAdmins.map(u => ({ email: u.email, role: u.role })),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
