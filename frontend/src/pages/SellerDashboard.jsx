@@ -4,8 +4,11 @@ import axios from 'axios';
 import { API_URL } from '../config/api.config';
 import TransferHistory from '../components/TransferHistory';
 import WithdrawalSection from '../components/WithdrawalSection';
+import { getUser } from '../lib/auth';
 
 export default function SellerDashboard() {
+  const currentUser = getUser();
+  const canAccessPix = currentUser?.role === 'PRODUCER' || currentUser?.role === 'ADMIN';
   const [stats, setStats] = useState(null);
   const [products, setProducts] = useState([]);
   const [recentSales, setRecentSales] = useState([]);
@@ -346,10 +349,12 @@ export default function SellerDashboard() {
         )}
 
         {/* Saque e Transferencias PIX */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <WithdrawalSection />
-          <TransferHistory limit={5} showViewAll={true} />
-        </div>
+        {canAccessPix && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <WithdrawalSection />
+            <TransferHistory limit={5} showViewAll={true} />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Produtos */}

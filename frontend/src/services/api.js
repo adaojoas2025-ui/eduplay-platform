@@ -61,9 +61,11 @@ api.interceptors.response.use(
       }
     }
 
-    // Show error toast
-    const message = error.response?.data?.message || 'Erro ao processar requisição';
-    toast.error(message);
+    // Show error toast (skip 403 - components handle permission errors themselves)
+    if (error.response?.status !== 403) {
+      const message = error.response?.data?.message || 'Erro ao processar requisição';
+      toast.error(message);
+    }
 
     return Promise.reject(error);
   }
