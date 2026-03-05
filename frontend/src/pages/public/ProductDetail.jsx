@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { productAPI } from '../../services/api';
-import { useAuth } from '../../hooks/useAuth';
 import { FiUser, FiShoppingCart, FiFileText } from 'react-icons/fi';
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState(false);
+  const [purchasing] = useState(false);
 
   useEffect(() => {
     fetchProduct();
@@ -101,11 +99,6 @@ export default function ProductDetail() {
             {purchasing ? 'Processando...' : 'Comprar Agora'}
           </button>
 
-          {!isAuthenticated && (
-            <p className="text-sm text-gray-600 mt-2 text-center">
-              Você precisa estar logado para comprar
-            </p>
-          )}
         </div>
       </div>
     </div>
