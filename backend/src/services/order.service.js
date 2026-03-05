@@ -21,19 +21,26 @@ const { USER_ROLES, ORDER_STATUS, COMMISSION_STATUS } = require('../utils/consta
  * @param {string} paymentType - Payment type ('pix' or 'card')
  * @returns {Object} Calculated amounts
  */
-const calculateOrderAmounts = (productPrice, paymentType = 'pix') => {
+const calculateOrderAmounts = (productPrice, paymentType = 'pix', installments = 1) => {
   const baseAmount = productPrice;
   const platformFeePercent = config.platform.feePercent;
   const platformFee = (baseAmount * platformFeePercent) / 100;
-  const producerAmount = baseAmount - platformFee;
 
   let amount = baseAmount;
+  let producerAmount = baseAmount - platformFee;
 
   if (paymentType === 'card') {
     const MP_CARD_FEE = 0.0499; // 4.99% Mercado Pago card fee
     const EXTRA_FEE = 1.00;     // R$1.00 fixed service fee
-    amount = baseAmount + (baseAmount * MP_CARD_FEE) + EXTRA_FEE;
-    amount = Math.round(amount * 100) / 100;
+    const cardFee = Math.round((baseAmount * MP_CARD_FEE + EXTRA_FEE) * 100) / 100;
+
+    if (installments > 1) {
+      // Parcelado: acréscimo vai para o comprador
+      amount = Math.round((baseAmount + cardFee) * 100) / 100;
+    } else {
+      // À vista: taxa descontada da comissão do vendedor
+      producerAmount = Math.max(0, Math.round((producerAmount - cardFee) * 100) / 100);
+    }
   }
 
   return {
@@ -51,7 +58,7 @@ const calculateOrderAmounts = (productPrice, paymentType = 'pix') => {
  */
 const createOrder = async (buyerId, orderData) => {
   try {
-    const { productId, paymentMethod, paymentType, bypassDuplicateCheck } = orderData;
+    const { productId, paymentMethod, paymentType, bypassDuplicateCheck, installments } = orderData;
 
     // Verify buyer exists
     const buyer = await userRepository.findUserById(buyerId);
@@ -78,7 +85,7 @@ const createOrder = async (buyerId, orderData) => {
     }
 
     // Calculate amounts
-    const amounts = calculateOrderAmounts(product.price, paymentType || 'pix');
+    const amounts = calculateOrderAmounts(product.price, paymentType || 'pix', installments || 1);
 
     // Create order
     const resolvedPaymentType = paymentType || 'pix';

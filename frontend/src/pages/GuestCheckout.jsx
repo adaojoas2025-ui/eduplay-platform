@@ -14,6 +14,7 @@ export default function GuestCheckout() {
   const [loadingProduct, setLoadingProduct] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '' });
   const [paymentType, setPaymentType] = useState('pix');
+  const [installments, setInstallments] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -54,7 +55,7 @@ export default function GuestCheckout() {
     setLoading(true);
     setError(null);
     try {
-      const response = await orderAPI.create({ productId, paymentType });
+      const response = await orderAPI.create({ productId, paymentType, installments });
       const data = response.data.data || response.data;
       if (!data.orderId) throw new Error('Pedido não retornado pelo servidor.');
       handlePaymentResult(data, data.orderId);
@@ -79,6 +80,7 @@ export default function GuestCheckout() {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         paymentType,
+        installments,
       });
 
       const { orderId, accessToken, refreshToken, isNewUser, user, tempPassword, ...paymentData } = res.data.data;
@@ -173,7 +175,34 @@ export default function GuestCheckout() {
                 <p className="text-xs text-gray-500 mt-2">QR Code aparece na próxima tela. Use o app do seu banco para pagar.</p>
               )}
               {paymentType === 'card' && (
-                <p className="text-xs text-gray-500 mt-2">Você será redirecionado para o Mercado Pago para inserir os dados do cartão.</p>
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Forma de pagamento no cartão:</p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setInstallments(1)}
+                      className={`flex-1 py-3 sm:py-2 rounded-lg border-2 font-medium text-sm transition ${
+                        installments === 1
+                          ? 'border-blue-600 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                      }`}
+                    >
+                      À vista (sem acréscimo)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInstallments(2)}
+                      className={`flex-1 py-3 sm:py-2 rounded-lg border-2 font-medium text-sm transition ${
+                        installments > 1
+                          ? 'border-blue-600 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                      }`}
+                    >
+                      Parcelado (com acréscimo)
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Você será redirecionado para o Mercado Pago para inserir os dados do cartão.</p>
+                </div>
               )}
             </div>
 

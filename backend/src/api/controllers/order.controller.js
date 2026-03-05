@@ -19,8 +19,9 @@ const logger = require('../../utils/logger');
  * @access Private (Buyer)
  */
 const createOrder = asyncHandler(async (req, res) => {
-  const order = await orderService.createOrder(req.user.id, req.body);
   const paymentType = req.body.paymentType || 'pix';
+  const installments = req.body.installments || 1;
+  const order = await orderService.createOrder(req.user.id, { ...req.body, paymentType, installments });
 
   if (paymentType === 'card') {
     // Card: redirect to Mercado Pago checkout
@@ -209,14 +210,14 @@ const getOrdersByStatusCount = asyncHandler(async (req, res) => {
  * @access Public
  */
 const createGuestOrder = asyncHandler(async (req, res) => {
-  const { productId, name, email, paymentMethod = 'PIX', paymentType = 'pix' } = req.body;
+  const { productId, name, email, paymentMethod = 'PIX', paymentType = 'pix', installments = 1 } = req.body;
 
   // 1. Find or create user account
   const { user, isNewUser, tempPassword, accessToken, refreshToken } =
     await authService.registerOrGet(name, email);
 
   // 2. Create order (guest checkout bypasses duplicate check — user may be re-testing)
-  const order = await orderService.createOrder(user.id, { productId, paymentMethod, paymentType, bypassDuplicateCheck: true });
+  const order = await orderService.createOrder(user.id, { productId, paymentMethod, paymentType, installments, bypassDuplicateCheck: true });
 
   // 3. Create payment based on type
   let paymentResult = {};
