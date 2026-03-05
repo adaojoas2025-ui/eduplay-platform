@@ -111,6 +111,49 @@ const createPaymentPreference = async (order) => {
 };
 
 /**
+ * Create direct PIX payment (transparent checkout — no redirect to Mercado Pago)
+ * @param {Object} order - Order object with buyer and product included
+ * @returns {Promise<Object>} PIX QR code data
+ */
+const createPixPayment = async (order) => {
+  try {
+    const product = order.product;
+    if (!product) throw ApiError.notFound('Product not found for this order');
+
+    const nameParts = (order.buyer.name || '').trim().split(' ');
+    const firstName = nameParts[0] || 'Cliente';
+    const lastName = nameParts.slice(1).join(' ') || 'EducaplayJA';
+
+    const payment = await mercadopago.createPayment({
+      transaction_amount: Number(order.amount),
+      description: product.title.substring(0, 256),
+      payment_method_id: 'pix',
+      payer: {
+        email: order.buyer.email,
+        first_name: firstName,
+        last_name: lastName,
+      },
+      notification_url: `${config.backend.url}/api/v1/payments/webhook`,
+      external_reference: order.id,
+    });
+
+    await orderRepository.updateOrder(order.id, { paymentId: String(payment.id) });
+
+    logger.info('PIX payment created', { orderId: order.id, paymentId: payment.id });
+
+    return {
+      paymentId: payment.id,
+      pixQrCode: payment.point_of_interaction?.transaction_data?.qr_code,
+      pixQrCodeBase64: payment.point_of_interaction?.transaction_data?.qr_code_base64,
+      pixExpiresAt: payment.date_of_expiration,
+    };
+  } catch (error) {
+    logger.error('Error creating PIX payment:', error);
+    throw error;
+  }
+};
+
+/**
  * Create payment preference for app order
  * @param {Object} order - Order object (with buyer included)
  * @param {Object} app - App object
@@ -436,6 +479,7 @@ const getOrderPaymentDetails = async (orderId, userId) => {
 
 module.exports = {
   createPaymentPreference,
+  createPixPayment,
   createAppPaymentPreference,
   processPaymentWebhook,
   verifyPaymentStatus,

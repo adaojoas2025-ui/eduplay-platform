@@ -180,6 +180,22 @@ const createPixPayoutAlternative = async (data) => {
 };
 
 /**
+ * Create direct payment (used for PIX transparent checkout)
+ * @param {Object} data - Payment data
+ * @returns {Promise<Object>} Payment response with QR code data
+ */
+const createPayment = async (data) => {
+  try {
+    const payment = await paymentAPI.create({ body: data });
+    logger.info('Payment created', { paymentId: payment.id, method: data.payment_method_id });
+    return payment;
+  } catch (error) {
+    logger.error('Error creating payment:', error);
+    throw error;
+  }
+};
+
+/**
  * Create refund for a payment
  * @param {string} paymentId - Payment ID to refund
  * @param {Object} data - Refund data (optional amount)
@@ -222,6 +238,7 @@ module.exports = {
   preferenceAPI,
   paymentAPI,
   createPreference,
+  createPayment,
   getPayment,
   createRefund,
   createPixPayout,

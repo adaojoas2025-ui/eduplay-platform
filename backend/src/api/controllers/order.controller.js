@@ -21,16 +21,18 @@ const logger = require('../../utils/logger');
 const createOrder = asyncHandler(async (req, res) => {
   const order = await orderService.createOrder(req.user.id, req.body);
 
-  // Create payment preference
-  const paymentPreference = await paymentService.createPaymentPreference(order);
+  // Create direct PIX payment (no redirect to Mercado Pago)
+  const pixData = await paymentService.createPixPayment(order);
 
   return ApiResponse.success(
     res,
     201,
     {
       order,
-      payment: paymentPreference,
-      paymentUrl: paymentPreference?.initPoint,
+      orderId: order.id,
+      pixQrCode: pixData.pixQrCode,
+      pixQrCodeBase64: pixData.pixQrCodeBase64,
+      pixExpiresAt: pixData.pixExpiresAt,
     },
     'Order created successfully'
   );
@@ -209,8 +211,8 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   // 2. Create order (guest checkout bypasses duplicate check — user may be re-testing)
   const order = await orderService.createOrder(user.id, { productId, paymentMethod, paymentType, bypassDuplicateCheck: true });
 
-  // 3. Create Mercado Pago payment preference
-  const paymentPreference = await paymentService.createPaymentPreference(order);
+  // 3. Create direct PIX payment (no redirect to Mercado Pago)
+  const pixData = await paymentService.createPixPayment(order);
 
   // 4. Send emails based on whether user is new or existing
   if (isNewUser) {
@@ -223,7 +225,6 @@ const createGuestOrder = asyncHandler(async (req, res) => {
       );
     }
   } else {
-    // Existing user: send login reminder so they know how to access their product
     emailService.sendLoginReminderEmail(user).catch((err) =>
       logger.error('Failed to send login reminder email', { error: err.message })
     );
@@ -231,7 +232,10 @@ const createGuestOrder = asyncHandler(async (req, res) => {
 
   return ApiResponse.success(res, 201, {
     order,
-    paymentUrl: paymentPreference?.initPoint,
+    orderId: order.id,
+    pixQrCode: pixData.pixQrCode,
+    pixQrCodeBase64: pixData.pixQrCodeBase64,
+    pixExpiresAt: pixData.pixExpiresAt,
     accessToken,
     refreshToken,
     isNewUser,

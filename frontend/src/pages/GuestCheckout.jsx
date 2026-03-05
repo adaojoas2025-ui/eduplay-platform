@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config/api.config';
 import { useAuth } from '../hooks/useAuth';
@@ -7,7 +7,8 @@ import { orderAPI } from '../services/api';
 
 export default function GuestCheckout() {
   const { productId } = useParams();
-const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
 
   const [product, setProduct] = useState(null);
   const [loadingProduct, setLoadingProduct] = useState(true);
@@ -40,9 +41,11 @@ const { user, isAuthenticated } = useAuth();
     setError(null);
     try {
       const response = await orderAPI.create({ productId, paymentType: 'pix' });
-      const paymentUrl = response.data.data?.paymentUrl || response.data.paymentUrl || response.data.initPoint || response.data.data?.initPoint;
-      if (!paymentUrl) throw new Error('URL de pagamento não retornada pelo servidor.');
-      window.location.href = paymentUrl;
+      const data = response.data.data || response.data;
+      const { orderId, pixQrCode, pixQrCodeBase64, pixExpiresAt } = data;
+      if (!orderId) throw new Error('Pedido não retornado pelo servidor.');
+      sessionStorage.setItem('pixData_' + orderId, JSON.stringify({ pixQrCode, pixQrCodeBase64, pixExpiresAt }));
+      navigate(`/order/${orderId}/pix`);
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao criar pedido. Tente novamente.');
       setLoading(false);
@@ -66,25 +69,26 @@ const { user, isAuthenticated } = useAuth();
         paymentType: 'pix',
       });
 
-      const { paymentUrl, accessToken, refreshToken, isNewUser, user, tempPassword } = res.data.data;
+      const { orderId, pixQrCode, pixQrCodeBase64, pixExpiresAt, accessToken, refreshToken, isNewUser, user, tempPassword } = res.data.data;
 
       // Auto-login with the returned tokens and user data
       if (accessToken) {
         localStorage.setItem('token', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
-        // Save under both keys: 'user' (Zustand/ProtectedRoute) and 'userData' (Navbar/lib/auth.js)
         if (user) {
           localStorage.setItem('user', JSON.stringify(user));
           localStorage.setItem('userData', JSON.stringify(user));
         }
       }
 
-      // Save guest info so OrderPending can show personalized instructions
+      // Save guest info for OrderSuccess page
       sessionStorage.setItem('guestEmail', formData.email.trim().toLowerCase());
       sessionStorage.setItem('guestIsNew', isNewUser ? 'true' : 'false');
       if (tempPassword) sessionStorage.setItem('guestTempPassword', tempPassword);
 
-      window.location.href = paymentUrl;
+      // Save PIX data and navigate to QR code page (no redirect to Mercado Pago)
+      sessionStorage.setItem('pixData_' + orderId, JSON.stringify({ pixQrCode, pixQrCodeBase64, pixExpiresAt }));
+      navigate(`/order/${orderId}/pix`);
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao processar. Tente novamente.');
       setLoading(false);

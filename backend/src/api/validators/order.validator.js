@@ -120,7 +120,7 @@ const getOrderStatsSchema = Joi.object({
  */
 const paymentCallbackSchema = Joi.object({
   body: Joi.object({
-    action: Joi.string().required(),
+    action: Joi.string().optional(),
     api_version: Joi.string().optional(),
     data: Joi.object({
       id: Joi.string().required(),

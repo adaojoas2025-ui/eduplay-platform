@@ -10,6 +10,7 @@ import { useCart } from './contexts/CartContext';
 import OrderSuccess from './pages/OrderSuccess';
 import OrderFailure from './pages/OrderFailure';
 import OrderPending from './pages/OrderPending';
+import OrderPixPending from './pages/OrderPixPending';
 import Checkout from './pages/Checkout';
 import GuestCheckout from './pages/GuestCheckout';
 import MyProducts from './pages/MyProducts';
@@ -911,6 +912,7 @@ function App() {
         <Route path="/order/:id/success" element={<OrderSuccess />} />
         <Route path="/order/:id/failure" element={<OrderFailure />} />
         <Route path="/order/:id/pending" element={<OrderPending />} />
+        <Route path="/order/:id/pix" element={<OrderPixPending />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfile /></ProtectedRoute>} />
         <Route path="/seller/dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
