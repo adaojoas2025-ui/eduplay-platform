@@ -20,22 +20,29 @@ const logger = require('../../utils/logger');
  */
 const createOrder = asyncHandler(async (req, res) => {
   const order = await orderService.createOrder(req.user.id, req.body);
+  const paymentType = req.body.paymentType || 'pix';
 
-  // Create direct PIX payment (no redirect to Mercado Pago)
-  const pixData = await paymentService.createPixPayment(order);
-
-  return ApiResponse.success(
-    res,
-    201,
-    {
+  if (paymentType === 'card') {
+    // Card: redirect to Mercado Pago checkout
+    const paymentPreference = await paymentService.createPaymentPreference(order);
+    return ApiResponse.success(res, 201, {
       order,
       orderId: order.id,
-      pixQrCode: pixData.pixQrCode,
-      pixQrCodeBase64: pixData.pixQrCodeBase64,
-      pixExpiresAt: pixData.pixExpiresAt,
-    },
-    'Order created successfully'
-  );
+      paymentType: 'card',
+      paymentUrl: paymentPreference?.initPoint,
+    }, 'Order created successfully');
+  }
+
+  // PIX: transparent checkout — QR code on site
+  const pixData = await paymentService.createPixPayment(order);
+  return ApiResponse.success(res, 201, {
+    order,
+    orderId: order.id,
+    paymentType: 'pix',
+    pixQrCode: pixData.pixQrCode,
+    pixQrCodeBase64: pixData.pixQrCodeBase64,
+    pixExpiresAt: pixData.pixExpiresAt,
+  }, 'Order created successfully');
 });
 
 /**
@@ -211,8 +218,20 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   // 2. Create order (guest checkout bypasses duplicate check — user may be re-testing)
   const order = await orderService.createOrder(user.id, { productId, paymentMethod, paymentType, bypassDuplicateCheck: true });
 
-  // 3. Create direct PIX payment (no redirect to Mercado Pago)
-  const pixData = await paymentService.createPixPayment(order);
+  // 3. Create payment based on type
+  let paymentResult = {};
+  if (paymentType === 'card') {
+    const paymentPreference = await paymentService.createPaymentPreference(order);
+    paymentResult = { paymentType: 'card', paymentUrl: paymentPreference?.initPoint };
+  } else {
+    const pixData = await paymentService.createPixPayment(order);
+    paymentResult = {
+      paymentType: 'pix',
+      pixQrCode: pixData.pixQrCode,
+      pixQrCodeBase64: pixData.pixQrCodeBase64,
+      pixExpiresAt: pixData.pixExpiresAt,
+    };
+  }
 
   // 4. Send emails based on whether user is new or existing
   if (isNewUser) {
@@ -233,9 +252,7 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 201, {
     order,
     orderId: order.id,
-    pixQrCode: pixData.pixQrCode,
-    pixQrCodeBase64: pixData.pixQrCodeBase64,
-    pixExpiresAt: pixData.pixExpiresAt,
+    ...paymentResult,
     accessToken,
     refreshToken,
     isNewUser,

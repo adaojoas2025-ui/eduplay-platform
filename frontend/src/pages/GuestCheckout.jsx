@@ -13,6 +13,7 @@ export default function GuestCheckout() {
   const [product, setProduct] = useState(null);
   const [loadingProduct, setLoadingProduct] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '' });
+  const [paymentType, setPaymentType] = useState('pix');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -35,24 +36,35 @@ export default function GuestCheckout() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Logged-in user: use the authenticated order endpoint directly
+  const handlePaymentResult = (data, orderId) => {
+    if (data.paymentType === 'card' && data.paymentUrl) {
+      window.location.href = data.paymentUrl;
+    } else {
+      sessionStorage.setItem('pixData_' + orderId, JSON.stringify({
+        pixQrCode: data.pixQrCode,
+        pixQrCodeBase64: data.pixQrCodeBase64,
+        pixExpiresAt: data.pixExpiresAt,
+      }));
+      navigate(`/order/${orderId}/pix`);
+    }
+  };
+
+  // Logged-in user
   const handleAuthenticatedPurchase = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await orderAPI.create({ productId, paymentType: 'pix' });
+      const response = await orderAPI.create({ productId, paymentType });
       const data = response.data.data || response.data;
-      const { orderId, pixQrCode, pixQrCodeBase64, pixExpiresAt } = data;
-      if (!orderId) throw new Error('Pedido não retornado pelo servidor.');
-      sessionStorage.setItem('pixData_' + orderId, JSON.stringify({ pixQrCode, pixQrCodeBase64, pixExpiresAt }));
-      navigate(`/order/${orderId}/pix`);
+      if (!data.orderId) throw new Error('Pedido não retornado pelo servidor.');
+      handlePaymentResult(data, data.orderId);
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao criar pedido. Tente novamente.');
       setLoading(false);
     }
   };
 
-  // Guest user: create account + order in one step
+  // Guest user
   const handleGuestPurchase = async (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.email.trim()) {
@@ -66,12 +78,11 @@ export default function GuestCheckout() {
         productId,
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
-        paymentType: 'pix',
+        paymentType,
       });
 
-      const { orderId, pixQrCode, pixQrCodeBase64, pixExpiresAt, accessToken, refreshToken, isNewUser, user, tempPassword } = res.data.data;
+      const { orderId, accessToken, refreshToken, isNewUser, user, tempPassword, ...paymentData } = res.data.data;
 
-      // Auto-login with the returned tokens and user data
       if (accessToken) {
         localStorage.setItem('token', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
@@ -81,14 +92,11 @@ export default function GuestCheckout() {
         }
       }
 
-      // Save guest info for OrderSuccess page
       sessionStorage.setItem('guestEmail', formData.email.trim().toLowerCase());
       sessionStorage.setItem('guestIsNew', isNewUser ? 'true' : 'false');
       if (tempPassword) sessionStorage.setItem('guestTempPassword', tempPassword);
 
-      // Save PIX data and navigate to QR code page (no redirect to Mercado Pago)
-      sessionStorage.setItem('pixData_' + orderId, JSON.stringify({ pixQrCode, pixQrCodeBase64, pixExpiresAt }));
-      navigate(`/order/${orderId}/pix`);
+      handlePaymentResult(paymentData, orderId);
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao processar. Tente novamente.');
       setLoading(false);
@@ -132,11 +140,47 @@ export default function GuestCheckout() {
             </p>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 space-y-5">
+
+            {/* Payment method selection */}
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">Forma de pagamento:</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPaymentType('pix')}
+                  className={`flex items-center justify-center gap-2 py-3 rounded-lg border-2 font-medium text-sm transition ${
+                    paymentType === 'pix'
+                      ? 'border-purple-600 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  🔑 PIX
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentType('card')}
+                  className={`flex items-center justify-center gap-2 py-3 rounded-lg border-2 font-medium text-sm transition ${
+                    paymentType === 'card'
+                      ? 'border-purple-600 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  💳 Cartão
+                </button>
+              </div>
+              {paymentType === 'pix' && (
+                <p className="text-xs text-gray-500 mt-2">QR Code aparece na próxima tela. Use o app do seu banco para pagar.</p>
+              )}
+              {paymentType === 'card' && (
+                <p className="text-xs text-gray-500 mt-2">Você será redirecionado para o Mercado Pago para inserir os dados do cartão.</p>
+              )}
+            </div>
+
             {isAuthenticated && !!user?.email ? (
-              // Logged-in flow: just confirm and pay
-              <div className="space-y-4">
-                <p className="text-gray-600">
+              // Logged-in flow
+              <div className="space-y-3">
+                <p className="text-gray-600 text-sm">
                   Comprando como <strong>{user?.name}</strong> ({user?.email})
                 </p>
                 {error && <p className="text-red-600 text-sm">{error}</p>}
@@ -145,7 +189,7 @@ export default function GuestCheckout() {
                   disabled={loading}
                   className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50"
                 >
-                  {loading ? 'Processando...' : 'Pagar Agora'}
+                  {loading ? 'Processando...' : paymentType === 'pix' ? 'Gerar QR Code PIX' : 'Pagar com Cartão'}
                 </button>
                 <p className="text-center text-sm text-gray-500">
                   Não é você?{' '}
@@ -158,11 +202,11 @@ export default function GuestCheckout() {
                 </p>
               </div>
             ) : (
-              // Guest flow: name + email form
+              // Guest flow
               <form onSubmit={handleGuestPurchase} className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-1">Seus dados para acesso</h3>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <h3 className="text-base font-semibold text-gray-800 mb-1">Seus dados para acesso</h3>
+                  <p className="text-sm text-gray-500">
                     Usaremos seu e-mail para criar sua conta e enviar o acesso ao produto.
                   </p>
                 </div>
@@ -200,7 +244,7 @@ export default function GuestCheckout() {
                   disabled={loading}
                   className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50"
                 >
-                  {loading ? 'Processando...' : 'Continuar para Pagamento'}
+                  {loading ? 'Processando...' : paymentType === 'pix' ? 'Gerar QR Code PIX' : 'Continuar para Cartão'}
                 </button>
 
                 <p className="text-center text-sm text-gray-500">
