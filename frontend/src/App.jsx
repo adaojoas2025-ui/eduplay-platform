@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import ScrollToTop from './components/ScrollToTop';
 import CallbackGoogle from './components/auth/CallbackGoogle';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useCart } from './contexts/CartContext';
@@ -886,6 +887,7 @@ const Profile = () => <div className="p-8"><h1 className="text-3xl font-bold">Pe
 function App() {
   return (
     <div className="min-h-screen bg-gray-50">
+      <ScrollToTop />
       <AchievementQueueManager />
       <Navbar />
       <Routes>
