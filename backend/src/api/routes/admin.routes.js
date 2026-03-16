@@ -161,11 +161,11 @@ router.get('/cleanup/non-admin-users', async (req, res, next) => {
     const nonAdmins = await prisma.users.findMany({
       where: { role: { not: 'ADMIN' } },
       select: { id: true, email: true, name: true, role: true },
-      orderBy: { id: 'desc' },
     });
     return res.json({ success: true, data: nonAdmins });
   } catch (error) {
-    next(error);
+    console.error('[GET /cleanup/non-admin-users] Error:', error.message, error.stack);
+    return res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -198,11 +198,21 @@ router.delete('/users/:id', async (req, res, next) => {
 router.delete('/cleanup/non-admin-users', async (req, res, next) => {
   const { prisma } = require('../../config/database');
   try {
-    // Find non-admin users
-    const nonAdmins = await prisma.users.findMany({
-      where: { role: { not: 'ADMIN' } },
-      select: { id: true, email: true, name: true, role: true },
-    });
+    // If specific userIds provided, only delete those; otherwise delete all non-admins
+    const requestedIds = req.body?.userIds;
+
+    let nonAdmins;
+    if (requestedIds && requestedIds.length > 0) {
+      nonAdmins = await prisma.users.findMany({
+        where: { id: { in: requestedIds }, role: { not: 'ADMIN' } },
+        select: { id: true, email: true, name: true, role: true },
+      });
+    } else {
+      nonAdmins = await prisma.users.findMany({
+        where: { role: { not: 'ADMIN' } },
+        select: { id: true, email: true, name: true, role: true },
+      });
+    }
 
     if (nonAdmins.length === 0) {
       return res.json({ success: true, message: 'Nenhum usuário para remover', removed: 0 });

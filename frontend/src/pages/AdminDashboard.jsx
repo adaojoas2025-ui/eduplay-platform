@@ -55,10 +55,11 @@ export default function AdminDashboard() {
     setUsersListLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/admin/cleanup/non-admin-users`, {
+      const res = await axios.get(`${API_URL}/users?limit=200`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsersList(res.data.data || []);
+      const allUsers = res.data.data || res.data.users || [];
+      setUsersList(allUsers.filter(u => u.role !== 'ADMIN'));
     } catch (err) {
       alert('Erro ao carregar usuários');
       setUsersModal(false);
@@ -72,8 +73,9 @@ export default function AdminDashboard() {
     setRemovingUserId(userId);
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/admin/users/${userId}`, {
+      await axios.delete(`${API_URL}/admin/cleanup/non-admin-users`, {
         headers: { Authorization: `Bearer ${token}` },
+        data: { userIds: [userId] },
       });
       setUsersList(prev => prev.filter(u => u.id !== userId));
       fetchDashboardStats();
