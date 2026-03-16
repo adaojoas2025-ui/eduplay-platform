@@ -58,7 +58,7 @@ export default function AdminDashboard() {
       const res = await axios.get(`${API_URL}/users?limit=100&page=1`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const allUsers = res.data.items || res.data.data || [];
+      const allUsers = res.data.data?.items || res.data.items || [];
       setUsersList(allUsers.filter(u => u.role !== 'ADMIN'));
     } catch (err) {
       alert('Erro ao carregar usuários');
