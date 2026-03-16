@@ -294,6 +294,16 @@ const deleteProduct = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 200, null, 'Product deleted successfully');
 });
 
+const listNonAdminUsers = asyncHandler(async (req, res) => {
+  const result = await userService.listUsers(
+    { role: undefined },
+    { page: 1, limit: 200 },
+    { sortBy: 'createdAt', order: 'desc' }
+  );
+  const nonAdmins = result.users.filter(u => u.role !== 'ADMIN');
+  return ApiResponse.success(res, 200, nonAdmins, 'Users retrieved successfully');
+});
+
 module.exports = {
   getDashboardStats,
   getCommissionStats,
@@ -310,4 +320,5 @@ module.exports = {
   approveProduct,
   rejectProduct,
   deleteProduct,
+  listNonAdminUsers,
 };

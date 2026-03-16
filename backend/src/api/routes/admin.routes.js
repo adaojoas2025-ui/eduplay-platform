@@ -90,6 +90,8 @@ router.patch('/users/:id/role', adminController.updateUserRole);
  * @desc    List all products (all statuses, all users)
  * @access  Private (Admin)
  */
+router.get('/users', adminController.listNonAdminUsers);
+
 router.get('/products', adminController.listAllProducts);
 
 /**
