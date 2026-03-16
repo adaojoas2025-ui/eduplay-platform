@@ -55,13 +55,13 @@ export default function AdminDashboard() {
     setUsersListLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/users?limit=100&page=1`, {
+      const res = await axios.get(`${API_URL}/admin/cleanup/non-admin-users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const allUsers = res.data.data?.items || res.data.items || [];
-      setUsersList(allUsers.filter(u => u.role !== 'ADMIN'));
+      const allUsers = res.data.data || [];
+      setUsersList(allUsers);
     } catch (err) {
-      alert('Erro ao carregar usuários');
+      alert('Erro ao carregar usuários: ' + (err.response?.data?.message || err.response?.status || err.message));
       setUsersModal(false);
     } finally {
       setUsersListLoading(false);
