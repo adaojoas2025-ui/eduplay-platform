@@ -115,7 +115,7 @@ const createPaymentPreference = async (order) => {
  * @param {Object} order - Order object with buyer and product included
  * @returns {Promise<Object>} PIX QR code data
  */
-const createPixPayment = async (order) => {
+const createPixPayment = async (order, amountOverride = null) => {
   try {
     const product = order.product;
     if (!product) throw ApiError.notFound('Product not found for this order');
@@ -125,7 +125,7 @@ const createPixPayment = async (order) => {
     const lastName = nameParts.slice(1).join(' ') || 'EducaplayJA';
 
     const payment = await mercadopago.createPayment({
-      transaction_amount: Number(order.amount),
+      transaction_amount: Number(amountOverride || order.amount),
       description: product.title.substring(0, 256),
       payment_method_id: 'pix',
       payer: {
@@ -320,6 +320,34 @@ const processPaymentWebhook = async (notification) => {
       } catch (emailError) {
         logger.error('Failed to send product access email', { error: emailError, orderId: order.id });
         // Don't throw - order is still processed successfully
+      }
+
+      // Mark bump orders complete if they were part of this payment
+      const bumpOrderIds = order.metadata?.bumpOrderIds;
+      if (bumpOrderIds?.length > 0) {
+        for (const bumpOrderId of bumpOrderIds) {
+          try {
+            await orderService.updateOrderStatus(bumpOrderId, ORDER_STATUS.COMPLETED, {
+              paidAt: new Date(payment.date_approved),
+              paymentStatus: 'approved',
+              paymentDetails: {
+                paymentId: payment.id,
+                status: payment.status,
+                statusDetail: payment.status_detail,
+                paymentType: payment.payment_type_id,
+                paymentMethod: payment.payment_method_id,
+              },
+            });
+            const bumpOrder = await orderRepository.findOrderById(bumpOrderId);
+            if (bumpOrder?.productId) {
+              const bumpProduct = await productRepository.findProductById(bumpOrder.productId);
+              await emailService.sendProductAccessEmail(bumpOrder.buyer, bumpProduct, bumpOrder);
+            }
+            logger.info('Bump order marked complete', { bumpOrderId, mainOrderId: order.id });
+          } catch (bumpErr) {
+            logger.error('Failed to mark bump order complete', { bumpOrderId, error: bumpErr.message });
+          }
+        }
       }
 
       // Note: PIX transfer is now done on-demand when producer requests withdrawal

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_URL } from '../config/api.config';
 import { useAuth } from '../hooks/useAuth';
 import { orderAPI } from '../services/api';
+import OrderBumpSuggestion from '../components/OrderBumpSuggestion';
 
 export default function GuestCheckout() {
   const { productId } = useParams();
@@ -17,6 +18,8 @@ export default function GuestCheckout() {
   const [installments, setInstallments] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedBumps, setSelectedBumps] = useState([]);
+  const [bumpTotal, setBumpTotal] = useState(0);
 
   useEffect(() => {
     fetchProduct();
@@ -37,6 +40,19 @@ export default function GuestCheckout() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleAddBump = (bump, isAdding) => {
+    const finalPrice = bump.discountPercent
+      ? bump.product.price * (1 - bump.discountPercent / 100)
+      : bump.product.price;
+    if (isAdding) {
+      setSelectedBumps(prev => [...prev, { ...bump, finalPrice }]);
+      setBumpTotal(prev => prev + finalPrice);
+    } else {
+      setSelectedBumps(prev => prev.filter(b => b.id !== bump.id));
+      setBumpTotal(prev => prev - finalPrice);
+    }
+  };
+
   const handlePaymentResult = (data, orderId) => {
     if (data.paymentType === 'card' && data.paymentUrl) {
       window.location.href = data.paymentUrl;
@@ -55,7 +71,9 @@ export default function GuestCheckout() {
     setLoading(true);
     setError(null);
     try {
-      const response = await orderAPI.create({ productId, paymentType, installments });
+      const bumpProductIds = selectedBumps.map(b => b.product.id);
+      const bumpIds = selectedBumps.map(b => b.id);
+      const response = await orderAPI.create({ productId, paymentType, installments, bumpProductIds, bumpIds });
       const data = response.data.data || response.data;
       if (!data.orderId) throw new Error('Pedido não retornado pelo servidor.');
       handlePaymentResult(data, data.orderId);
@@ -75,12 +93,16 @@ export default function GuestCheckout() {
     setLoading(true);
     setError(null);
     try {
+      const bumpProductIds = selectedBumps.map(b => b.product.id);
+      const bumpIds = selectedBumps.map(b => b.id);
       const res = await axios.post(`${API_URL}/orders/guest`, {
         productId,
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         paymentType,
         installments,
+        bumpProductIds,
+        bumpIds,
       });
 
       const { orderId, accessToken, refreshToken, isNewUser, user, tempPassword, ...paymentData } = res.data.data;
@@ -125,6 +147,7 @@ export default function GuestCheckout() {
   }
 
   const price = product?.price ?? 0;
+  const totalPrice = price + bumpTotal;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -137,12 +160,34 @@ export default function GuestCheckout() {
           )}
           <div className="p-6 border-b">
             <h2 className="text-xl font-bold text-gray-800">{product?.title}</h2>
-            <p className="text-3xl font-bold text-purple-600 mt-2">
-              {price === 0 ? 'Grátis' : `R$ ${price.toFixed(2).replace('.', ',')}`}
-            </p>
+            {bumpTotal > 0 ? (
+              <div className="mt-2">
+                <span className="text-lg text-gray-400 line-through mr-2">
+                  R$ {price.toFixed(2).replace('.', ',')}
+                </span>
+                <span className="text-3xl font-bold text-purple-600">
+                  R$ {totalPrice.toFixed(2).replace('.', ',')}
+                </span>
+                <p className="text-sm text-green-600 mt-1">
+                  Inclui {selectedBumps.length} oferta{selectedBumps.length > 1 ? 's' : ''} especial{selectedBumps.length > 1 ? 'is' : ''}
+                </p>
+              </div>
+            ) : (
+              <p className="text-3xl font-bold text-purple-600 mt-2">
+                {price === 0 ? 'Grátis' : `R$ ${price.toFixed(2).replace('.', ',')}`}
+              </p>
+            )}
           </div>
 
           <div className="p-6 space-y-5">
+
+            {/* Order Bump Suggestions */}
+            {product && (
+              <OrderBumpSuggestion
+                cartItems={[{ productId: product.id, product }]}
+                onAddBump={handleAddBump}
+              />
+            )}
 
             {/* Payment method selection */}
             <div>

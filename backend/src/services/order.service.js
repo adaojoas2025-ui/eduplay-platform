@@ -58,7 +58,7 @@ const calculateOrderAmounts = (productPrice, paymentType = 'pix', installments =
  */
 const createOrder = async (buyerId, orderData) => {
   try {
-    const { productId, paymentMethod, paymentType, bypassDuplicateCheck, installments } = orderData;
+    const { productId, paymentMethod, paymentType, bypassDuplicateCheck, installments, extraMetadata = {} } = orderData;
 
     // Verify buyer exists
     const buyer = await userRepository.findUserById(buyerId);
@@ -98,7 +98,7 @@ const createOrder = async (buyerId, orderData) => {
       platformFee: amounts.platformFee,
       producerAmount: amounts.producerAmount,
       paymentMethod,
-      metadata: { paymentType: resolvedPaymentType },
+      metadata: { paymentType: resolvedPaymentType, ...extraMetadata },
       status: ORDER_STATUS.PENDING,
     });
 

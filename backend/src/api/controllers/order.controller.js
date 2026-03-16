@@ -9,6 +9,7 @@ const paymentService = require('../../services/payment.service');
 const emailService = require('../../services/email.service');
 const authService = require('../../services/auth.service');
 const gamificationService = require('../services/gamification.service');
+const orderBumpService = require('../services/order-bump.service');
 const ApiResponse = require('../../utils/ApiResponse');
 const asyncHandler = require('../../utils/asyncHandler');
 const logger = require('../../utils/logger');
@@ -210,22 +211,55 @@ const getOrdersByStatusCount = asyncHandler(async (req, res) => {
  * @access Public
  */
 const createGuestOrder = asyncHandler(async (req, res) => {
-  const { productId, name, email, paymentMethod = 'PIX', paymentType = 'pix', installments = 1 } = req.body;
+  const { productId, name, email, paymentMethod = 'PIX', paymentType = 'pix', installments = 1, bumpProductIds = [], bumpIds = [] } = req.body;
 
   // 1. Find or create user account
   const { user, isNewUser, tempPassword, accessToken, refreshToken } =
     await authService.registerOrGet(name, email);
 
-  // 2. Create order (guest checkout bypasses duplicate check — user may be re-testing)
-  const order = await orderService.createOrder(user.id, { productId, paymentMethod, paymentType, installments, bypassDuplicateCheck: true });
+  // 2. Create bump orders first (so we have their IDs for main order metadata)
+  const bumpOrders = [];
+  for (const bumpProductId of bumpProductIds) {
+    try {
+      const bumpOrder = await orderService.createOrder(user.id, {
+        productId: bumpProductId,
+        paymentMethod,
+        paymentType,
+        installments,
+        bypassDuplicateCheck: true,
+      });
+      bumpOrders.push(bumpOrder);
+    } catch (err) {
+      logger.warn('Failed to create bump order, skipping', { bumpProductId, error: err.message });
+    }
+  }
 
-  // 3. Create payment based on type
+  // 3. Create main order with bump order IDs in metadata
+  const bumpOrderIds = bumpOrders.map(o => o.id);
+  const order = await orderService.createOrder(user.id, {
+    productId,
+    paymentMethod,
+    paymentType,
+    installments,
+    bypassDuplicateCheck: true,
+    extraMetadata: bumpOrderIds.length > 0 ? { bumpOrderIds } : {},
+  });
+
+  // 4. Track bump conversions
+  for (const bumpId of bumpIds) {
+    orderBumpService.trackEvent(bumpId, 'conversion').catch(() => {});
+  }
+
+  // 5. Create payment for total amount (main + bumps)
+  const bumpTotal = bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
+  const totalAmount = Number(order.amount) + bumpTotal;
+
   let paymentResult = {};
   if (paymentType === 'card') {
     const paymentPreference = await paymentService.createPaymentPreference(order);
     paymentResult = { paymentType: 'card', paymentUrl: paymentPreference?.initPoint };
   } else {
-    const pixData = await paymentService.createPixPayment(order);
+    const pixData = await paymentService.createPixPayment(order, bumpTotal > 0 ? totalAmount : null);
     paymentResult = {
       paymentType: 'pix',
       pixQrCode: pixData.pixQrCode,
