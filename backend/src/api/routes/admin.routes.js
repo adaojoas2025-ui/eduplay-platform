@@ -155,6 +155,46 @@ router.delete('/cleanup/all-orders', async (req, res, next) => {
   }
 });
 
+router.get('/cleanup/non-admin-users', async (req, res, next) => {
+  const { prisma } = require('../../config/database');
+  try {
+    const nonAdmins = await prisma.users.findMany({
+      where: { role: { not: 'ADMIN' } },
+      select: { id: true, email: true, name: true, role: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    return res.json({ success: true, data: nonAdmins });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/users/:id', async (req, res, next) => {
+  const { prisma } = require('../../config/database');
+  const { id } = req.params;
+  try {
+    const user = await prisma.users.findUnique({ where: { id }, select: { id: true, email: true, role: true } });
+    if (!user) return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
+    if (user.role === 'ADMIN') return res.status(403).json({ success: false, message: 'Não é possível remover admin' });
+
+    const userProducts = await prisma.products.findMany({ where: { producerId: id }, select: { id: true } });
+    const productIds = userProducts.map(p => p.id);
+
+    await prisma.pix_transfers.deleteMany({ where: { producerId: id } });
+    await prisma.commissions.deleteMany({ where: { OR: [{ producerId: id }, { buyerId: id }] } });
+    await prisma.orders.deleteMany({ where: { buyerId: id } });
+    if (productIds.length > 0) {
+      await prisma.orders.deleteMany({ where: { productId: { in: productIds } } });
+      await prisma.products.deleteMany({ where: { producerId: id } });
+    }
+    await prisma.users.delete({ where: { id } });
+
+    return res.json({ success: true, message: `Usuário ${user.email} removido` });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.delete('/cleanup/non-admin-users', async (req, res, next) => {
   const { prisma } = require('../../config/database');
   try {

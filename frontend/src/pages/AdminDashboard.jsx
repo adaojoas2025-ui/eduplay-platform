@@ -11,6 +11,10 @@ export default function AdminDashboard() {
   const [cleanupLoading, setCleanupLoading] = useState(false);
   const [cleanupOrdersLoading, setCleanupOrdersLoading] = useState(false);
   const [cleanupEverythingLoading, setCleanupEverythingLoading] = useState(false);
+  const [usersModal, setUsersModal] = useState(false);
+  const [usersList, setUsersList] = useState([]);
+  const [usersListLoading, setUsersListLoading] = useState(false);
+  const [removingUserId, setRemovingUserId] = useState(null);
 
   const handleCleanupEverything = async () => {
     if (!window.confirm('Remover TUDO: pedidos, produtos e usuários não-admin? Esta ação não pode ser desfeita.')) return;
@@ -46,6 +50,40 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleOpenUsersModal = async () => {
+    setUsersModal(true);
+    setUsersListLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/admin/cleanup/non-admin-users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsersList(res.data.data || []);
+    } catch (err) {
+      alert('Erro ao carregar usuários');
+      setUsersModal(false);
+    } finally {
+      setUsersListLoading(false);
+    }
+  };
+
+  const handleRemoveUser = async (userId) => {
+    if (!window.confirm('Remover este usuário e todos os seus dados?')) return;
+    setRemovingUserId(userId);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/admin/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsersList(prev => prev.filter(u => u.id !== userId));
+      fetchDashboardStats();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erro ao remover usuário');
+    } finally {
+      setRemovingUserId(null);
+    }
+  };
+
   const handleCleanupUsers = async () => {
     if (!window.confirm('Remover TODOS os usuários não-admin? Esta ação não pode ser desfeita.')) return;
     setCleanupLoading(true);
@@ -55,6 +93,7 @@ export default function AdminDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert(`✅ ${response.data.message}`);
+      setUsersList([]);
       fetchDashboardStats();
     } catch (err) {
       alert('❌ Erro: ' + (err.response?.data?.message || err.message));
@@ -355,14 +394,70 @@ export default function AdminDashboard() {
               {cleanupOrdersLoading ? 'Removendo...' : '🗑️ Limpar todos os pedidos'}
             </button>
             <button
-              onClick={handleCleanupUsers}
-              disabled={cleanupLoading}
-              className="bg-red-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 transition"
+              onClick={handleOpenUsersModal}
+              className="bg-red-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-red-700 transition"
             >
-              {cleanupLoading ? 'Removendo...' : '🗑️ Remover usuários de teste'}
+              🗑️ Remover usuários de teste
             </button>
           </div>
         </div>
+
+        {/* Modal de usuários */}
+        {usersModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
+              <div className="flex items-center justify-between p-5 border-b">
+                <h3 className="text-lg font-bold text-gray-800">Usuários não-admin</h3>
+                <button onClick={() => setUsersModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+              </div>
+
+              <div className="overflow-y-auto flex-1 p-4">
+                {usersListLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                  </div>
+                ) : usersList.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">Nenhum usuário não-admin encontrado.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {usersList.map(u => (
+                      <div key={u.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-800 truncate">{u.name}</p>
+                          <p className="text-sm text-gray-500 truncate">{u.email}</p>
+                          <span className="text-xs text-purple-600 font-medium uppercase">{u.role}</span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveUser(u.id)}
+                          disabled={removingUserId === u.id}
+                          className="ml-3 bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-red-600 disabled:opacity-50 transition flex-shrink-0"
+                        >
+                          {removingUserId === u.id ? '...' : 'Remover'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 border-t flex justify-between items-center gap-3">
+                <span className="text-sm text-gray-500">{usersList.length} usuário{usersList.length !== 1 ? 's' : ''}</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCleanupUsers}
+                    disabled={cleanupLoading || usersList.length === 0}
+                    className="bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-800 disabled:opacity-50 transition"
+                  >
+                    {cleanupLoading ? 'Removendo...' : 'Remover todos'}
+                  </button>
+                  <button onClick={() => setUsersModal(false)} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-300 transition">
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
