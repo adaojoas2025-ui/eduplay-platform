@@ -160,8 +160,8 @@ router.get('/cleanup/non-admin-users', async (req, res, next) => {
   try {
     const nonAdmins = await prisma.users.findMany({
       where: { role: { not: 'ADMIN' } },
-      select: { id: true, email: true, name: true, role: true, createdAt: true },
-      orderBy: { createdAt: 'desc' },
+      select: { id: true, email: true, name: true, role: true },
+      orderBy: { id: 'desc' },
     });
     return res.json({ success: true, data: nonAdmins });
   } catch (error) {
