@@ -55,7 +55,7 @@ export default function AdminDashboard() {
     setUsersListLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/users?limit=200`, {
+      const res = await axios.get(`${API_URL}/users?limit=100`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const allUsers = res.data.data || res.data.users || [];
