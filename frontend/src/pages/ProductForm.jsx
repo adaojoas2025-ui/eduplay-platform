@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { uploadToCloudinary } from '../utils/uploadToCloudinary';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+import { API_URL } from '../config/api.config';
 
 export default function ProductForm() {
   const navigate = useNavigate();
@@ -156,8 +155,9 @@ export default function ProductForm() {
 
       clearTimeout(slowServerWarning);
 
-      // Show message if product was submitted for approval
-      if (formData.status === 'PUBLISHED') {
+      const userData = JSON.parse(localStorage.getItem('user') || localStorage.getItem('userData') || '{}');
+      const isAdmin = userData.role === 'ADMIN';
+      if (!isAdmin && formData.status === 'PUBLISHED') {
         alert('✅ Produto enviado para aprovação do administrador! Você receberá um email quando for aprovado.');
       } else {
         alert('✅ Produto salvo com sucesso!');
