@@ -36,8 +36,12 @@ async function main() {
     'Prisma migrate deploy'
   );
 
-  // Step 3: Always run db push to sync schema changes not in migrations
-  console.log('\nStep 3: Syncing schema with db push...');
+  // Step 3: Regenerate Prisma client to ensure it matches current schema
+  console.log('\nStep 3: Regenerating Prisma client...');
+  runCommand('npx prisma generate', 'Prisma generate (client sync)');
+
+  // Step 4: Always run db push to sync schema changes not in migrations
+  console.log('\nStep 4: Syncing schema with db push...');
   const pushSuccess = runCommand(
     'npx prisma db push --accept-data-loss',
     'Prisma db push (schema sync)'
@@ -47,7 +51,7 @@ async function main() {
     console.log('\n>>> WARNING: Could not sync schema. Server may have issues.');
   }
 
-  // Step 4: Start the server
+  // Step 5: Start the server
   console.log('\n===========================================');
   console.log('  Starting Express Server');
   console.log('===========================================\n');
