@@ -18,6 +18,7 @@ export default function AdminDashboard() {
   const [ordersModal, setOrdersModal] = useState(false);
   const [ordersList, setOrdersList] = useState([]);
   const [ordersListLoading, setOrdersListLoading] = useState(false);
+  const [ordersListError, setOrdersListError] = useState(null);
   const [removingOrderId, setRemovingOrderId] = useState(null);
 
   const handleCleanupEverything = async () => {
@@ -40,6 +41,7 @@ export default function AdminDashboard() {
   const handleOpenOrdersModal = async () => {
     setOrdersModal(true);
     setOrdersListLoading(true);
+    setOrdersListError(null);
     try {
       const token = localStorage.getItem('token');
       const res = await axios.get(`${API_URL}/admin/cleanup/orders`, {
@@ -47,8 +49,7 @@ export default function AdminDashboard() {
       });
       setOrdersList(res.data.data || []);
     } catch (err) {
-      alert('Erro ao carregar pedidos: ' + (err.response?.data?.message || err.message));
-      setOrdersModal(false);
+      setOrdersListError('Erro: ' + (err.response?.status || '') + ' ' + (err.response?.data?.message || err.message));
     } finally {
       setOrdersListLoading(false);
     }
@@ -516,6 +517,8 @@ export default function AdminDashboard() {
                   <div className="flex justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
                   </div>
+                ) : ordersListError ? (
+                  <p className="text-center text-red-500 py-8">{ordersListError}</p>
                 ) : ordersList.length === 0 ? (
                   <p className="text-center text-gray-500 py-8">Nenhum pedido encontrado.</p>
                 ) : (
