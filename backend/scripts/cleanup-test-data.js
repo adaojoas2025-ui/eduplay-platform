@@ -24,6 +24,10 @@ async function cleanupTestData() {
     const users = await prisma.users.deleteMany({ where: { role: { not: 'ADMIN' } } });
     console.log(`    - non-admin users removed: ${users.count}`);
 
+    // Remove specific admin test account
+    await prisma.users.deleteMany({ where: { email: 'adao1980aguiar@gmail.com' } });
+    console.log('    - adao1980aguiar@gmail.com removed');
+
     console.log('>>> Cleanup done!\n');
   } catch (err) {
     console.log(`>>> Cleanup failed (non-fatal): ${err.message}\n`);
