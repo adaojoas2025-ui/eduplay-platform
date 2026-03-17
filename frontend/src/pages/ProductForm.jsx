@@ -4,6 +4,11 @@ import axios from 'axios';
 import { uploadToCloudinary } from '../utils/uploadToCloudinary';
 import { API_URL } from '../config/api.config';
 
+const getStoredUser = () => {
+  try { return JSON.parse(localStorage.getItem('user') || localStorage.getItem('userData') || '{}') || {}; }
+  catch { return {}; }
+};
+
 export default function ProductForm() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -155,8 +160,7 @@ export default function ProductForm() {
 
       clearTimeout(slowServerWarning);
 
-      const userData = JSON.parse(localStorage.getItem('user') || localStorage.getItem('userData') || '{}');
-      const isAdmin = userData.role === 'ADMIN';
+      const isAdmin = getStoredUser().role === 'ADMIN';
       if (!isAdmin && formData.status === 'PUBLISHED') {
         alert('✅ Produto enviado para aprovação do administrador! Você receberá um email quando for aprovado.');
       } else {
@@ -619,11 +623,17 @@ export default function ProductForm() {
                   onChange={handleChange}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="DRAFT">Salvar como Rascunho</option>
-                  <option value="PUBLISHED">Enviar para Aprovação</option>
+                  <option value="DRAFT">Rascunho</option>
+                  {getStoredUser().role === 'ADMIN' ? (
+                    <option value="PUBLISHED">Publicar agora</option>
+                  ) : (
+                    <option value="PUBLISHED">Enviar para Aprovação</option>
+                  )}
                 </select>
                 <p className="mt-1 text-xs text-gray-500">
-                  Ao enviar para aprovação, seu produto será analisado pelo administrador antes de ser publicado
+                  {getStoredUser().role === 'ADMIN'
+                    ? 'Administradores podem publicar diretamente.'
+                    : 'Ao enviar para aprovação, seu produto será analisado pelo administrador antes de ser publicado'}
                 </p>
               </div>
 
