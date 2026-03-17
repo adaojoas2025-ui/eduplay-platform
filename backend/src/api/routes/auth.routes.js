@@ -123,12 +123,12 @@ router.post('/validate-password', authenticate, authController.validatePassword)
  * @desc    Redirect to Google OAuth consent screen
  * @access  Public
  */
-router.get(
-  '/google',
-  passport.authenticate('google', {
-    scope: ['profile', 'email'],
-  })
-);
+router.get('/google', (req, res, next) => {
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    return res.status(503).json({ success: false, message: 'Google OAuth not configured' });
+  }
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+});
 
 /**
  * @route   GET /api/v1/auth/google/callback
@@ -138,6 +138,10 @@ router.get(
 router.get(
   '/google/callback',
   (req, res, next) => {
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5175';
+      return res.redirect(`${frontendUrl}/login?error=auth_failed`);
+    }
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5175';
     passport.authenticate('google', {
       session: false,
