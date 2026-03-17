@@ -21,7 +21,7 @@ const { USER_ROLES, ORDER_STATUS, COMMISSION_STATUS } = require('../utils/consta
  * @param {string} paymentType - Payment type ('pix' or 'card')
  * @returns {Object} Calculated amounts
  */
-const calculateOrderAmounts = (productPrice, paymentType = 'pix', installments = 1) => {
+const calculateOrderAmounts = (productPrice, paymentType = 'pix', installments = 1, feeConfig = {}) => {
   const baseAmount = productPrice;
   const platformFeePercent = config.platform.feePercent;
   const platformFee = (baseAmount * platformFeePercent) / 100;
@@ -34,11 +34,13 @@ const calculateOrderAmounts = (productPrice, paymentType = 'pix', installments =
     const EXTRA_FEE = 1.00;     // R$1.00 fixed service fee
     const cardFee = Math.round((baseAmount * MP_CARD_FEE + EXTRA_FEE) * 100) / 100;
 
-    if (installments > 1) {
-      // Parcelado: acréscimo vai para o comprador
+    const cardFeeOnCash = feeConfig.cardFeeOnCash || 'SELLER';
+    const cardFeeOnInstallments = feeConfig.cardFeeOnInstallments || 'BUYER';
+    const feeResponsible = installments > 1 ? cardFeeOnInstallments : cardFeeOnCash;
+
+    if (feeResponsible === 'BUYER') {
       amount = Math.round((baseAmount + cardFee) * 100) / 100;
     } else {
-      // À vista: taxa descontada da comissão do vendedor
       producerAmount = Math.max(0, Math.round((producerAmount - cardFee) * 100) / 100);
     }
   }
@@ -85,7 +87,10 @@ const createOrder = async (buyerId, orderData) => {
     }
 
     // Calculate amounts
-    const amounts = calculateOrderAmounts(product.price, paymentType || 'pix', installments || 1);
+    const amounts = calculateOrderAmounts(product.price, paymentType || 'pix', installments || 1, {
+      cardFeeOnCash: product.cardFeeOnCash,
+      cardFeeOnInstallments: product.cardFeeOnInstallments,
+    });
 
     // Create order
     const resolvedPaymentType = paymentType || 'pix';

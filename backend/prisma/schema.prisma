@@ -279,6 +279,8 @@ model products {
   certificateIncluded Boolean       @default(false)
   hasSupport          Boolean       @default(false)
   supportDuration     Int?
+  cardFeeOnCash         String        @default("SELLER")
+  cardFeeOnInstallments String        @default("BUYER")
   producerId          String
   status              ProductStatus @default(DRAFT)
   featured            Boolean       @default(false)

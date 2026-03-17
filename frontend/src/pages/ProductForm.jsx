@@ -26,6 +26,8 @@ export default function ProductForm() {
     language: 'Português',
     certificateIncluded: false,
     hasSupport: false,
+    cardFeeOnCash: 'SELLER',
+    cardFeeOnInstallments: 'BUYER',
     filesUrl: [''],
     videoUrl: '',
     status: 'DRAFT',
@@ -58,6 +60,8 @@ export default function ProductForm() {
         language: product.language || 'Português',
         certificateIncluded: product.certificateIncluded || false,
         hasSupport: product.hasSupport || false,
+        cardFeeOnCash: product.cardFeeOnCash || 'SELLER',
+        cardFeeOnInstallments: product.cardFeeOnInstallments || 'BUYER',
         filesUrl: product.filesUrl && product.filesUrl.length > 0 ? product.filesUrl : [''],
         videoUrl: product.videoUrl || '',
         status: product.status || 'DRAFT',
@@ -459,6 +463,72 @@ export default function ProductForm() {
                     />
                     <span className="ml-2 text-sm text-gray-700">Suporte ao aluno</span>
                   </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Taxa do Cartão de Crédito */}
+            <div className="border-t border-gray-200 px-6 py-4">
+              <h2 className="text-base font-semibold text-gray-900">💳 Taxa do Cartão de Crédito</h2>
+              <p className="text-xs text-gray-500 mt-1">Taxa Mercado Pago: 4,99% + R$1,00. Escolha quem paga em cada modalidade.</p>
+            </div>
+
+            <div className="px-6 py-5 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Cartão à vista</label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="cardFeeOnCash"
+                        value="SELLER"
+                        checked={formData.cardFeeOnCash === 'SELLER'}
+                        onChange={handleChange}
+                        className="text-blue-600"
+                      />
+                      <span className="text-sm text-gray-700">Vendedor absorve (padrão)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="cardFeeOnCash"
+                        value="BUYER"
+                        checked={formData.cardFeeOnCash === 'BUYER'}
+                        onChange={handleChange}
+                        className="text-blue-600"
+                      />
+                      <span className="text-sm text-gray-700">Acrescentar ao preço do comprador</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Cartão parcelado</label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="cardFeeOnInstallments"
+                        value="BUYER"
+                        checked={formData.cardFeeOnInstallments === 'BUYER'}
+                        onChange={handleChange}
+                        className="text-blue-600"
+                      />
+                      <span className="text-sm text-gray-700">Acrescentar ao preço do comprador (padrão)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="cardFeeOnInstallments"
+                        value="SELLER"
+                        checked={formData.cardFeeOnInstallments === 'SELLER'}
+                        onChange={handleChange}
+                        className="text-blue-600"
+                      />
+                      <span className="text-sm text-gray-700">Vendedor absorve</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

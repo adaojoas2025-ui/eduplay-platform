@@ -28,6 +28,8 @@ const createProductSchema = Joi.object({
     hasSupport: Joi.boolean().default(false),
     supportDuration: Joi.number().integer().min(0).max(365).optional(),
     status: Joi.string().valid('DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REJECTED', 'ARCHIVED').optional(),
+    cardFeeOnCash: Joi.string().valid('BUYER', 'SELLER').default('SELLER'),
+    cardFeeOnInstallments: Joi.string().valid('BUYER', 'SELLER').default('BUYER'),
   }),
 });
 
@@ -56,6 +58,8 @@ const updateProductSchema = Joi.object({
     hasSupport: Joi.boolean().optional(),
     supportDuration: Joi.number().integer().min(0).max(365).optional(),
     status: Joi.string().valid('DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REJECTED', 'ARCHIVED').optional(),
+    cardFeeOnCash: Joi.string().valid('BUYER', 'SELLER').optional(),
+    cardFeeOnInstallments: Joi.string().valid('BUYER', 'SELLER').optional(),
   }),
 });
 
