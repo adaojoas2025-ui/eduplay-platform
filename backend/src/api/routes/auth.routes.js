@@ -125,7 +125,9 @@ router.post('/validate-password', authenticate, authController.validatePassword)
  */
 router.get('/google', (req, res, next) => {
   if (!process.env.GOOGLE_CLIENT_ID) {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5175';
+    const referer = req.get('Referer') || '';
+    const frontendUrl = process.env.FRONTEND_URL ||
+      (referer.includes('eduplay-frontend.onrender.com') ? 'https://eduplay-frontend.onrender.com' : 'http://localhost:5175');
     return res.redirect(`${frontendUrl}/#/login?error=google_unavailable`);
   }
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
