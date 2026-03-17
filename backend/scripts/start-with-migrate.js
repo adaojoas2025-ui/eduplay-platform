@@ -47,11 +47,7 @@ async function main() {
     console.log('\n>>> WARNING: Could not sync schema. Server may have issues.');
   }
 
-  // Step 4: Run one-time test data cleanup
-  const { cleanupTestData } = require('./cleanup-test-data');
-  await cleanupTestData();
-
-  // Step 5: Start the server
+  // Step 4: Start the server
   console.log('\n===========================================');
   console.log('  Starting Express Server');
   console.log('===========================================\n');
