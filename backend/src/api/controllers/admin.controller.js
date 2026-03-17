@@ -10,6 +10,7 @@ const orderService = require('../../services/order.service');
 const commissionService = require('../../services/commission.service');
 const ApiResponse = require('../../utils/ApiResponse');
 const asyncHandler = require('../../utils/asyncHandler');
+const { prisma } = require('../../config/database');
 
 /**
  * Get dashboard statistics
@@ -295,13 +296,12 @@ const deleteProduct = asyncHandler(async (req, res) => {
 });
 
 const listNonAdminUsers = asyncHandler(async (req, res) => {
-  const result = await userService.listUsers(
-    { role: undefined },
-    { page: 1, limit: 200 },
-    { sortBy: 'createdAt', order: 'desc' }
-  );
-  const nonAdmins = result.users.filter(u => u.role !== 'ADMIN');
-  return ApiResponse.success(res, 200, nonAdmins, 'Users retrieved successfully');
+  const nonAdmins = await prisma.users.findMany({
+    where: { role: { not: 'ADMIN' } },
+    select: { id: true, email: true, name: true, role: true },
+    orderBy: { createdAt: 'desc' },
+  });
+  return res.json({ success: true, data: nonAdmins });
 });
 
 module.exports = {
