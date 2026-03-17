@@ -3,14 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { uploadToCloudinary } from '../utils/uploadToCloudinary';
 import { API_URL } from '../config/api.config';
-import { useAuth } from '../hooks/useAuth';
 
 export default function ProductForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = (JSON.parse(localStorage.getItem('user') || '{}'))?.role === 'ADMIN';
 
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
@@ -159,11 +157,7 @@ export default function ProductForm() {
       clearTimeout(slowServerWarning);
 
       const isAdmin = isAdmin;
-      if (!isAdmin && formData.status === 'PUBLISHED') {
-        alert('✅ Produto enviado para aprovação do administrador! Você receberá um email quando for aprovado.');
-      } else {
-        alert('✅ Produto salvo com sucesso!');
-      }
+      alert('✅ Produto salvo com sucesso!');
 
       navigate('/seller/products');
     } catch (err) {
