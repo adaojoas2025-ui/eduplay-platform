@@ -27,6 +27,9 @@ const createGuestOrderSchema = Joi.object({
     email: Joi.string().email().lowercase().trim().required(),
     paymentMethod: Joi.string().valid('CREDIT_CARD', 'PIX', 'BOLETO', 'CARD').default('PIX'),
     paymentType: Joi.string().valid('pix', 'card').default('pix'),
+    installments: Joi.number().integer().min(1).max(12).default(1),
+    bumpProductIds: Joi.array().items(Joi.string().uuid()).default([]),
+    bumpIds: Joi.array().items(Joi.string().uuid()).default([]),
   }),
 });
 
