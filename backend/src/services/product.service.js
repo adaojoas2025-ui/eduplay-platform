@@ -197,9 +197,15 @@ const updateProduct = async (productId, userId, updateData) => {
     delete updateData.sales;
     delete updateData.slug;
 
+    logger.info('Product update data (cardFee debug)', {
+      productId,
+      cardFeeOnCash: updateData.cardFeeOnCash,
+      cardFeeOnInstallments: updateData.cardFeeOnInstallments,
+    });
+
     const updatedProduct = await productRepository.updateProduct(productId, updateData);
 
-    logger.info('Product updated', { productId, userId });
+    logger.info('Product updated', { productId, userId, cardFeeOnCash: updatedProduct.cardFeeOnCash, cardFeeOnInstallments: updatedProduct.cardFeeOnInstallments });
 
     return updatedProduct;
   } catch (error) {
