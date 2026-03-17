@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
+    "start": "node scripts/start-with-migrate.js",
     "start:migrate": "node scripts/start-with-migrate.js",
     "dev": "nodemon server.js",
     "build": "node scripts/build.js",
