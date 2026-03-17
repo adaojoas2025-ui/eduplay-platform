@@ -7,15 +7,6 @@
 // Load environment variables FIRST
 require('dotenv').config();
 
-// Sync Prisma schema to DB on every startup (ensures new columns exist)
-const { execSync } = require('child_process');
-try {
-  execSync('npx prisma generate', { stdio: 'inherit' });
-  execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
-} catch (e) {
-  console.warn('Prisma sync warning:', e.message);
-}
-
 const app = require('./src/app');
 const { connectDatabase } = require('./src/config/database');
 const logger = require('./src/utils/logger');
