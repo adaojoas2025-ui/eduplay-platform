@@ -396,10 +396,11 @@ export default function AdminDashboard() {
               {cleanupOrdersLoading ? 'Removendo...' : '🗑️ Limpar todos os pedidos'}
             </button>
             <button
-              onClick={handleOpenUsersModal}
-              className="bg-red-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-red-700 transition"
+              onClick={handleCleanupUsers}
+              disabled={cleanupLoading}
+              className="bg-red-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 transition"
             >
-              🗑️ Remover usuários de teste
+              {cleanupLoading ? 'Removendo...' : '🗑️ Remover usuários de teste'}
             </button>
           </div>
         </div>
