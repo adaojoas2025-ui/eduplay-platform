@@ -4,10 +4,25 @@ const logger = require('../../utils/logger');
 class OrderBumpService {
   async getSuggestions({ productIds, category, limit = 3 }) {
     try {
+      // Buscar o producerId dos produtos no carrinho para filtrar bumps do mesmo vendedor
+      let producerFilter = {};
+      if (productIds && productIds.length > 0) {
+        const cartProducts = await prisma.products.findMany({
+          where: { id: { in: productIds } },
+          select: { producerId: true }
+        });
+        const producerIds = [...new Set(cartProducts.map(p => p.producerId).filter(Boolean))];
+        if (producerIds.length > 0) {
+          producerFilter = { producerId: { in: producerIds } };
+        }
+      }
+
       const where = {
         isActive: true,
         // Excluir produtos já no carrinho
-        productId: { notIn: productIds }
+        productId: { notIn: productIds },
+        // Mostrar apenas bumps do mesmo vendedor
+        ...producerFilter
       };
 
       // Construir filtro OR para triggers
