@@ -49,6 +49,8 @@ export default function ProductForm() {
       // API returns { success: true, data: product }
       const product = response.data.data || response.data;
 
+      console.log('DEBUG fetchProduct - cardFeeOnCash:', product.cardFeeOnCash, '| cardFeeOnInstallments:', product.cardFeeOnInstallments, '| full URL:', response.config?.url);
+
       setFormData({
         title: product.title || '',
         description: product.description || '',
@@ -141,6 +143,8 @@ export default function ProductForm() {
       }
 
       delete productData.customCategory;
+
+      console.log('DEBUG handleSubmit - sending cardFeeOnCash:', productData.cardFeeOnCash, '| cardFeeOnInstallments:', productData.cardFeeOnInstallments);
 
       if (isEdit) {
         await axios.put(`${API_URL}/products/${id}`, productData, {
