@@ -26,10 +26,16 @@ export default function OrderBumpSuggestion({ cartItems, onAddBump }) {
       });
 
       if (response.data.success && response.data.data?.length > 0) {
-        setSuggestions(response.data.data);
+        // Filtrar bumps do mesmo vendedor do produto no carrinho
+        const cartProducerId = cartItems[0]?.product?.producerId;
+        const filtered = cartProducerId
+          ? response.data.data.filter(bump => bump.producerId === cartProducerId)
+          : response.data.data;
+
+        setSuggestions(filtered);
 
         // Track impressions
-        response.data.data.forEach(bump => {
+        filtered.forEach(bump => {
           api.post(`/order-bumps/${bump.id}/track`, { event: 'impression' }).catch(() => {});
         });
       }
