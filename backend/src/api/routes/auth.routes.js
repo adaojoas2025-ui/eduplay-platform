@@ -125,7 +125,8 @@ router.post('/validate-password', authenticate, authController.validatePassword)
  */
 router.get('/google', (req, res, next) => {
   if (!process.env.GOOGLE_CLIENT_ID) {
-    return res.status(503).json({ success: false, message: 'Google OAuth not configured' });
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5175';
+    return res.redirect(`${frontendUrl}/#/login?error=google_unavailable`);
   }
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 });
