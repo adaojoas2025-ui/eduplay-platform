@@ -44,10 +44,10 @@ export default function AdminDashboard() {
     setOrdersListError(null);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/admin/cleanup/orders`, {
+      const res = await axios.get(`${API_URL}/orders?limit=100&page=1`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setOrdersList(res.data.data || []);
+      setOrdersList((res.data.data && res.data.data.items) || []);
     } catch (err) {
       setOrdersListError('Erro: ' + (err.response?.status || '') + ' ' + (err.response?.data?.message || err.message));
     } finally {
