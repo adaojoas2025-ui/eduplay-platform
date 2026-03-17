@@ -39,7 +39,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://eduplay-backend-yw7z.onrender.com/api/v1
+        value: https://eduplay-platform.onrender.com/api/v1
       - key: VITE_CLOUDINARY_CLOUD_NAME
         value: dexlzykqm
       - key: VITE_CLOUDINARY_UPLOAD_PRESET
