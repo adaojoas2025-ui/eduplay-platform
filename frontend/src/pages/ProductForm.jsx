@@ -3,16 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { uploadToCloudinary } from '../utils/uploadToCloudinary';
 import { API_URL } from '../config/api.config';
-
-const getStoredUser = () => {
-  try { return JSON.parse(localStorage.getItem('user') || localStorage.getItem('userData') || '{}') || {}; }
-  catch { return {}; }
-};
+import { useAuth } from '../hooks/useAuth';
 
 export default function ProductForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
 
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
@@ -160,7 +158,7 @@ export default function ProductForm() {
 
       clearTimeout(slowServerWarning);
 
-      const isAdmin = getStoredUser().role === 'ADMIN';
+      const isAdmin = isAdmin;
       if (!isAdmin && formData.status === 'PUBLISHED') {
         alert('✅ Produto enviado para aprovação do administrador! Você receberá um email quando for aprovado.');
       } else {
@@ -624,14 +622,14 @@ export default function ProductForm() {
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="DRAFT">Rascunho</option>
-                  {getStoredUser().role === 'ADMIN' ? (
+                  {isAdmin ? (
                     <option value="PUBLISHED">Publicar agora</option>
                   ) : (
                     <option value="PUBLISHED">Enviar para Aprovação</option>
                   )}
                 </select>
                 <p className="mt-1 text-xs text-gray-500">
-                  {getStoredUser().role === 'ADMIN'
+                  {isAdmin
                     ? 'Administradores podem publicar diretamente.'
                     : 'Ao enviar para aprovação, seu produto será analisado pelo administrador antes de ser publicado'}
                 </p>
