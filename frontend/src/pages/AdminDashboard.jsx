@@ -15,6 +15,10 @@ export default function AdminDashboard() {
   const [usersList, setUsersList] = useState([]);
   const [usersListLoading, setUsersListLoading] = useState(false);
   const [removingUserId, setRemovingUserId] = useState(null);
+  const [ordersModal, setOrdersModal] = useState(false);
+  const [ordersList, setOrdersList] = useState([]);
+  const [ordersListLoading, setOrdersListLoading] = useState(false);
+  const [removingOrderId, setRemovingOrderId] = useState(null);
 
   const handleCleanupEverything = async () => {
     if (!window.confirm('Remover TUDO: pedidos, produtos e usuários não-admin? Esta ação não pode ser desfeita.')) return;
@@ -33,6 +37,41 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleOpenOrdersModal = async () => {
+    setOrdersModal(true);
+    setOrdersListLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/admin/cleanup/orders`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOrdersList(res.data.data || []);
+    } catch (err) {
+      alert('Erro ao carregar pedidos: ' + (err.response?.data?.message || err.message));
+      setOrdersModal(false);
+    } finally {
+      setOrdersListLoading(false);
+    }
+  };
+
+  const handleRemoveOrder = async (orderId) => {
+    if (!window.confirm('Remover este pedido?')) return;
+    setRemovingOrderId(orderId);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/admin/cleanup/all-orders`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { orderIds: [orderId] },
+      });
+      setOrdersList(prev => prev.filter(o => o.id !== orderId));
+      fetchDashboardStats();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erro ao remover pedido');
+    } finally {
+      setRemovingOrderId(null);
+    }
+  };
+
   const handleCleanupOrders = async () => {
     if (!window.confirm('Remover TODOS os pedidos, comissões e transferências? Esta ação não pode ser desfeita.')) return;
     setCleanupOrdersLoading(true);
@@ -42,6 +81,8 @@ export default function AdminDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert(`✅ ${response.data.message}`);
+      setOrdersList([]);
+      setOrdersModal(false);
       fetchDashboardStats();
     } catch (err) {
       alert('❌ Erro: ' + (err.response?.data?.message || err.message));
@@ -389,11 +430,11 @@ export default function AdminDashboard() {
               {cleanupEverythingLoading ? 'Removendo...' : '💣 Limpar TUDO'}
             </button>
             <button
-              onClick={handleCleanupOrders}
+              onClick={handleOpenOrdersModal}
               disabled={cleanupOrdersLoading}
               className="bg-orange-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-orange-700 disabled:opacity-50 transition"
             >
-              {cleanupOrdersLoading ? 'Removendo...' : '🗑️ Limpar todos os pedidos'}
+              🗑️ Limpar todos os pedidos
             </button>
             <button
               onClick={handleOpenUsersModal}
@@ -453,6 +494,67 @@ export default function AdminDashboard() {
                     {cleanupLoading ? 'Removendo...' : 'Remover todos'}
                   </button>
                   <button onClick={() => setUsersModal(false)} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-300 transition">
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de pedidos */}
+        {ordersModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
+              <div className="flex items-center justify-between p-5 border-b">
+                <h3 className="text-lg font-bold text-gray-800">Pedidos de teste</h3>
+                <button onClick={() => setOrdersModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+              </div>
+
+              <div className="overflow-y-auto flex-1 p-4">
+                {ordersListLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+                  </div>
+                ) : ordersList.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">Nenhum pedido encontrado.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {ordersList.map(o => (
+                      <div key={o.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-800 truncate">{o.product?.title || '(produto removido)'}</p>
+                          <p className="text-sm text-gray-500 truncate">{o.buyer?.name} — {o.buyer?.email}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs font-semibold text-green-700">R$ {Number(o.amount).toFixed(2).replace('.', ',')}</span>
+                            <span className="text-xs text-gray-400">{o.status}</span>
+                            <span className="text-xs text-gray-400">{new Date(o.createdAt).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveOrder(o.id)}
+                          disabled={removingOrderId === o.id}
+                          className="ml-3 bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-red-600 disabled:opacity-50 transition flex-shrink-0"
+                        >
+                          {removingOrderId === o.id ? '...' : 'Remover'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 border-t flex justify-between items-center gap-3">
+                <span className="text-sm text-gray-500">{ordersList.length} pedido{ordersList.length !== 1 ? 's' : ''}</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCleanupOrders}
+                    disabled={cleanupOrdersLoading || ordersList.length === 0}
+                    className="bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-800 disabled:opacity-50 transition"
+                  >
+                    {cleanupOrdersLoading ? 'Removendo...' : 'Remover todos'}
+                  </button>
+                  <button onClick={() => setOrdersModal(false)} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-300 transition">
                     Fechar
                   </button>
                 </div>

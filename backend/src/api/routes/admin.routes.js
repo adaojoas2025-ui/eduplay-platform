@@ -145,9 +145,38 @@ router.delete('/cleanup/everything', async (req, res, next) => {
   }
 });
 
+router.get('/cleanup/orders', async (req, res, next) => {
+  const { prisma } = require('../../config/database');
+  try {
+    const orders = await prisma.orders.findMany({
+      select: {
+        id: true,
+        amount: true,
+        status: true,
+        paymentType: true,
+        createdAt: true,
+        product: { select: { title: true } },
+        buyer: { select: { name: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+    return res.json({ success: true, data: orders });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.delete('/cleanup/all-orders', async (req, res, next) => {
   const { prisma } = require('../../config/database');
   try {
+    const requestedIds = req.body?.orderIds;
+    if (requestedIds && requestedIds.length > 0) {
+      await prisma.pix_transfers.deleteMany({ where: { orderId: { in: requestedIds } } });
+      await prisma.commissions.deleteMany({ where: { orderId: { in: requestedIds } } });
+      const result = await prisma.orders.deleteMany({ where: { id: { in: requestedIds } } });
+      return res.json({ success: true, message: `${result.count} pedido${result.count !== 1 ? 's' : ''} removido${result.count !== 1 ? 's' : ''}` });
+    }
     await prisma.pix_transfers.deleteMany({});
     await prisma.commissions.deleteMany({});
     const result = await prisma.orders.deleteMany({});
