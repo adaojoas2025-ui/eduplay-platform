@@ -114,9 +114,16 @@ export default function OrderPixPending() {
             <div className="text-sm text-gray-600 mb-6 bg-gray-50 rounded-lg p-4 text-left">
               <p className="font-medium text-gray-800 mb-1">Detalhes do pedido:</p>
               <p>{order.product?.title}</p>
-              <p className="text-purple-600 font-bold">
-                R$ {Number(order.amount).toFixed(2).replace('.', ',')}
-              </p>
+              {pixData?.totalAmount && pixData.totalAmount > Number(order.amount) ? (
+                <div>
+                  <p className="text-gray-500 line-through text-xs">R$ {Number(order.amount).toFixed(2).replace('.', ',')}</p>
+                  <p className="text-purple-600 font-bold">Total: R$ {Number(pixData.totalAmount).toFixed(2).replace('.', ',')}</p>
+                </div>
+              ) : (
+                <p className="text-purple-600 font-bold">
+                  R$ {Number(order.amount).toFixed(2).replace('.', ',')}
+                </p>
+              )}
             </div>
           )}
 

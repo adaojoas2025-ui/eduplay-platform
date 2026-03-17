@@ -53,7 +53,7 @@ export default function GuestCheckout() {
     }
   };
 
-  const handlePaymentResult = (data, orderId) => {
+  const handlePaymentResult = (data, orderId, totalAmount) => {
     if (data.paymentType === 'card' && data.paymentUrl) {
       window.location.href = data.paymentUrl;
     } else {
@@ -61,6 +61,7 @@ export default function GuestCheckout() {
         pixQrCode: data.pixQrCode,
         pixQrCodeBase64: data.pixQrCodeBase64,
         pixExpiresAt: data.pixExpiresAt,
+        totalAmount: totalAmount || null,
       }));
       navigate(`/order/${orderId}/pix`);
     }
@@ -76,7 +77,8 @@ export default function GuestCheckout() {
       const response = await orderAPI.create({ productId, paymentType, installments, bumpProductIds, bumpIds });
       const data = response.data.data || response.data;
       if (!data.orderId) throw new Error('Pedido não retornado pelo servidor.');
-      handlePaymentResult(data, data.orderId);
+      const total = bumpTotal > 0 ? (price + bumpTotal) : null;
+      handlePaymentResult(data, data.orderId, total);
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao criar pedido. Tente novamente.');
       setLoading(false);
@@ -120,7 +122,8 @@ export default function GuestCheckout() {
       sessionStorage.setItem('guestIsNew', isNewUser ? 'true' : 'false');
       if (tempPassword) sessionStorage.setItem('guestTempPassword', tempPassword);
 
-      handlePaymentResult(paymentData, orderId);
+      const total = bumpTotal > 0 ? (price + bumpTotal) : null;
+      handlePaymentResult(paymentData, orderId, total);
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao processar. Tente novamente.');
       setLoading(false);
