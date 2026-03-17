@@ -235,7 +235,7 @@ export default function GuestCheckout() {
                           : 'border-gray-300 text-gray-600 hover:border-gray-400'
                       }`}
                     >
-                      À vista (sem acréscimo)
+                      À vista {product?.cardFeeOnCash === 'BUYER' ? '(com acréscimo)' : '(sem acréscimo)'}
                     </button>
                     <button
                       type="button"
@@ -246,7 +246,7 @@ export default function GuestCheckout() {
                           : 'border-gray-300 text-gray-600 hover:border-gray-400'
                       }`}
                     >
-                      Parcelado (com acréscimo)
+                      Parcelado {product?.cardFeeOnInstallments === 'SELLER' ? '(sem acréscimo)' : '(com acréscimo)'}
                     </button>
                   </div>
                   <p className="text-xs text-gray-500 mt-2">Você será redirecionado para o Mercado Pago para inserir os dados do cartão.</p>
