@@ -156,7 +156,6 @@ export default function ProductForm() {
 
       clearTimeout(slowServerWarning);
 
-      const isAdmin = isAdmin;
       alert('✅ Produto salvo com sucesso!');
 
       navigate('/seller/products');
