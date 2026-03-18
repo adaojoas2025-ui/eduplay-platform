@@ -80,6 +80,15 @@ export default function GuestCheckout() {
       const total = bumpTotal > 0 ? (price + bumpTotal) : null;
       handlePaymentResult(data, data.orderId, total);
     } catch (err) {
+      if (err.response?.status === 401) {
+        // Token expirado ou ausente — cai no fluxo guest automaticamente
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('userData');
+        window.location.reload();
+        return;
+      }
       setError(err.response?.data?.message || 'Erro ao criar pedido. Tente novamente.');
       setLoading(false);
     }
