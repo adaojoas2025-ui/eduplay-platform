@@ -30,6 +30,7 @@ const createGuestOrderSchema = Joi.object({
     installments: Joi.number().integer().min(1).max(12).default(1),
     bumpProductIds: Joi.array().items(Joi.string().uuid()).default([]),
     bumpIds: Joi.array().items(Joi.string().uuid()).default([]),
+    bumpTotal: Joi.number().min(0).default(0),
   }),
 });
 

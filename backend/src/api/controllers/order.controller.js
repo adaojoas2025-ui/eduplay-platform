@@ -211,7 +211,7 @@ const getOrdersByStatusCount = asyncHandler(async (req, res) => {
  * @access Public
  */
 const createGuestOrder = asyncHandler(async (req, res) => {
-  const { productId, name, email, paymentMethod = 'PIX', paymentType = 'pix', installments = 1, bumpProductIds = [], bumpIds = [] } = req.body;
+  const { productId, name, email, paymentMethod = 'PIX', paymentType = 'pix', installments = 1, bumpProductIds = [], bumpIds = [], bumpTotal: bumpTotalFromClient = 0 } = req.body;
 
   // 1. Find or create user account
   const { user, isNewUser, tempPassword, accessToken, refreshToken } =
@@ -251,7 +251,7 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   }
 
   // 5. Create payment for total amount (main + bumps)
-  const bumpTotal = bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
+  const bumpTotal = bumpTotalFromClient > 0 ? bumpTotalFromClient : bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
   const totalAmount = Number(order.amount) + bumpTotal;
 
   let paymentResult = {};

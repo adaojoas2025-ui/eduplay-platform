@@ -74,7 +74,7 @@ export default function GuestCheckout() {
     try {
       const bumpProductIds = selectedBumps.map(b => b.product.id);
       const bumpIds = selectedBumps.map(b => b.id);
-      const response = await orderAPI.create({ productId, paymentType, installments, bumpProductIds, bumpIds });
+      const response = await orderAPI.create({ productId, paymentType, installments, bumpProductIds, bumpIds, bumpTotal: bumpTotal || 0 });
       const data = response.data.data || response.data;
       if (!data.orderId) throw new Error('Pedido não retornado pelo servidor.');
       const total = bumpTotal > 0 ? (price + bumpTotal) : null;
@@ -105,6 +105,7 @@ export default function GuestCheckout() {
         installments,
         bumpProductIds,
         bumpIds,
+        bumpTotal: bumpTotal || 0,
       });
 
       const { orderId, accessToken, refreshToken, isNewUser, user, tempPassword, ...paymentData } = res.data.data;
