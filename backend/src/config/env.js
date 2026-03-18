@@ -43,6 +43,14 @@ if (error) {
   throw new Error(`Config validation error: ${error.message}`);
 }
 
+// Apply Joi defaults back to process.env so libraries (e.g. Prisma) that read
+// process.env directly also get the correct values.
+Object.keys(envVars).forEach((key) => {
+  if (process.env[key] === undefined) {
+    process.env[key] = String(envVars[key]);
+  }
+});
+
 module.exports = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
