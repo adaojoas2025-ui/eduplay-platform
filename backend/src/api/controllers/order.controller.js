@@ -50,7 +50,7 @@ const createOrder = asyncHandler(async (req, res) => {
   });
 
   const bumpTotal = bumpTotalFromClient > 0 ? bumpTotalFromClient : bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
-  const totalAmount = Number(order.amount) + bumpTotal;
+  const totalAmount = Math.round((Number(order.amount) + bumpTotal) * 100) / 100;
 
   if (paymentType === 'card') {
     const paymentPreference = await paymentService.createPaymentPreference(order, bumpTotal > 0 ? totalAmount : null);
@@ -279,7 +279,7 @@ const createGuestOrder = asyncHandler(async (req, res) => {
 
   // 5. Create payment for total amount (main + bumps)
   const bumpTotal = bumpTotalFromClient > 0 ? bumpTotalFromClient : bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
-  const totalAmount = Number(order.amount) + bumpTotal;
+  const totalAmount = Math.round((Number(order.amount) + bumpTotal) * 100) / 100;
 
   let paymentResult = {};
   if (paymentType === 'card') {
