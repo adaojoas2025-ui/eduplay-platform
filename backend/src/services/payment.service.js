@@ -69,7 +69,6 @@ const createPaymentPreference = async (order, amountOverride = null) => {
         },
       ],
       payer: {
-        email: order.buyer.email,
         name: order.buyer.name,
         first_name: firstName,
         last_name: lastName,
