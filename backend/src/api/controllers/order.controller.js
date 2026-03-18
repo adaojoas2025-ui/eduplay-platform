@@ -24,6 +24,8 @@ const createOrder = asyncHandler(async (req, res) => {
   const installments = req.body.installments || 1;
   const { bumpProductIds = [], bumpIds = [], bumpTotal: bumpTotalFromClient = 0 } = req.body;
 
+  logger.info('createOrder called', { paymentType, installments, bumpProductIds, bumpTotalFromClient });
+
   // Create bump orders first (so we have their IDs for main order metadata)
   const bumpOrders = [];
   for (const bumpProductId of bumpProductIds) {
