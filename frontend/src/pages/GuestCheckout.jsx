@@ -264,7 +264,7 @@ export default function GuestCheckout() {
               )}
             </div>
 
-            {isAuthenticated && !!user?.email ? (
+            {isAuthenticated && !!user?.email && !!localStorage.getItem('token') ? (
               // Logged-in flow
               <div className="space-y-3">
                 <p className="text-gray-600 text-sm">
