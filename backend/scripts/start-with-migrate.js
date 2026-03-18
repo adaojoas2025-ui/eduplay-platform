@@ -22,22 +22,8 @@ async function main() {
   console.log('  EduplayJA Backend Startup Script');
   console.log('===========================================\n');
 
-  // Step 1: Try to resolve the specific failed migration
-  console.log('Step 1: Checking for failed migrations...');
-  runCommand(
-    'npx prisma migrate resolve --rolled-back 20260114190000_add_producer_bank_fields',
-    'Resolving failed migration 20260114190000'
-  );
-
-  // Step 2: Try to deploy migrations normally
-  console.log('\nStep 2: Deploying migrations...');
-  runCommand(
-    'npx prisma migrate deploy',
-    'Prisma migrate deploy'
-  );
-
-  // Step 3: Regenerate Prisma client to ensure it matches current schema
-  console.log('\nStep 3: Regenerating Prisma client...');
+  // Step 1: Regenerate Prisma client to ensure it matches current schema
+  console.log('\nStep 1: Regenerating Prisma client...');
   runCommand('npx prisma generate', 'Prisma generate (client sync)');
 
   // Step 4: Start the server
