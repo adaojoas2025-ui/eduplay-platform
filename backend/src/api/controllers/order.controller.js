@@ -22,11 +22,38 @@ const logger = require('../../utils/logger');
 const createOrder = asyncHandler(async (req, res) => {
   const paymentType = req.body.paymentType || 'pix';
   const installments = req.body.installments || 1;
-  const order = await orderService.createOrder(req.user.id, { ...req.body, paymentType, installments });
+  const { bumpProductIds = [], bumpIds = [], bumpTotal: bumpTotalFromClient = 0 } = req.body;
+
+  // Create bump orders first (so we have their IDs for main order metadata)
+  const bumpOrders = [];
+  for (const bumpProductId of bumpProductIds) {
+    try {
+      const bumpOrder = await orderService.createOrder(req.user.id, {
+        productId: bumpProductId,
+        paymentMethod: req.body.paymentMethod,
+        paymentType,
+        installments,
+        bypassDuplicateCheck: true,
+      });
+      bumpOrders.push(bumpOrder);
+    } catch (err) {
+      logger.warn('Failed to create bump order, skipping', { bumpProductId, error: err.message });
+    }
+  }
+
+  const bumpOrderIds = bumpOrders.map(o => o.id);
+  const order = await orderService.createOrder(req.user.id, {
+    ...req.body,
+    paymentType,
+    installments,
+    extraMetadata: bumpOrderIds.length > 0 ? { bumpOrderIds } : {},
+  });
+
+  const bumpTotal = bumpTotalFromClient > 0 ? bumpTotalFromClient : bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
+  const totalAmount = Number(order.amount) + bumpTotal;
 
   if (paymentType === 'card') {
-    // Card: redirect to Mercado Pago checkout
-    const paymentPreference = await paymentService.createPaymentPreference(order);
+    const paymentPreference = await paymentService.createPaymentPreference(order, bumpTotal > 0 ? totalAmount : null);
     return ApiResponse.success(res, 201, {
       order,
       orderId: order.id,
@@ -36,7 +63,7 @@ const createOrder = asyncHandler(async (req, res) => {
   }
 
   // PIX: transparent checkout — QR code on site
-  const pixData = await paymentService.createPixPayment(order);
+  const pixData = await paymentService.createPixPayment(order, bumpTotal > 0 ? totalAmount : null);
   return ApiResponse.success(res, 201, {
     order,
     orderId: order.id,

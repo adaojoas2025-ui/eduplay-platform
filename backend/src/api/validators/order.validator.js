@@ -14,6 +14,10 @@ const createOrderSchema = Joi.object({
     productId: Joi.string().uuid().required(),
     paymentMethod: Joi.string().valid('CREDIT_CARD', 'PIX', 'BOLETO', 'CARD', 'INSTANT_TEST', 'TEST').default('PIX'),
     paymentType: Joi.string().valid('pix', 'card').default('pix'),
+    installments: Joi.number().integer().min(1).max(12).default(1),
+    bumpProductIds: Joi.array().items(Joi.string().uuid()).default([]),
+    bumpIds: Joi.array().items(Joi.string().uuid()).default([]),
+    bumpTotal: Joi.number().min(0).default(0),
   }),
 });
 
