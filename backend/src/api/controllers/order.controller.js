@@ -256,7 +256,7 @@ const createGuestOrder = asyncHandler(async (req, res) => {
 
   let paymentResult = {};
   if (paymentType === 'card') {
-    const paymentPreference = await paymentService.createPaymentPreference(order);
+    const paymentPreference = await paymentService.createPaymentPreference(order, bumpTotal > 0 ? totalAmount : null);
     paymentResult = { paymentType: 'card', paymentUrl: paymentPreference?.initPoint };
   } else {
     const pixData = await paymentService.createPixPayment(order, bumpTotal > 0 ? totalAmount : null);

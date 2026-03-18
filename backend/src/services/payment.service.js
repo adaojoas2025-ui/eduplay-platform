@@ -19,7 +19,7 @@ const { ORDER_STATUS } = require('../utils/constants');
  * @param {Object} order - Order object
  * @returns {Promise<Object>} Payment preference
  */
-const createPaymentPreference = async (order) => {
+const createPaymentPreference = async (order, amountOverride = null) => {
   try {
     const product = order.product;
     if (!product) {
@@ -65,7 +65,7 @@ const createPaymentPreference = async (order) => {
           category_id: 'others',
           quantity: 1,
           currency_id: 'BRL',
-          unit_price: Number(order.amount),
+          unit_price: amountOverride ? Number(amountOverride) : Number(order.amount),
         },
       ],
       payer: {
