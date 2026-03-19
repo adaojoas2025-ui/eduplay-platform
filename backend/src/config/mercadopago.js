@@ -16,7 +16,6 @@ const mercadopagoClient = new MercadoPagoConfig({
   accessToken: config.mercadopago.accessToken,
   options: {
     timeout: 5000,
-    idempotencyKey: 'eduplay',
   },
 });
 
