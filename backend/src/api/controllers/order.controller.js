@@ -77,6 +77,7 @@ const createOrder = asyncHandler(async (req, res) => {
     pixQrCode: pixData.pixQrCode,
     pixQrCodeBase64: pixData.pixQrCodeBase64,
     pixExpiresAt: pixData.pixExpiresAt,
+    totalAmount: bumpTotal > 0 ? totalAmount : null,
   }, 'Order created successfully');
 });
 
@@ -304,6 +305,7 @@ const createGuestOrder = asyncHandler(async (req, res) => {
       pixQrCode: pixData.pixQrCode,
       pixQrCodeBase64: pixData.pixQrCodeBase64,
       pixExpiresAt: pixData.pixExpiresAt,
+      totalAmount: bumpTotal > 0 ? totalAmount : null,
     };
   }
 

@@ -74,10 +74,12 @@ export default function GuestCheckout() {
     try {
       const bumpProductIds = selectedBumps.map(b => b.product.id);
       const bumpIds = selectedBumps.map(b => b.id);
+      console.log('[checkout] enviando:', { bumpProductIds, bumpIds, bumpTotal });
       const response = await orderAPI.create({ productId, paymentType, installments, bumpProductIds, bumpIds, bumpTotal: bumpTotal || 0 });
       const data = response.data.data || response.data;
       if (!data.orderId) throw new Error('Pedido não retornado pelo servidor.');
-      const total = bumpTotal > 0 ? (price + bumpTotal) : null;
+      console.log('[checkout] resposta backend:', { totalAmount: data.totalAmount, bumpOrdersCount: data.order?.metadata });
+      const total = data.totalAmount || null;
       handlePaymentResult(data, data.orderId, total);
     } catch (err) {
       if (err.response?.status === 401) {
@@ -132,7 +134,7 @@ export default function GuestCheckout() {
       sessionStorage.setItem('guestIsNew', isNewUser ? 'true' : 'false');
       if (tempPassword) sessionStorage.setItem('guestTempPassword', tempPassword);
 
-      const total = bumpTotal > 0 ? (price + bumpTotal) : null;
+      const total = paymentData.totalAmount || null;
       handlePaymentResult(paymentData, orderId, total);
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao processar. Tente novamente.');
