@@ -51,12 +51,12 @@ const createOrder = asyncHandler(async (req, res) => {
     extraMetadata: bumpOrderIds.length > 0 ? { bumpOrderIds } : {},
   });
 
-  // Prefer backend-calculated sum from created bump orders; fall back to frontend value if none were created
+  // Use frontend-sent bumpTotal (which respects discounts) as primary; fall back to backend order amounts if frontend sent 0
   const backendBumpTotal = bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
-  const bumpTotal = backendBumpTotal > 0 ? backendBumpTotal : (bumpTotalFromClient > 0 ? bumpTotalFromClient : 0);
+  const bumpTotal = bumpTotalFromClient > 0 ? bumpTotalFromClient : backendBumpTotal;
   const totalAmount = Math.round((Number(order.amount) + bumpTotal) * 100) / 100;
 
-  logger.info('Creating payment', { orderId: order.id, orderAmount: order.amount, bumpTotal, totalAmount, bumpOrdersCount: bumpOrders.length, paymentType });
+  logger.info('Creating payment', { orderId: order.id, orderAmount: order.amount, bumpTotal, bumpTotalFromClient, backendBumpTotal, totalAmount, bumpOrdersCount: bumpOrders.length, paymentType });
 
   if (paymentType === 'card') {
     const paymentPreference = await paymentService.createPaymentPreference(order, bumpTotal > 0 ? totalAmount : null);
@@ -287,12 +287,12 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   }
 
   // 5. Create payment for total amount (main + bumps)
-  // Prefer backend-calculated sum from created bump orders; fall back to frontend value if none were created
+  // Use frontend-sent bumpTotal (which respects discounts) as primary; fall back to backend order amounts if frontend sent 0
   const backendBumpTotal = bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
-  const bumpTotal = backendBumpTotal > 0 ? backendBumpTotal : (bumpTotalFromClient > 0 ? bumpTotalFromClient : 0);
+  const bumpTotal = bumpTotalFromClient > 0 ? bumpTotalFromClient : backendBumpTotal;
   const totalAmount = Math.round((Number(order.amount) + bumpTotal) * 100) / 100;
 
-  logger.info('Creating payment', { orderId: order.id, orderAmount: order.amount, bumpTotal, totalAmount, bumpOrdersCount: bumpOrders.length, paymentType });
+  logger.info('Creating payment', { orderId: order.id, orderAmount: order.amount, bumpTotal, bumpTotalFromClient, backendBumpTotal, totalAmount, bumpOrdersCount: bumpOrders.length, paymentType });
 
   let paymentResult = {};
   if (paymentType === 'card') {
