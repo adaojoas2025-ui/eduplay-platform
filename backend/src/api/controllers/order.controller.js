@@ -24,7 +24,7 @@ const createOrder = asyncHandler(async (req, res) => {
   const installments = req.body.installments || 1;
   const { bumpProductIds = [], bumpIds = [], bumpTotal: bumpTotalFromClient = 0 } = req.body;
 
-  logger.info('createOrder called', { paymentType, installments, bumpProductIds, bumpTotalFromClient, fullBody: req.body });
+  logger.info('createOrder called', { paymentType, installments, bumpProductIds, bumpTotalFromClient });
 
   // Create bump orders first (so we have their IDs for main order metadata)
   const bumpOrders = [];
@@ -39,7 +39,7 @@ const createOrder = asyncHandler(async (req, res) => {
       });
       bumpOrders.push(bumpOrder);
     } catch (err) {
-      logger.warn('Failed to create bump order, skipping', { bumpProductId, error: err.message });
+      logger.warn('Failed to create bump order', { bumpProductId, error: err.message, bumpTotalFromClient, userId: req.user?.id });
     }
   }
 
@@ -51,8 +51,12 @@ const createOrder = asyncHandler(async (req, res) => {
     extraMetadata: bumpOrderIds.length > 0 ? { bumpOrderIds } : {},
   });
 
-  const bumpTotal = bumpTotalFromClient > 0 ? bumpTotalFromClient : bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
+  // Prefer backend-calculated sum from created bump orders; fall back to frontend value if none were created
+  const backendBumpTotal = bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
+  const bumpTotal = backendBumpTotal > 0 ? backendBumpTotal : (bumpTotalFromClient > 0 ? bumpTotalFromClient : 0);
   const totalAmount = Math.round((Number(order.amount) + bumpTotal) * 100) / 100;
+
+  logger.info('Creating payment', { orderId: order.id, orderAmount: order.amount, bumpTotal, totalAmount, bumpOrdersCount: bumpOrders.length, paymentType });
 
   if (paymentType === 'card') {
     const paymentPreference = await paymentService.createPaymentPreference(order, bumpTotal > 0 ? totalAmount : null);
@@ -242,7 +246,7 @@ const getOrdersByStatusCount = asyncHandler(async (req, res) => {
 const createGuestOrder = asyncHandler(async (req, res) => {
   const { productId, name, email, paymentMethod = 'PIX', paymentType = 'pix', installments = 1, bumpProductIds = [], bumpIds = [], bumpTotal: bumpTotalFromClient = 0 } = req.body;
 
-  logger.info('createGuestOrder called', { productId, paymentType, bumpProductIds, bumpTotalFromClient, fullBody: req.body });
+  logger.info('createGuestOrder called', { productId, paymentType, bumpProductIds, bumpTotalFromClient });
 
   // 1. Find or create user account
   const { user, isNewUser, tempPassword, accessToken, refreshToken } =
@@ -261,7 +265,7 @@ const createGuestOrder = asyncHandler(async (req, res) => {
       });
       bumpOrders.push(bumpOrder);
     } catch (err) {
-      logger.warn('Failed to create bump order, skipping', { bumpProductId, error: err.message });
+      logger.warn('Failed to create bump order', { bumpProductId, error: err.message, bumpTotalFromClient, userId: user?.id });
     }
   }
 
@@ -282,8 +286,12 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   }
 
   // 5. Create payment for total amount (main + bumps)
-  const bumpTotal = bumpTotalFromClient > 0 ? bumpTotalFromClient : bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
+  // Prefer backend-calculated sum from created bump orders; fall back to frontend value if none were created
+  const backendBumpTotal = bumpOrders.reduce((sum, o) => sum + Number(o.amount), 0);
+  const bumpTotal = backendBumpTotal > 0 ? backendBumpTotal : (bumpTotalFromClient > 0 ? bumpTotalFromClient : 0);
   const totalAmount = Math.round((Number(order.amount) + bumpTotal) * 100) / 100;
+
+  logger.info('Creating payment', { orderId: order.id, orderAmount: order.amount, bumpTotal, totalAmount, bumpOrdersCount: bumpOrders.length, paymentType });
 
   let paymentResult = {};
   if (paymentType === 'card') {
