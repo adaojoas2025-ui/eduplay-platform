@@ -31,12 +31,15 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
   try {
     transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT) || 587,
-      secure: process.env.EMAIL_SECURE === 'true',
+      port: parseInt(process.env.EMAIL_PORT) || 465,
+      secure: process.env.EMAIL_SECURE !== 'false', // port 465 = SSL (secure: true by default)
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 10000,
     });
     useNodemailer = true;
     logger.info('✅ Using Nodemailer (Gmail SMTP) for email service');
