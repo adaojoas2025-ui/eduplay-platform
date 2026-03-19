@@ -87,26 +87,7 @@ const verifyConnection = async () => {
 const sendEmail = async ({ to, subject, html, text, replyTo }) => {
   const fromEmail = process.env.EMAIL_FROM || 'EducaplayJA <ja.eduplay@gmail.com>';
 
-  // Try Nodemailer (Gmail SMTP) first — avoids "via sendgrid.net" spam flag
-  if (useNodemailer && transporter) {
-    try {
-      logger.info('📤 Sending email via Nodemailer...', { to, subject });
-      const result = await transporter.sendMail({
-        from: fromEmail,
-        to,
-        subject,
-        text: text || subject,
-        html,
-        ...(replyTo && { replyTo }),
-      });
-      logger.info('✅ Email sent successfully via Nodemailer', { to, subject, messageId: result.messageId });
-      return result;
-    } catch (error) {
-      logger.warn('⚠️ Nodemailer failed, trying SendGrid...', { error: error.message });
-    }
-  }
-
-  // Fallback: SendGrid
+  // SendGrid first — reliable from Render (SMTP outbound is blocked on Render free tier)
   if (useSendGrid && sgMail) {
     try {
       logger.info('📤 Sending email via SendGrid...', { to, subject });
@@ -121,12 +102,31 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
       logger.info('✅ Email sent successfully via SendGrid', { to, subject, statusCode: response.statusCode });
       return response;
     } catch (error) {
-      logger.error('❌ SendGrid failed:', { error: error.message, to, subject });
+      logger.warn('⚠️ SendGrid failed, trying Nodemailer...', { error: error.message });
+    }
+  }
+
+  // Fallback: Nodemailer (Gmail SMTP) — may not work on Render free tier
+  if (useNodemailer && transporter) {
+    try {
+      logger.info('📤 Sending email via Nodemailer...', { to, subject });
+      const result = await transporter.sendMail({
+        from: fromEmail,
+        to,
+        subject,
+        text: text || subject,
+        html,
+        ...(replyTo && { replyTo }),
+      });
+      logger.info('✅ Email sent successfully via Nodemailer', { to, subject, messageId: result.messageId });
+      return result;
+    } catch (error) {
+      logger.error('❌ Nodemailer failed:', { error: error.message, to, subject });
       throw error;
     }
   }
 
-  throw new Error('No email service configured — configure EMAIL_USER/EMAIL_PASS or SENDGRID_API_KEY');
+  throw new Error('No email service configured — configure SENDGRID_API_KEY or EMAIL_USER/EMAIL_PASS');
 };
 
 /**
