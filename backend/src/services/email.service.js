@@ -152,7 +152,7 @@ const sendOrderConfirmationEmail = async (order) => {
         </div>
         <p>Você já pode acessar o conteúdo do seu curso!</p>
         <p>
-          <a href="${config.frontend.url}/my-courses" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+          <a href="${config.frontend.url}/#/my-courses" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
             Acessar Meus Cursos
           </a>
         </p>
@@ -199,7 +199,7 @@ const sendNewSaleNotification = async (order) => {
           <p><strong>Taxa da Plataforma:</strong> R$ ${order.platformFee.toFixed(2)}</p>
         </div>
         <p>
-          <a href="${config.frontend.url}/producer/sales" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+          <a href="${config.frontend.url}/#/seller/sales" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
             Ver Minhas Vendas
           </a>
         </p>
@@ -243,7 +243,7 @@ const sendCommissionPaidNotification = async (commission) => {
         </div>
         <p>O valor foi transferido para sua chave PIX cadastrada.</p>
         <p>
-          <a href="${config.frontend.url}/producer/commissions" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+          <a href="${config.frontend.url}/#/seller/commissions" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
             Ver Minhas Comissões
           </a>
         </p>
@@ -347,7 +347,7 @@ const sendProductAccessEmail = async (buyer, product, order) => {
         ` : ''}
 
         <p style="margin-top: 30px;">
-          <a href="${config.frontend.url}/my-courses" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+          <a href="${config.frontend.url}/#/my-courses" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
             Ver Meus Produtos
           </a>
         </p>
@@ -399,7 +399,7 @@ const sendProductSubmittedEmail = async (product, producer) => {
           <p><strong>Data de Envio:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
         </div>
         <p>
-          <a href="${config.frontend.url}/admin/products" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+          <a href="${config.frontend.url}/#/admin/products" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
             Ver Produtos Pendentes
           </a>
         </p>
@@ -445,7 +445,7 @@ const sendProductApprovedEmail = async (product, producer) => {
         </div>
         <p>Seu produto agora está disponível para venda no marketplace!</p>
         <p>
-          <a href="${config.frontend.url}/product/${product.id}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+          <a href="${config.frontend.url}/#/product/${product.id}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
             Ver Produto
           </a>
         </p>
@@ -491,7 +491,7 @@ const sendProductRejectedEmail = async (product, producer, reason) => {
         </div>
         <p>Você pode editar seu produto e enviá-lo novamente para aprovação após fazer as correções necessárias.</p>
         <p>
-          <a href="${config.frontend.url}/seller/products/${product.id}/edit" style="background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+          <a href="${config.frontend.url}/#/seller/products/${product.id}/edit" style="background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
             Editar Produto
           </a>
         </p>
@@ -561,7 +561,7 @@ const sendProductPendingApprovalEmail = async (adminEmail, data) => {
             <p>Por favor, revise o produto e tome uma ação:</p>
 
             <div style="text-align: center;">
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin/products" class="button">
+              <a href="${config.frontend.url}/#/admin/products" class="button">
                 Revisar Produto
               </a>
             </div>

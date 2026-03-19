@@ -84,26 +84,7 @@ const verifyConnection = async () => {
 const sendEmail = async ({ to, subject, html, text, replyTo }) => {
   const fromEmail = process.env.EMAIL_FROM || 'EducaplayJA <ja.eduplay@gmail.com>';
 
-  // Try SendGrid first
-  if (useSendGrid && sgMail) {
-    try {
-      logger.info('📤 Sending email via SendGrid...', { to, subject });
-      const [response] = await sgMail.send({
-        to,
-        from: fromEmail,
-        subject,
-        text: text || subject,
-        html,
-        ...(replyTo && { replyTo }),
-      });
-      logger.info('✅ Email sent successfully via SendGrid', { to, subject, statusCode: response.statusCode });
-      return response;
-    } catch (error) {
-      logger.warn('⚠️ SendGrid failed, trying Nodemailer...', { error: error.message });
-    }
-  }
-
-  // Fallback: Nodemailer (Gmail SMTP)
+  // Try Nodemailer (Gmail SMTP) first — avoids "via sendgrid.net" spam flag
   if (useNodemailer && transporter) {
     try {
       logger.info('📤 Sending email via Nodemailer...', { to, subject });
@@ -118,12 +99,31 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
       logger.info('✅ Email sent successfully via Nodemailer', { to, subject, messageId: result.messageId });
       return result;
     } catch (error) {
-      logger.error('❌ Nodemailer failed:', { error: error.message, to, subject });
+      logger.warn('⚠️ Nodemailer failed, trying SendGrid...', { error: error.message });
+    }
+  }
+
+  // Fallback: SendGrid
+  if (useSendGrid && sgMail) {
+    try {
+      logger.info('📤 Sending email via SendGrid...', { to, subject });
+      const [response] = await sgMail.send({
+        to,
+        from: fromEmail,
+        subject,
+        text: text || subject,
+        html,
+        ...(replyTo && { replyTo }),
+      });
+      logger.info('✅ Email sent successfully via SendGrid', { to, subject, statusCode: response.statusCode });
+      return response;
+    } catch (error) {
+      logger.error('❌ SendGrid failed:', { error: error.message, to, subject });
       throw error;
     }
   }
 
-  throw new Error('No email service configured — configure SENDGRID_API_KEY or EMAIL_USER/EMAIL_PASS');
+  throw new Error('No email service configured — configure EMAIL_USER/EMAIL_PASS or SENDGRID_API_KEY');
 };
 
 /**
