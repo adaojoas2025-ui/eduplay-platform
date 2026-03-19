@@ -24,7 +24,7 @@ const createOrder = asyncHandler(async (req, res) => {
   const installments = req.body.installments || 1;
   const { bumpProductIds = [], bumpIds = [], bumpTotal: bumpTotalFromClient = 0 } = req.body;
 
-  logger.info('createOrder called', { paymentType, installments, bumpProductIds, bumpTotalFromClient });
+  logger.info('createOrder called', { paymentType, installments, bumpProductIds, bumpTotalFromClient, fullBody: req.body });
 
   // Create bump orders first (so we have their IDs for main order metadata)
   const bumpOrders = [];
@@ -241,6 +241,8 @@ const getOrdersByStatusCount = asyncHandler(async (req, res) => {
  */
 const createGuestOrder = asyncHandler(async (req, res) => {
   const { productId, name, email, paymentMethod = 'PIX', paymentType = 'pix', installments = 1, bumpProductIds = [], bumpIds = [], bumpTotal: bumpTotalFromClient = 0 } = req.body;
+
+  logger.info('createGuestOrder called', { productId, paymentType, bumpProductIds, bumpTotalFromClient, fullBody: req.body });
 
   // 1. Find or create user account
   const { user, isNewUser, tempPassword, accessToken, refreshToken } =
