@@ -1,21 +1,35 @@
 /**
  * Email Configuration
- * Email service using SendGrid or Nodemailer (Gmail SMTP)
+ * Primary: Resend (HTTP API — works on Render free tier)
+ * Fallback: SendGrid → Nodemailer (Gmail SMTP)
  * @module config/email
  */
 
 const logger = require('../utils/logger');
-const nodemailer = require('nodemailer');
 
 logger.info('📧 Initializing email service...');
 
+let useResend = false;
 let useSendGrid = false;
 let useNodemailer = false;
+let resendClient = null;
 let sgMail = null;
 let transporter = null;
 
-// Try SendGrid first
-if (process.env.SENDGRID_API_KEY) {
+// 1. Resend (primary — HTTP API, works on Render)
+if (process.env.RESEND_API_KEY) {
+  try {
+    const { Resend } = require('resend');
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+    useResend = true;
+    logger.info('✅ Using Resend for email service');
+  } catch (error) {
+    logger.error('❌ Failed to initialize Resend:', error.message);
+  }
+}
+
+// 2. SendGrid fallback
+if (!useResend && process.env.SENDGRID_API_KEY) {
   try {
     sgMail = require('@sendgrid/mail');
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -26,13 +40,14 @@ if (process.env.SENDGRID_API_KEY) {
   }
 }
 
-// Nodemailer Gmail SMTP — fallback (always initialized if vars are set)
-if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+// 3. Nodemailer Gmail SMTP fallback
+if (!useResend && !useSendGrid && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
   try {
+    const nodemailer = require('nodemailer');
     transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.EMAIL_PORT) || 465,
-      secure: process.env.EMAIL_SECURE !== 'false', // port 465 = SSL (secure: true by default)
+      secure: process.env.EMAIL_SECURE !== 'false',
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -48,7 +63,7 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
   }
 }
 
-if (!useSendGrid && !useNodemailer) {
+if (!useResend && !useSendGrid && !useNodemailer) {
   logger.warn('⚠️  No email service configured');
 }
 
@@ -57,6 +72,10 @@ if (!useSendGrid && !useNodemailer) {
  */
 const verifyConnection = async () => {
   try {
+    if (useResend) {
+      logger.info('✅ Email service ready (Resend)');
+      return true;
+    }
     if (useSendGrid) {
       logger.info('✅ Email service ready (SendGrid)');
       return true;
@@ -76,18 +95,37 @@ const verifyConnection = async () => {
 
 /**
  * Send email
- * @param {Object} options - Email options
- * @param {string} options.to - Recipient email
- * @param {string} options.subject - Email subject
- * @param {string} options.html - HTML content
- * @param {string} options.text - Plain text content
- * @param {string} options.replyTo - Reply-to email (optional)
- * @returns {Promise<Object>} Send result
  */
 const sendEmail = async ({ to, subject, html, text, replyTo }) => {
-  const fromEmail = process.env.EMAIL_FROM || 'EducaplayJA <ja.eduplay@gmail.com>';
+  // Resend requires a verified domain as FROM. On free tier, use onboarding@resend.dev
+  // OR use a verified domain. For now, use resend.dev domain with display name.
+  const fromEmail = useResend
+    ? (process.env.RESEND_FROM || 'EducaplayJA <onboarding@resend.dev>')
+    : (process.env.EMAIL_FROM || 'EducaplayJA <ja.eduplay@gmail.com>');
 
-  // SendGrid first — reliable from Render (SMTP outbound is blocked on Render free tier)
+  // 1. Resend
+  if (useResend && resendClient) {
+    try {
+      logger.info('📤 Sending email via Resend...', { to, subject });
+      const result = await resendClient.emails.send({
+        from: fromEmail,
+        to,
+        subject,
+        html,
+        text: text || subject,
+        ...(replyTo && { reply_to: replyTo }),
+      });
+      if (result.error) {
+        throw new Error(result.error.message || JSON.stringify(result.error));
+      }
+      logger.info('✅ Email sent successfully via Resend', { to, subject, id: result.data?.id });
+      return result;
+    } catch (error) {
+      logger.warn('⚠️ Resend failed, trying SendGrid...', { error: error.message });
+    }
+  }
+
+  // 2. SendGrid
   if (useSendGrid && sgMail) {
     try {
       logger.info('📤 Sending email via SendGrid...', { to, subject });
@@ -106,7 +144,7 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
     }
   }
 
-  // Fallback: Nodemailer (Gmail SMTP) — may not work on Render free tier
+  // 3. Nodemailer
   if (useNodemailer && transporter) {
     try {
       logger.info('📤 Sending email via Nodemailer...', { to, subject });
@@ -126,13 +164,14 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
     }
   }
 
-  throw new Error('No email service configured — configure SENDGRID_API_KEY or EMAIL_USER/EMAIL_PASS');
+  throw new Error('No email service configured');
 };
 
 /**
  * Get active email service name
  */
 const getActiveService = () => {
+  if (useResend) return 'resend';
   if (useSendGrid) return 'sendgrid';
   if (useNodemailer) return 'nodemailer';
   return 'none';
@@ -142,8 +181,8 @@ module.exports = {
   verifyConnection,
   sendEmail,
   getActiveService,
+  usingResend: useResend,
   usingBrevo: false,
-  usingResend: false,
   usingSendGrid: useSendGrid,
   usingNodemailer: useNodemailer,
 };
