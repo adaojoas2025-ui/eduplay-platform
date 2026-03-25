@@ -153,7 +153,7 @@ router.get('/cleanup/orders', async (req, res, next) => {
         id: true,
         amount: true,
         status: true,
-        paymentType: true,
+        paymentMethod: true,
         createdAt: true,
         product: { select: { title: true } },
         buyer: { select: { name: true, email: true } },
