@@ -348,7 +348,7 @@ const sendProductAccessEmail = async (buyer, product, order) => {
 
         <p style="margin-top: 30px;">
           <a href="${config.frontend.url}/#/my-courses" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-            Ver Meus Produtos
+            Meus Cursos
           </a>
         </p>
 
