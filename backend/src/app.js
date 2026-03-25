@@ -35,6 +35,8 @@ app.use(helmet());
  */
 const allowedOrigins = [
   config.urls.frontend,
+  'https://educaplayja.com.br',
+  'https://www.educaplayja.com.br',
   'https://eduplay-frontend.onrender.com',
   'https://eduplay.com',
   'http://localhost:5173',

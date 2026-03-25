@@ -25,7 +25,7 @@ const envSchema = Joi.object({
   EMAIL_USER: Joi.string(),
   EMAIL_PASS: Joi.string(),
   EMAIL_FROM: Joi.string(),
-  FRONTEND_URL: Joi.string().uri().default('https://eduplay-frontend.onrender.com'),
+  FRONTEND_URL: Joi.string().uri().default('https://educaplayja.com.br'),
   BACKEND_URL: Joi.string().uri().default('https://eduplay-backend-yw7z.onrender.com'),
   PLATFORM_FEE_PERCENT: Joi.number().min(0).max(100).default(10),
   PLATFORM_NAME: Joi.string().default('EducaplayJA'),
