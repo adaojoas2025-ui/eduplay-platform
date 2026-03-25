@@ -152,7 +152,7 @@ const sendOrderConfirmationEmail = async (order) => {
         </div>
         <p>Você já pode acessar o conteúdo do seu curso!</p>
         <p>
-          <a href="${config.frontend.url}/#/my-courses" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+          <a href="${config.frontend.url}/#/my-products" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
             Acessar Meus Cursos
           </a>
         </p>
@@ -347,7 +347,7 @@ const sendProductAccessEmail = async (buyer, product, order) => {
         ` : ''}
 
         <p style="margin-top: 30px;">
-          <a href="${config.frontend.url}/#/my-courses" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+          <a href="${config.frontend.url}/#/my-products" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
             Meus Cursos
           </a>
         </p>
