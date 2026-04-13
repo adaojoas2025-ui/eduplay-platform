@@ -103,6 +103,7 @@ const createPaymentPreference = async (order, amountOverride = null) => {
       preferenceId: preference.id,
       initPoint: preference.init_point,
       sandboxInitPoint: preference.sandbox_init_point,
+      mobileInitPoint: preference.mobile_init_point,
     };
   } catch (error) {
     logger.error('Error creating payment preference:', error);
@@ -220,6 +221,7 @@ const createAppPaymentPreference = async (order, app) => {
       preferenceId: preference.id,
       initPoint: preference.init_point,
       sandboxInitPoint: preference.sandbox_init_point,
+      mobileInitPoint: preference.mobile_init_point,
     };
   } catch (error) {
     logger.error('Error creating app payment preference:', error);

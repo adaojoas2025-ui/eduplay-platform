@@ -65,6 +65,7 @@ const createOrder = asyncHandler(async (req, res) => {
       orderId: order.id,
       paymentType: 'card',
       paymentUrl: paymentPreference?.initPoint,
+      mobilePaymentUrl: paymentPreference?.mobileInitPoint,
     }, 'Order created successfully');
   }
 
@@ -297,7 +298,7 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   let paymentResult = {};
   if (paymentType === 'card') {
     const paymentPreference = await paymentService.createPaymentPreference(order, bumpTotal > 0 ? totalAmount : null);
-    paymentResult = { paymentType: 'card', paymentUrl: paymentPreference?.initPoint };
+    paymentResult = { paymentType: 'card', paymentUrl: paymentPreference?.initPoint, mobilePaymentUrl: paymentPreference?.mobileInitPoint };
   } else {
     const pixData = await paymentService.createPixPayment(order, bumpTotal > 0 ? totalAmount : null);
     paymentResult = {

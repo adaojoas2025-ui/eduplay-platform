@@ -118,8 +118,9 @@ export default function AppDetails() {
         { version: selectedVersion, price: app.paidNoAdsPrice },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      const { paymentUrl } = orderResponse.data.data;
-      window.location.href = paymentUrl;
+      const { paymentUrl, mobilePaymentUrl } = orderResponse.data.data;
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      window.location.href = (isMobile && mobilePaymentUrl) ? mobilePaymentUrl : paymentUrl;
     } catch (err) {
       console.error('❌ Erro na compra:', err);
       setError(err.response?.data?.message || 'Erro ao processar compra. Tente novamente.');

@@ -54,8 +54,10 @@ export default function GuestCheckout() {
   };
 
   const handlePaymentResult = (data, orderId, totalAmount) => {
-    if (data.paymentType === 'card' && data.paymentUrl) {
-      window.location.href = data.paymentUrl;
+    if (data.paymentType === 'card' && (data.paymentUrl || data.mobilePaymentUrl)) {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const url = (isMobile && data.mobilePaymentUrl) ? data.mobilePaymentUrl : data.paymentUrl;
+      window.location.href = url;
     } else {
       sessionStorage.setItem('pixData_' + orderId, JSON.stringify({
         pixQrCode: data.pixQrCode,
