@@ -1,10 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config/api.config';
 import { useAuth } from '../hooks/useAuth';
 import { orderAPI } from '../services/api';
 import OrderBumpSuggestion from '../components/OrderBumpSuggestion';
+
+const MP_PUBLIC_KEY = 'APP_USR-a8765e94-d9d1-4a29-aec5-d81100bb11d1';
+
+const isMobileDevice = () =>
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+const loadMPScript = () =>
+  new Promise((resolve, reject) => {
+    if (window.MercadoPago) { resolve(); return; }
+    const script = document.createElement('script');
+    script.src = 'https://sdk.mercadopago.com/js/v2';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
 
 export default function GuestCheckout() {
   const { productId } = useParams();
@@ -21,9 +36,90 @@ export default function GuestCheckout() {
   const [selectedBumps, setSelectedBumps] = useState([]);
   const [bumpTotal, setBumpTotal] = useState(0);
 
+  // Bricks state (mobile card payment)
+  const [showBricks, setShowBricks] = useState(false);
+  const [bricksData, setBricksData] = useState(null); // { orderId, amount }
+  const [bricksReady, setBricksReady] = useState(false);
+  const bricksControllerRef = useRef(null);
+
   useEffect(() => {
     fetchProduct();
   }, [productId]);
+
+  // Initialize MP Bricks when showBricks becomes true
+  useEffect(() => {
+    if (!showBricks || !bricksData) return;
+
+    let cancelled = false;
+
+    loadMPScript()
+      .then(() => {
+        if (cancelled) return;
+        const mp = new window.MercadoPago(MP_PUBLIC_KEY, { locale: 'pt-BR' });
+        const bricksBuilder = mp.bricks();
+
+        return bricksBuilder.create('payment', 'mp-bricks-container', {
+          initialization: { amount: bricksData.amount },
+          customization: {
+            paymentMethods: {
+              creditCard: 'all',
+              debitCard: 'all',
+              ticket: 'none',
+              bankTransfer: 'none',
+              atm: 'none',
+              onboarding_credits: 'none',
+              wallet_purchase: 'none',
+            },
+            visual: { hideFormTitle: true, hidePaymentButton: false },
+          },
+          callbacks: {
+            onReady: () => setBricksReady(true),
+            onSubmit: async ({ formData: bricksFormData }) => {
+              try {
+                const token = localStorage.getItem('token');
+                const res = await axios.post(
+                  `${API_URL}/orders/${bricksData.orderId}/process-card-payment`,
+                  { formData: bricksFormData },
+                  token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+                );
+                const result = res.data.data;
+                if (result.approved) {
+                  navigate(`/order/${bricksData.orderId}/success`);
+                } else if (result.pending) {
+                  navigate(`/order/${bricksData.orderId}/pending`);
+                } else {
+                  setError('Pagamento não aprovado. Verifique os dados e tente novamente.');
+                  throw new Error('not_approved');
+                }
+              } catch (err) {
+                if (err.message !== 'not_approved') {
+                  setError(err.response?.data?.message || 'Erro ao processar pagamento.');
+                }
+                throw err;
+              }
+            },
+            onError: (err) => console.error('Bricks error:', err),
+          },
+        });
+      })
+      .then((ctrl) => {
+        if (ctrl) bricksControllerRef.current = ctrl;
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError('Erro ao carregar formulário de pagamento. Tente novamente.');
+          setShowBricks(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      if (bricksControllerRef.current) {
+        bricksControllerRef.current.unmount?.();
+        bricksControllerRef.current = null;
+      }
+    };
+  }, [showBricks, bricksData]);
 
   const fetchProduct = async () => {
     try {
@@ -54,10 +150,17 @@ export default function GuestCheckout() {
   };
 
   const handlePaymentResult = (data, orderId, totalAmount) => {
-    if (data.paymentType === 'card' && (data.paymentUrl || data.mobilePaymentUrl)) {
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const url = (isMobile && data.mobilePaymentUrl) ? data.mobilePaymentUrl : data.paymentUrl;
-      window.location.href = url;
+    if (data.paymentType === 'card' && data.paymentUrl) {
+      if (isMobileDevice()) {
+        // Mobile: show embedded Bricks form — no redirect (avoids MP app interception)
+        const amount = totalAmount || (product?.price || 0) + bumpTotal;
+        setBricksData({ orderId, amount });
+        setShowBricks(true);
+        setLoading(false);
+        return;
+      }
+      // Desktop: redirect to MP Checkout Pro as before
+      window.location.href = data.paymentUrl;
     } else {
       sessionStorage.setItem('pixData_' + orderId, JSON.stringify({
         pixQrCode: data.pixQrCode,
@@ -143,6 +246,45 @@ export default function GuestCheckout() {
       setLoading(false);
     }
   };
+
+  // Mobile card payment — show Bricks modal overlay
+  if (showBricks && bricksData) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-lg mx-auto px-4">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="font-semibold text-gray-800">💳 Dados do Cartão</h3>
+              <button
+                onClick={() => { setShowBricks(false); setBricksReady(false); setBricksData(null); }}
+                className="text-gray-400 hover:text-gray-600 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4">
+              {!bricksReady && (
+                <div className="flex flex-col items-center py-8 gap-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
+                  <p className="text-sm text-gray-500">Carregando formulário seguro...</p>
+                </div>
+              )}
+              <div id="mp-bricks-container" />
+              {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
+            </div>
+          </div>
+          <p className="text-center mt-4">
+            <button
+              onClick={() => { setShowBricks(false); setBricksReady(false); setBricksData(null); }}
+              className="text-gray-500 hover:text-gray-700 text-sm"
+            >
+              ← Voltar ao checkout
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (loadingProduct) {
     return (

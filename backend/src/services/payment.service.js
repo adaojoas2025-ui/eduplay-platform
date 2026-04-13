@@ -507,6 +507,63 @@ const getOrderPaymentDetails = async (orderId, userId) => {
   }
 };
 
+/**
+ * Process card payment using a token from MP Checkout Bricks (mobile flow)
+ * No redirect — tokenization and charge happen transparently
+ * @param {string} orderId - Order ID
+ * @param {Object} formData - Bricks formData (token, payment_method_id, installments, payer, issuer_id)
+ * @returns {Promise<Object>} Payment result
+ */
+const processDirectCardPayment = async (orderId, formData) => {
+  try {
+    const order = await orderRepository.findOrderById(orderId);
+    if (!order) throw ApiError.notFound('Order not found');
+
+    const installments = Number(formData.installments) || 1;
+    const amount = Number(order.amount);
+
+    const paymentData = {
+      transaction_amount: amount,
+      token: formData.token,
+      description: (order.product?.title || 'EducaplayJA').substring(0, 256),
+      installments,
+      payment_method_id: formData.payment_method_id,
+      payer: {
+        email: order.buyer.email,
+        first_name: order.buyer.name?.split(' ')[0] || 'Cliente',
+        last_name: order.buyer.name?.split(' ').slice(1).join(' ') || 'EducaplayJA',
+        identification: formData.payer?.identification,
+      },
+      notification_url: `${config.backend.url}/api/v1/payments/webhook`,
+      external_reference: order.id,
+      statement_descriptor: 'EDUCAPLAYJA',
+    };
+
+    if (formData.issuer_id) {
+      paymentData.issuer_id = Number(formData.issuer_id);
+    }
+
+    const payment = await mercadopago.createPayment(paymentData);
+    await orderRepository.updateOrder(order.id, { paymentId: String(payment.id) });
+
+    logger.info('Direct card payment created via Bricks', {
+      orderId: order.id,
+      paymentId: payment.id,
+      status: payment.status,
+      installments,
+    });
+
+    return {
+      paymentId: payment.id,
+      status: payment.status,
+      statusDetail: payment.status_detail,
+    };
+  } catch (error) {
+    logger.error('Error processing direct card payment:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   createPaymentPreference,
   createPixPayment,
@@ -516,5 +573,6 @@ module.exports = {
   createRefund,
   getPaymentMethods,
   getOrderPaymentDetails,
+  processDirectCardPayment,
 };
 

@@ -88,6 +88,13 @@ router.get(
 );
 
 /**
+ * @route   POST /api/v1/orders/:id/process-card-payment
+ * @desc    Process card payment via Bricks token (mobile — no redirect)
+ * @access  Public
+ */
+router.post('/:id/process-card-payment', orderController.processCardPayment);
+
+/**
  * @route   GET /api/v1/orders/:id
  * @desc    Get order by ID
  * @access  Private (Buyer, Producer, Admin)

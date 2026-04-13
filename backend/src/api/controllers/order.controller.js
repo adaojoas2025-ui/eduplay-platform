@@ -360,6 +360,31 @@ const resendProductEmail = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, 200, { orderId: order.id, sentTo: order.buyer.email }, 'Email reenviado com sucesso');
 });
 
+/**
+ * Process card payment using Bricks token (mobile flow — no redirect)
+ * @route POST /api/v1/orders/:id/process-card-payment
+ * @access Public (guest users have token in localStorage after order creation)
+ */
+const processCardPayment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { formData } = req.body;
+
+  if (!formData || !formData.token) {
+    return ApiResponse.error(res, 400, 'Card token is required');
+  }
+
+  const result = await paymentService.processDirectCardPayment(id, formData);
+
+  return ApiResponse.success(res, 200, {
+    orderId: id,
+    paymentId: result.paymentId,
+    status: result.status,
+    statusDetail: result.statusDetail,
+    approved: result.status === 'approved',
+    pending: result.status === 'in_process' || result.status === 'pending',
+  }, 'Payment processed');
+});
+
 module.exports = {
   createOrder,
   createGuestOrder,
@@ -374,4 +399,5 @@ module.exports = {
   getRecentOrders,
   getOrdersByStatusCount,
   resendProductEmail,
+  processCardPayment,
 };
