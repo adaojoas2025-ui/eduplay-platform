@@ -58,27 +58,16 @@ export default function GuestCheckout() {
         const mp = new window.MercadoPago(MP_PUBLIC_KEY, { locale: 'pt-BR' });
         const bricksBuilder = mp.bricks();
 
-        return bricksBuilder.create('payment', 'mp-bricks-container', {
+        return bricksBuilder.create('cardPayment', 'mp-bricks-container', {
           initialization: { amount: Number(bricksData.amount) },
-          customization: {
-            paymentMethods: {
-              creditCard: 'all',
-              debitCard: 'all',
-              ticket: 'none',
-              bankTransfer: 'none',
-              atm: 'none',
-              mercadoPago: 'none',
-            },
-            visual: { hideFormTitle: true },
-          },
           callbacks: {
             onReady: () => setBricksReady(true),
-            onSubmit: async ({ formData: bricksFormData }) => {
+            onSubmit: async (cardFormData) => {
               try {
                 const token = localStorage.getItem('token');
                 const res = await axios.post(
                   `${API_URL}/orders/${bricksData.orderId}/process-card-payment`,
-                  { formData: bricksFormData },
+                  { formData: cardFormData },
                   token ? { headers: { Authorization: `Bearer ${token}` } } : {}
                 );
                 const result = res.data.data;
@@ -97,7 +86,10 @@ export default function GuestCheckout() {
                 throw err;
               }
             },
-            onError: (err) => console.error('Bricks error:', err),
+            onError: (err) => {
+              console.error('Bricks error:', err);
+              setError(`Erro no formulário: ${err?.cause?.[0]?.description || err?.message || 'tente novamente'}`);
+            },
           },
         });
       })
