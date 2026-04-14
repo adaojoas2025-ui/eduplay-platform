@@ -59,7 +59,7 @@ export default function GuestCheckout() {
         const bricksBuilder = mp.bricks();
 
         return bricksBuilder.create('payment', 'mp-bricks-container', {
-          initialization: { amount: bricksData.amount },
+          initialization: { amount: Number(bricksData.amount) },
           customization: {
             paymentMethods: {
               creditCard: 'all',
@@ -67,10 +67,9 @@ export default function GuestCheckout() {
               ticket: 'none',
               bankTransfer: 'none',
               atm: 'none',
-              onboarding_credits: 'none',
-              wallet_purchase: 'none',
+              mercadoPago: 'none',
             },
-            visual: { hideFormTitle: true, hidePaymentButton: false },
+            visual: { hideFormTitle: true },
           },
           callbacks: {
             onReady: () => setBricksReady(true),
