@@ -17,6 +17,32 @@ function runCommand(command, description) {
   }
 }
 
+async function ensureIrpTables() {
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const p = new PrismaClient();
+    const sqls = [
+      `CREATE TABLE IF NOT EXISTS "IrpLicense" ("id" TEXT NOT NULL,"licenseKey" TEXT NOT NULL,"email" TEXT NOT NULL,"status" TEXT NOT NULL DEFAULT 'active',"expiresAt" TIMESTAMP(3) NOT NULL,"activeDeviceId" TEXT,"lastSeenAt" TIMESTAMP(3),"extensionVersion" TEXT,"notes" TEXT,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "IrpLicense_pkey" PRIMARY KEY ("id"))`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "IrpLicense_licenseKey_key" ON "IrpLicense"("licenseKey")`,
+      `CREATE INDEX IF NOT EXISTS "IrpLicense_email_idx" ON "IrpLicense"("email")`,
+      `CREATE INDEX IF NOT EXISTS "IrpLicense_status_idx" ON "IrpLicense"("status")`,
+      `CREATE TABLE IF NOT EXISTS "IrpLicenseEvent" ("id" TEXT NOT NULL,"licenseId" TEXT NOT NULL,"eventType" TEXT NOT NULL,"deviceId" TEXT,"extensionVersion" TEXT,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "IrpLicenseEvent_pkey" PRIMARY KEY ("id"))`,
+      `CREATE INDEX IF NOT EXISTS "IrpLicenseEvent_licenseId_idx" ON "IrpLicenseEvent"("licenseId")`,
+    ];
+    for (const sql of sqls) {
+      try { await p.$executeRawUnsafe(sql); } catch(e) { /* already exists */ }
+    }
+    // Add FK separately to avoid errors if already exists
+    try {
+      await p.$executeRawUnsafe(`ALTER TABLE "IrpLicenseEvent" ADD CONSTRAINT "IrpLicenseEvent_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "IrpLicense"("id") ON DELETE CASCADE ON UPDATE CASCADE`);
+    } catch(e) { /* already exists */ }
+    await p.$disconnect();
+    console.log('>>> IRP License tables ready');
+  } catch(e) {
+    console.log('>>> IRP License tables setup warning:', e.message);
+  }
+}
+
 async function main() {
   console.log('===========================================');
   console.log('  EduplayJA Backend Startup Script');
@@ -26,7 +52,11 @@ async function main() {
   console.log('\nStep 1: Regenerating Prisma client...');
   runCommand('npx prisma generate', 'Prisma generate (client sync)');
 
-  // Step 4: Start the server
+  // Step 2: Ensure IRP License tables exist
+  console.log('\nStep 2: Ensuring IRP License tables...');
+  await ensureIrpTables();
+
+  // Step 3: Start the server
   console.log('\n===========================================');
   console.log('  Starting Express Server');
   console.log('===========================================\n');
