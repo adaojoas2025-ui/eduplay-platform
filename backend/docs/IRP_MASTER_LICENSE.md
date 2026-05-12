@@ -333,9 +333,59 @@ Se o e-mail for diferente: gera nova licença com nova chave.
 
 ---
 
+## Correções e ajustes pós-implantação
+
+### `src/services/license.service.js` — reescrito com SQL direto
+
+**Problema:** O Prisma client em produção (Render) estava cacheado sem o modelo `irpLicense`, causando erro 500 em todos os endpoints.
+
+**Solução:** Todas as funções foram reescritas usando `prisma.$queryRawUnsafe` e `prisma.$executeRawUnsafe` — SQL direto que não depende dos modelos gerados do Prisma.
+
+### `src/routes/licenses.js` — endpoint admin adicionado
+
+```
+POST /api/v1/licenses/admin/create
+  Header: x-admin-secret: irpmaster2026admin
+  Body: { email, days }
+  → Cria ou renova licença manualmente (para admin)
+```
+
+### `scripts/start-with-migrate.js` — criação automática de tabelas
+
+Adicionada função `ensureIrpTables()` que cria as tabelas `IrpLicense` e `IrpLicenseEvent` automaticamente em cada startup, usando `CREATE TABLE IF NOT EXISTS`. Garante que as tabelas existam mesmo em bancos de produção novos.
+
+### `src/app.js` — CORS liberado para extensão Chrome
+
+**Problema:** O CORS bloqueava requisições com `Origin: chrome-extension://...`, causando erro 500 na extensão.
+
+**Solução:** Adicionada regra que permite todas as origens `chrome-extension://`:
+
+```js
+if (origin && origin.startsWith('chrome-extension://')) {
+  return callback(null, true);
+}
+```
+
+### Scripts utilitários criados
+
+| Arquivo | Uso |
+|---|---|
+| `criar-chave-teste.js` | Cria chave de teste no banco LOCAL |
+| `criar-tabelas-producao.js` | Cria tabelas via Prisma no banco de produção |
+| `setup-producao.js` | Cria tabelas + chave de teste via `pg` direto |
+
+---
+
 ## Commits relacionados
 
 | Hash | Descrição |
 |---|---|
 | `b6bf2f0` | feat: add IRP Master license system |
 | `3cd7997` | feat: IRP license email + Mercado Pago webhook |
+| `48601a4` | docs: add IRP Master license system documentation |
+| `93529a1` | feat: add migration for IRP license tables |
+| `6b0886d` | feat: add admin endpoint to create IRP licenses |
+| `47d7f45` | fix: auto-create IRP license tables on startup |
+| `405a748` | fix: expose error message for debugging |
+| `42a1ffb` | fix: rewrite license service with raw SQL |
+| `1b881ca` | fix: allow Chrome extension origins in CORS |
