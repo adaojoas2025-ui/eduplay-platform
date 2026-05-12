@@ -19,7 +19,7 @@ const activate = async (req, res) => {
     return res.status(result.valid ? 200 : 403).json(result);
   } catch (err) {
     logger.error('License activate error', { error: err.message });
-    return res.status(500).json({ valid: false, reason: 'server_error', message: 'Erro interno. Tente novamente.' });
+    return res.status(500).json({ valid: false, reason: 'server_error', message: err.message });
   }
 };
 
@@ -37,7 +37,7 @@ const validate = async (req, res) => {
     return res.status(result.valid ? 200 : 403).json(result);
   } catch (err) {
     logger.error('License validate error', { error: err.message });
-    return res.status(500).json({ valid: false, reason: 'server_error', message: 'Erro interno. Tente novamente.' });
+    return res.status(500).json({ valid: false, reason: 'server_error', message: err.message });
   }
 };
 
