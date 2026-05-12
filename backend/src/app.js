@@ -50,6 +50,11 @@ app.use(
       // Allow requests with no origin (like mobile apps or Postman)
       if (!origin) return callback(null, true);
 
+      // Allow Chrome extension origins (IRP Master Automação)
+      if (origin && origin.startsWith('chrome-extension://')) {
+        return callback(null, true);
+      }
+
       // Allow all Render.com and Vercel origins
       if (origin && (origin.includes('.onrender.com') || origin.includes('.vercel.app'))) {
         return callback(null, true);
