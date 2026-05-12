@@ -154,29 +154,82 @@ router.post('/asaas', (req, res) => {
 });
 
 /**
- * Mercado Pago Webhook Handler (existing functionality)
+ * Mercado Pago Webhook Handler
+ * Generates IRP Master license key when payment is approved.
  *
  * @route POST /api/v1/webhooks/mercadopago
  */
 router.post('/mercadopago', async (req, res) => {
+  // Always respond 200 first — MP retries if it doesn't receive 200 quickly
+  res.status(200).json({ received: true });
+
   try {
     const { type, data } = req.body;
 
-    logger.info('Mercado Pago webhook received', {
-      type,
-      dataId: data?.id,
+    logger.info('Mercado Pago webhook received', { type, dataId: data?.id });
+
+    if (type !== 'payment' || !data?.id) return;
+
+    // Fetch full payment details from MP API
+    const { getPayment } = require('../../config/mercadopago');
+    const payment = await getPayment(data.id);
+
+    logger.info('MP payment details', {
+      id: payment.id,
+      status: payment.status,
+      email: payment.payer?.email,
+      description: payment.description,
+      metadata: payment.metadata,
     });
 
-    // Handle different webhook types
-    // This is a placeholder - implement actual handling as needed
+    if (payment.status !== 'approved') return;
 
-    return res.status(200).json({ received: true });
+    // Only generate IRP license if it's an IRP Master product
+    const description = (payment.description || '').toLowerCase();
+    const metadata = payment.metadata || {};
+    const isIrpProduct =
+      description.includes('irp master') ||
+      description.includes('irp_master') ||
+      metadata.product_type === 'irp_license';
+
+    if (!isIrpProduct) {
+      logger.info('MP payment approved but not IRP product — skipping license generation', {
+        description: payment.description,
+      });
+      return;
+    }
+
+    const email = payment.payer?.email;
+    if (!email) {
+      logger.error('MP payment approved but no payer email found', { paymentId: payment.id });
+      return;
+    }
+
+    // Determine validity in days from metadata or default to 30
+    const days = parseInt(metadata.license_days || '30', 10) || 30;
+
+    // Create or renew license
+    const licenseService = require('../../services/license.service');
+    const emailService = require('../../services/email.service');
+
+    const result = await licenseService.renewLicense(email, days);
+
+    // Send license key by email
+    await emailService.sendIrpLicenseEmail(email, result.licenseKey, result.expiresAt);
+
+    logger.info('IRP license generated after payment', {
+      paymentId: payment.id,
+      email,
+      licenseKey: result.licenseKey.substring(0, 8) + '...',
+      renewed: result.renewed,
+      expiresAt: result.expiresAt,
+    });
 
   } catch (error) {
-    logger.error('Error processing Mercado Pago webhook', {
+    logger.error('Error processing Mercado Pago IRP webhook', {
       error: error.message,
+      stack: error.stack,
     });
-    return res.status(200).json({ received: true });
   }
 });
 

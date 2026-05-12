@@ -667,6 +667,60 @@ const sendLoginReminderEmail = async (user) => {
   }
 };
 
+/**
+ * Send IRP Master license key to buyer after payment
+ * @param {string} email - Buyer email
+ * @param {string} licenseKey - Generated license key
+ * @param {Date} expiresAt - Expiration date
+ */
+const sendIrpLicenseEmail = async (email, licenseKey, expiresAt) => {
+  try {
+    const expiry = new Date(expiresAt).toLocaleDateString('pt-BR');
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #0D6E4B 0%, #0A5A3D 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0;">🔑 IRP Master Automação</h1>
+          <p style="color: #a7f3d0; margin: 8px 0 0;">Sua licença está pronta!</p>
+        </div>
+        <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+          <p>Olá,</p>
+          <p>Seu pagamento foi confirmado. Aqui está sua chave de licença:</p>
+          <div style="background: white; border: 2px solid #0D6E4B; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+            <p style="font-size: 22px; font-weight: bold; color: #0D6E4B; letter-spacing: 2px; margin: 0;">${licenseKey}</p>
+          </div>
+          <p style="color: #6b7280; font-size: 14px;"><strong>Válida até:</strong> ${expiry}</p>
+          <h3 style="color: #333;">Como ativar:</h3>
+          <ol style="color: #374151; line-height: 2;">
+            <li>Instale a extensão <strong>IRP Master Automação</strong> no Chrome</li>
+            <li>Abra a extensão — ela pedirá a chave de licença</li>
+            <li>Cole a chave acima e clique em <strong>Ativar</strong></li>
+            <li>Pronto — todas as funções estarão liberadas</li>
+          </ol>
+          <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 13px; color: #78350f;">
+              ⚠️ Esta ferramenta auxilia o preenchimento de dados no SIASG.
+              Revise sempre os dados antes de finalizar atos oficiais.
+            </p>
+          </div>
+          <p style="color: #6b7280; font-size: 13px;">Dúvidas? Entre em contato conosco.</p>
+          <p>Atenciosamente,<br><strong>Equipe IRP Master Automação</strong></p>
+        </div>
+      </div>
+    `;
+
+    await emailConfig.sendEmail({
+      to: email,
+      subject: '🔑 Sua chave IRP Master Automação',
+      html,
+    });
+
+    logger.info('IRP license email sent', { email, licenseKey: licenseKey.substring(0, 8) + '...' });
+  } catch (error) {
+    logger.error('Error sending IRP license email:', error);
+    // Don't throw — email error should not block license creation
+  }
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendVerificationEmail,
@@ -682,4 +736,5 @@ module.exports = {
   sendProductPendingApprovalEmail,
   sendGuestPurchaseCredentials,
   sendLoginReminderEmail,
+  sendIrpLicenseEmail,
 };
