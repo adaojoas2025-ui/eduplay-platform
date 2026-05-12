@@ -538,3 +538,36 @@ enum UserStatus {
   SUSPENDED
   BANNED
 }
+
+// ── IRP Master Automação — Licenças ──────────────────────────────────────────
+
+model IrpLicense {
+  id               String            @id @default(uuid())
+  licenseKey       String            @unique
+  email            String
+  status           String            @default("active")
+  expiresAt        DateTime
+  activeDeviceId   String?
+  lastSeenAt       DateTime?
+  extensionVersion String?
+  notes            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  events           IrpLicenseEvent[]
+
+  @@index([licenseKey])
+  @@index([email])
+  @@index([status])
+}
+
+model IrpLicenseEvent {
+  id               String     @id @default(uuid())
+  licenseId        String
+  license          IrpLicense @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  eventType        String
+  deviceId         String?
+  extensionVersion String?
+  createdAt        DateTime   @default(now())
+
+  @@index([licenseId])
+}

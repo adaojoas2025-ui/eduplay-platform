@@ -27,6 +27,7 @@ const emailTestRoutes = require('./email-test.routes'); // TEMPORARY - For email
 const diagnosticRoutes = require('./diagnostic.routes'); // TEMPORARY - For diagnostics
 const webhookRoutes = require('./webhook.routes');
 const contactRoutes = require('./contact.routes');
+const licenseRoutes = require('../../routes/licenses');
 
 /**
  * Health check route
@@ -63,6 +64,7 @@ router.use('/email-debug', emailTestRoutes); // TEMPORARY - For email debugging
 router.use('/diagnostic', diagnosticRoutes); // TEMPORARY - For diagnostics
 router.use('/webhooks', webhookRoutes);
 router.use('/contact', contactRoutes);
+router.use('/licenses', licenseRoutes);
 
 /**
  * 404 handler for API routes
