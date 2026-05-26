@@ -36,6 +36,16 @@ frontend/src/pages/BaixaTudoPrivacy.jsx
 frontend/public/baixatudo/index.html
 frontend/public/baixatudo/privacidade/index.html
 docs/PONTO_RESTAURACAO_BAIXATUDO.md
+docs/BAIXATUDO_PUBLICACAO_WEBSTORE.md
+```
+
+## Documentacao complementar
+
+O registro completo da publicacao das paginas, URLs finais, commits e validacao
+para Chrome Web Store esta em:
+
+```text
+docs/BAIXATUDO_PUBLICACAO_WEBSTORE.md
 ```
 
 ## Como restaurar manualmente
@@ -66,6 +76,7 @@ Remove-Item frontend/src/pages/BaixaTudo.jsx
 Remove-Item frontend/src/pages/BaixaTudoPrivacy.jsx
 Remove-Item frontend/public/baixatudo -Recurse
 Remove-Item docs/PONTO_RESTAURACAO_BAIXATUDO.md
+Remove-Item docs/BAIXATUDO_PUBLICACAO_WEBSTORE.md
 ```
 
 ## Restauracao completa do repositorio
