@@ -33,6 +33,8 @@ Arquivos planejados para a criacao das rotas do BaixaTudo:
 frontend/src/App.jsx
 frontend/src/pages/BaixaTudo.jsx
 frontend/src/pages/BaixaTudoPrivacy.jsx
+frontend/public/baixatudo/index.html
+frontend/public/baixatudo/privacidade/index.html
 docs/PONTO_RESTAURACAO_BAIXATUDO.md
 ```
 
@@ -62,6 +64,7 @@ No Windows PowerShell, use:
 ```powershell
 Remove-Item frontend/src/pages/BaixaTudo.jsx
 Remove-Item frontend/src/pages/BaixaTudoPrivacy.jsx
+Remove-Item frontend/public/baixatudo -Recurse
 Remove-Item docs/PONTO_RESTAURACAO_BAIXATUDO.md
 ```
 

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BaixaTudo - EducaplayJA</title>
+    <style>
+      body { margin: 0; font-family: Arial, sans-serif; color: #111827; background: #f9fafb; }
+      header { background: #111827; color: white; padding: 56px 20px; }
+      main { max-width: 1040px; margin: 0 auto; padding: 40px 20px; }
+      h1 { font-size: 44px; margin: 0 0 16px; }
+      h2 { font-size: 28px; margin-top: 0; }
+      p { line-height: 1.65; }
+      a { color: #b91c1c; font-weight: 700; }
+      .hero { max-width: 1040px; margin: 0 auto; }
+      .lead { color: #d1d5db; font-size: 20px; max-width: 760px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
+      .card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 22px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); }
+      .badge { display: inline-block; background: #fee2e2; color: #991b1b; padding: 8px 12px; border-radius: 999px; font-size: 14px; font-weight: 700; margin-bottom: 18px; }
+      .notice { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 18px; }
+      footer { text-align: center; color: #6b7280; padding: 32px 20px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="hero">
+        <span class="badge">Extensao Chrome</span>
+        <h1>BaixaTudo</h1>
+        <p class="lead">
+          Uma extensao para detectar videos carregados em paginas web e ajudar o usuario
+          a baixar aulas e conteudos autorizados de forma organizada.
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <section class="grid">
+        <div class="card">
+          <h2>Acionamento manual</h2>
+          <p>O widget abre somente quando o usuario clica no icone da extensao.</p>
+        </div>
+        <div class="card">
+          <h2>Downloads</h2>
+          <p>Detecta videos carregados na pagina e envia o download para o Chrome.</p>
+        </div>
+        <div class="card">
+          <h2>Fila com retomada</h2>
+          <p>Mantem progresso local de filas quando aplicavel.</p>
+        </div>
+        <div class="card">
+          <h2>Organizacao</h2>
+          <p>Ajuda a salvar arquivos com nomes numerados e pastas mais faceis de localizar.</p>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top: 28px;">
+        <h2>Uso responsavel</h2>
+        <p>
+          O BaixaTudo e uma ferramenta tecnica de apoio ao usuario. A extensao nao concede
+          direito sobre conteudos de terceiros, nao remove protecoes de acesso e nao deve
+          ser usada para violar direitos autorais, contratos, termos de uso de plataformas
+          ou leis aplicaveis.
+        </p>
+        <div class="notice">
+          Verifique se voce e dono do conteudo, possui autorizacao do titular ou se o
+          download e permitido pela plataforma onde o conteudo esta hospedado.
+        </div>
+      </section>
+
+      <section class="card" style="margin-top: 28px;">
+        <h2>Privacidade</h2>
+        <p>
+          Consulte a politica especifica da extensao:
+          <a href="/baixatudo/privacidade">/baixatudo/privacidade</a>
+        </p>
+        <p>Suporte: <a href="mailto:ja.eduplay@gmail.com">ja.eduplay@gmail.com</a></p>
+      </section>
+    </main>
+
+    <footer>EducaplayJA - BaixaTudo</footer>
+  </body>
+</html>
