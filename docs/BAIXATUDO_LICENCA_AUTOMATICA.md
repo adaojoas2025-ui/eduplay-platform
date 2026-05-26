@@ -188,3 +188,65 @@ Teste esperado:
 2. Clicar em Comprar mensal ou Comprar anual.
 3. Ser redirecionado para o Mercado Pago.
 4. Apos pagamento aprovado, receber chave `BT-...` automaticamente por email.
+
+## Gerar licenca manual sem pagamento
+
+Tambem existe uma rota administrativa para gerar ou renovar licenca sem pagamento.
+Use apenas para testes, cortesia, suporte ou liberacao manual autorizada.
+
+### Pelo login ADMIN do EducaplayJA
+
+Estando logado como administrador no site, abra o console do navegador e execute:
+
+```js
+fetch('https://eduplay-backend-yw7z.onrender.com/api/v1/licenses/admin/create-auth', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    product: 'baixatudo',
+    email: 'cliente@email.com',
+    days: 365,
+    notes: 'Licenca BaixaTudo Pro anual liberada manualmente'
+  })
+}).then(r => r.json()).then(console.log);
+```
+
+Resposta esperada:
+
+```json
+{
+  "ok": true,
+  "prefix": "BT",
+  "createdBy": "admin@educaplayja.com.br",
+  "renewed": false,
+  "licenseKey": "BT-XXXX-XXXX-XXXX-XXXX",
+  "expiresAt": "2027-05-26T00:00:00.000Z"
+}
+```
+
+Para plano mensal manual:
+
+```js
+body: JSON.stringify({
+  product: 'baixatudo',
+  email: 'cliente@email.com',
+  days: 30,
+  notes: 'Licenca BaixaTudo Pro mensal liberada manualmente'
+})
+```
+
+### Pelo segredo administrativo
+
+A rota antiga com segredo continua funcionando:
+
+```bash
+curl -X POST https://eduplay-backend-yw7z.onrender.com/api/v1/licenses/admin/create \
+  -H "x-admin-secret: SEU_ADMIN_SECRET" \
+  -H "Content-Type: application/json" \
+  -d "{\"product\":\"baixatudo\",\"email\":\"cliente@email.com\",\"days\":365}"
+```
+
+Essa rota tambem gera chave com prefixo `BT` quando `product` e `baixatudo`.

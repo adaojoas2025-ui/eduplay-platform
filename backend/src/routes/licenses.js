@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const { activate, validate, heartbeat, logout } = require('../controllers/licenseController');
 const licenseService = require('../services/license.service');
+const { authenticate, isAdmin } = require('../api/middlewares/auth.middleware');
 
 // Public license endpoints
 router.post('/activate',  activate);
@@ -20,11 +21,38 @@ router.post('/admin/create', async (req, res) => {
   if (secret !== (process.env.ADMIN_SECRET || 'irpmaster2026admin')) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  const { email, days = 30, notes = '' } = req.body;
+  const { email, days = 30, notes = '', prefix = 'IRP', product = '' } = req.body;
   if (!email) return res.status(400).json({ error: 'email required' });
   try {
-    const result = await licenseService.renewLicense(email, Number(days));
-    return res.status(200).json({ ok: true, ...result });
+    const licensePrefix = product === 'baixatudo' ? 'BT' : prefix;
+    const result = await licenseService.renewLicense(email, Number(days), {
+      prefix: licensePrefix,
+      notes: notes || `manual admin create - ${product || licensePrefix}`,
+    });
+    return res.status(200).json({ ok: true, prefix: licensePrefix, ...result });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Authenticated admin endpoint - use the logged-in EducaplayJA admin token.
+router.post('/admin/create-auth', authenticate, isAdmin, async (req, res) => {
+  const { email, days = 30, notes = '', prefix = 'IRP', product = '' } = req.body;
+  if (!email) return res.status(400).json({ error: 'email required' });
+
+  try {
+    const licensePrefix = product === 'baixatudo' ? 'BT' : prefix;
+    const result = await licenseService.renewLicense(email, Number(days), {
+      prefix: licensePrefix,
+      notes: notes || `manual admin create by ${req.user.email} - ${product || licensePrefix}`,
+    });
+
+    return res.status(200).json({
+      ok: true,
+      prefix: licensePrefix,
+      createdBy: req.user.email,
+      ...result,
+    });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
