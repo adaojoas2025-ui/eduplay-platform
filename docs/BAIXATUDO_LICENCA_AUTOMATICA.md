@@ -172,22 +172,63 @@ node --check backend/src/services/email.service.js
 npm run build
 ```
 
-## Proximo passo
+## Status de publicacao
 
-Publicar este commit no GitHub e aguardar deploy do Render.
+O checkout e a geracao automatica de licencas ja foram implementados e publicados
+no EducaplayJA.
 
-Depois do deploy, testar:
+Validacoes em producao:
+
+```text
+https://educaplayja.com.br/baixatudo
+https://eduplay-backend-yw7z.onrender.com/api/v1/baixatudo/plans
+```
+
+## Decisao de ordem
+
+Antes de vender amplamente, a extensao deve ser enviada primeiro para a Chrome
+Web Store.
+
+Ordem definida:
+
+1. Subir a extensao BaixaTudo na Chrome Web Store.
+2. Aguardar aprovacao/publicacao.
+3. Testar o fluxo de compra e geracao de licenca.
+4. Integrar/validar a ativacao Pro dentro da extensao, caso ainda nao esteja na
+   versao enviada.
+5. Divulgar a venda dos planos mensal e anual.
+
+## Dados para Chrome Web Store
+
+Pagina oficial:
 
 ```text
 https://educaplayja.com.br/baixatudo
 ```
 
-Teste esperado:
+Politica de privacidade:
 
-1. Informar email.
-2. Clicar em Comprar mensal ou Comprar anual.
-3. Ser redirecionado para o Mercado Pago.
-4. Apos pagamento aprovado, receber chave `BT-...` automaticamente por email.
+```text
+https://educaplayja.com.br/baixatudo/privacidade
+```
+
+Planos definidos para uso comercial posterior:
+
+```text
+Mensal: R$ 9,99
+Anual: R$ 39,90
+```
+
+ZIP local gerado para envio/teste:
+
+```text
+C:\tmp\baixatudo-webstore-20260526-164626.zip
+```
+
+Observacao: antes do envio definitivo, revisar se a versao da extensao que sera
+enviada contem o comportamento desejado para a primeira publicacao. A versao atual
+da extensao local possui bloqueio por senha do dono e ainda precisa da tela final
+de ativacao de licenca `BT-...` caso a publicacao ja seja feita como Pro.
 
 ## Gerar licenca manual sem pagamento
 
