@@ -48,6 +48,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contact from './pages/Contact';
 import HelpArticle from './pages/HelpArticle';
 import ResetPassword from './pages/ResetPassword';
+import BaixaTudo from './pages/BaixaTudo';
+import BaixaTudoPrivacy from './pages/BaixaTudoPrivacy';
 
 
 // ============================================
@@ -908,6 +910,8 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/baixatudo" element={<BaixaTudo />} />
+        <Route path="/baixatudo/privacidade" element={<BaixaTudoPrivacy />} />
         <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
         <Route path="/my-courses" element={<MyCourses />} />
         <Route path="/orders" element={<Orders />} />
