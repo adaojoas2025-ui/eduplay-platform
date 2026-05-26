@@ -7,12 +7,17 @@
 const { prisma } = require('../config/database');
 const logger = require('../utils/logger');
 
-const LICENSE_PREFIX = 'IRP';
 const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-function generateLicenseKey() {
+function normalizePrefix(prefix = 'IRP') {
+  const clean = String(prefix || 'IRP').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return clean || 'IRP';
+}
+
+function generateLicenseKey(prefix = 'IRP') {
+  const licensePrefix = normalizePrefix(prefix);
   const seg = () => Array.from({ length: 4 }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join('');
-  return `${LICENSE_PREFIX}-${seg()}-${seg()}-${seg()}-${seg()}`;
+  return `${licensePrefix}-${seg()}-${seg()}-${seg()}-${seg()}`;
 }
 
 function uuid() {
@@ -39,11 +44,12 @@ async function logEvent(licenseId, eventType, deviceId, extensionVersion) {
   } catch (e) { /* non-critical */ }
 }
 
-async function createLicense(email, days, notes = '') {
+async function createLicense(email, days, notes = '', options = {}) {
+  const prefix = normalizePrefix(options.prefix || 'IRP');
   let licenseKey;
   let attempts = 0;
   do {
-    licenseKey = generateLicenseKey();
+    licenseKey = generateLicenseKey(prefix);
     const existing = await findByKey(licenseKey);
     if (!existing) break;
     attempts++;
@@ -58,7 +64,7 @@ async function createLicense(email, days, notes = '') {
   );
   await logEvent(id, 'created', null, null);
   logger.info('IRP license created', { licenseKey, email });
-  return { id, licenseKey, email, status: 'active' };
+  return { id, licenseKey, email, status: 'active', expiresAt: new Date(Date.now() + Number(days) * 86400000) };
 }
 
 async function activateLicense(licenseKey, deviceId, extensionVersion) {
@@ -133,9 +139,15 @@ async function logoutLicense(licenseKey, deviceId) {
   return { ok: true };
 }
 
-async function renewLicense(email, days) {
+async function renewLicense(email, days, options = {}) {
+  const prefix = normalizePrefix(options.prefix || 'IRP');
+  const notes = options.notes || 'new purchase';
   const rows = await prisma.$queryRawUnsafe(
-    `SELECT * FROM "IrpLicense" WHERE "email"=$1 AND "status" IN ('active','expired') ORDER BY "createdAt" DESC LIMIT 1`, email
+    `SELECT * FROM "IrpLicense"
+     WHERE "email"=$1 AND "licenseKey" LIKE $2 AND "status" IN ('active','expired')
+     ORDER BY "createdAt" DESC LIMIT 1`,
+    email,
+    `${prefix}-%`
   );
   const existing = rows[0];
 
@@ -151,8 +163,8 @@ async function renewLicense(email, days) {
     return { renewed: true, licenseKey: existing.licenseKey, expiresAt: newExpiry };
   }
 
-  const newLicense = await createLicense(email, days, 'new purchase');
-  return { renewed: false, licenseKey: newLicense.licenseKey, expiresAt: null };
+  const newLicense = await createLicense(email, days, notes, { prefix });
+  return { renewed: false, licenseKey: newLicense.licenseKey, expiresAt: newLicense.expiresAt };
 }
 
 module.exports = { generateLicenseKey, createLicense, activateLicense, validateLicense, heartbeat, logoutLicense, renewLicense };

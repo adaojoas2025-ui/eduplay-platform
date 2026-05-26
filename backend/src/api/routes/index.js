@@ -28,6 +28,7 @@ const diagnosticRoutes = require('./diagnostic.routes'); // TEMPORARY - For diag
 const webhookRoutes = require('./webhook.routes');
 const contactRoutes = require('./contact.routes');
 const licenseRoutes = require('../../routes/licenses');
+const baixatudoRoutes = require('../../routes/baixatudo');
 
 /**
  * Health check route
@@ -65,6 +66,7 @@ router.use('/diagnostic', diagnosticRoutes); // TEMPORARY - For diagnostics
 router.use('/webhooks', webhookRoutes);
 router.use('/contact', contactRoutes);
 router.use('/licenses', licenseRoutes);
+router.use('/baixatudo', baixatudoRoutes);
 
 /**
  * 404 handler for API routes

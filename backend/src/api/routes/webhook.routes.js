@@ -187,14 +187,20 @@ router.post('/mercadopago', async (req, res) => {
     // Only generate IRP license if it's an IRP Master product
     const description = (payment.description || '').toLowerCase();
     const metadata = payment.metadata || {};
+    const isBaixaTudoProduct =
+      description.includes('baixatudo') ||
+      description.includes('baixa tudo') ||
+      metadata.product_type === 'baixatudo_license' ||
+      metadata.product_type === 'bt_license';
     const isIrpProduct =
       description.includes('irp master') ||
       description.includes('irp_master') ||
       metadata.product_type === 'irp_license';
 
-    if (!isIrpProduct) {
+    if (!isIrpProduct && !isBaixaTudoProduct) {
       logger.info('MP payment approved but not IRP product — skipping license generation', {
         description: payment.description,
+        metadata,
       });
       return;
     }
@@ -212,15 +218,29 @@ router.post('/mercadopago', async (req, res) => {
     const licenseService = require('../../services/license.service');
     const emailService = require('../../services/email.service');
 
-    const result = await licenseService.renewLicense(email, days);
+    const productName = isBaixaTudoProduct ? 'BaixaTudo Pro' : 'IRP Master Automacao';
+    const result = await licenseService.renewLicense(email, days, {
+      prefix: isBaixaTudoProduct ? 'BT' : (metadata.license_prefix || 'IRP'),
+      notes: `${productName} - ${metadata.plan || days + ' days'}`,
+    });
 
     // Send license key by email
-    await emailService.sendIrpLicenseEmail(email, result.licenseKey, result.expiresAt);
+    if (isBaixaTudoProduct) {
+      await emailService.sendBaixaTudoLicenseEmail(
+        email,
+        result.licenseKey,
+        result.expiresAt,
+        metadata.plan_label || (days >= 365 ? 'Anual' : 'Mensal')
+      );
+    } else {
+      await emailService.sendIrpLicenseEmail(email, result.licenseKey, result.expiresAt);
+    }
 
-    logger.info('IRP license generated after payment', {
+    logger.info('Extension license generated after payment', {
       paymentId: payment.id,
       email,
       licenseKey: result.licenseKey.substring(0, 8) + '...',
+      productName,
       renewed: result.renewed,
       expiresAt: result.expiresAt,
     });
