@@ -77,6 +77,8 @@ Rotas:
 ```text
 GET  /api/v1/baixatudo/plans
 POST /api/v1/baixatudo/checkout
+POST /api/v1/baixatudo/licenses/activate
+POST /api/v1/baixatudo/licenses/validate
 ```
 
 Rota registrada em:
@@ -139,6 +141,33 @@ O email informa:
 - Passos para ativar na extensao.
 - Aviso de uso responsavel.
 
+## Ativacao na extensao
+
+A extensao possui um campo para colar a chave recebida por email no formato:
+
+```text
+BT-XXXX-XXXX-XXXX-XXXX
+```
+
+Quando o usuario clica em `Ativar licenca`, a extensao chama o backend do EducaplayJA e salva localmente:
+
+- chave da licenca;
+- identificador local do dispositivo;
+- status da licenca;
+- data de validade.
+
+Quando a validacao retorna sucesso, o widget passa a exibir:
+
+```text
+Licenca ativa ate DD/MM/AAAA.
+```
+
+Esse texto vale tanto para o plano mensal quanto para o anual. A diferenca fica na data calculada pelo backend:
+
+```text
+Mensal: data de expiracao em 30 dias
+Anual:  data de expiracao em 365 dias
+```
 ## Pagina publica
 
 Arquivo principal publicado:
@@ -281,4 +310,5 @@ Documento consolidado da fase atual:
 ```text
 docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md
 ```
+
 
