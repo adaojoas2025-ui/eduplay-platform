@@ -22,9 +22,12 @@ router.post('/admin/create', async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   const { email, days = 30, notes = '', prefix = 'IRP', product = '' } = req.body;
+  if (product === 'baixatudo' || String(prefix).toUpperCase() === 'BT') {
+    return res.status(403).json({ error: 'BaixaTudo licenses are generated automatically after Mercado Pago approval.' });
+  }
   if (!email) return res.status(400).json({ error: 'email required' });
   try {
-    const licensePrefix = product === 'baixatudo' ? 'BT' : prefix;
+    const licensePrefix = prefix;
     const result = await licenseService.renewLicense(email, Number(days), {
       prefix: licensePrefix,
       notes: notes || `manual admin create - ${product || licensePrefix}`,
@@ -38,10 +41,13 @@ router.post('/admin/create', async (req, res) => {
 // Authenticated admin endpoint - use the logged-in EducaplayJA admin token.
 router.post('/admin/create-auth', authenticate, isAdmin, async (req, res) => {
   const { email, days = 30, notes = '', prefix = 'IRP', product = '' } = req.body;
+  if (product === 'baixatudo' || String(prefix).toUpperCase() === 'BT') {
+    return res.status(403).json({ error: 'BaixaTudo licenses are generated automatically after Mercado Pago approval.' });
+  }
   if (!email) return res.status(400).json({ error: 'email required' });
 
   try {
-    const licensePrefix = product === 'baixatudo' ? 'BT' : prefix;
+    const licensePrefix = prefix;
     const result = await licenseService.renewLicense(email, Number(days), {
       prefix: licensePrefix,
       notes: notes || `manual admin create by ${req.user.email} - ${product || licensePrefix}`,

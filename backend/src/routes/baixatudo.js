@@ -9,6 +9,7 @@ const router = express.Router();
 const mercadopago = require('../config/mercadopago');
 const config = require('../config/env');
 const logger = require('../utils/logger');
+const licenseService = require('../services/license.service');
 
 const PLANS = {
   monthly: {
@@ -27,6 +28,31 @@ const PLANS = {
   },
 };
 
+function isBaixaTudoLicenseKey(licenseKey) {
+  return /^BT-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(String(licenseKey || '').toUpperCase());
+}
+
+async function handleBaixaTudoLicense(req, res, action) {
+  try {
+    const { licenseKey, deviceId, extensionVersion } = req.body || {};
+    if (!licenseKey || !deviceId) {
+      return res.status(400).json({ valid: false, reason: 'missing_fields', message: 'licenseKey e deviceId sao obrigatorios.' });
+    }
+    if (!isBaixaTudoLicenseKey(licenseKey)) {
+      return res.status(403).json({ valid: false, reason: 'wrong_product', message: 'Esta chave nao pertence ao BaixaTudo.' });
+    }
+
+    const result = action === 'activate'
+      ? await licenseService.activateLicense(licenseKey, deviceId, extensionVersion)
+      : await licenseService.validateLicense(licenseKey, deviceId, extensionVersion);
+
+    return res.status(result.valid ? 200 : 403).json({ product: 'baixatudo', ...result });
+  } catch (error) {
+    logger.error('BaixaTudo license validation error', { error: error.message });
+    return res.status(500).json({ valid: false, reason: 'server_error', message: 'Erro ao validar licenca do BaixaTudo.' });
+  }
+}
+
 router.get('/plans', (req, res) => {
   res.json({
     success: true,
@@ -36,6 +62,11 @@ router.get('/plans', (req, res) => {
     },
   });
 });
+
+router.post('/licenses/activate', (req, res) => handleBaixaTudoLicense(req, res, 'activate'));
+router.post('/licenses/validate', (req, res) => handleBaixaTudoLicense(req, res, 'validate'));
+router.post('/license/activate', (req, res) => handleBaixaTudoLicense(req, res, 'activate'));
+router.post('/license/validate', (req, res) => handleBaixaTudoLicense(req, res, 'validate'));
 
 router.post('/checkout', async (req, res) => {
   try {
@@ -95,6 +126,8 @@ router.post('/checkout', async (req, res) => {
         license_days: selectedPlan.days,
         plan,
         plan_label: selectedPlan.label,
+        buyer_email: String(email).trim().toLowerCase(),
+        buyer_name: buyerName,
       },
     });
 

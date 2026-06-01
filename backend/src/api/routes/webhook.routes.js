@@ -155,7 +155,7 @@ router.post('/asaas', (req, res) => {
 
 /**
  * Mercado Pago Webhook Handler
- * Generates IRP Master license key when payment is approved.
+ * Generates extension license keys when payment is approved.
  *
  * @route POST /api/v1/webhooks/mercadopago
  */
@@ -184,7 +184,7 @@ router.post('/mercadopago', async (req, res) => {
 
     if (payment.status !== 'approved') return;
 
-    // Only generate IRP license if it's an IRP Master product
+    // Only generate a license for supported extension products.
     const description = (payment.description || '').toLowerCase();
     const metadata = payment.metadata || {};
     const isBaixaTudoProduct =
@@ -205,7 +205,7 @@ router.post('/mercadopago', async (req, res) => {
       return;
     }
 
-    const email = payment.payer?.email;
+    const email = metadata.buyer_email || payment.payer?.email;
     if (!email) {
       logger.error('MP payment approved but no payer email found', { paymentId: payment.id });
       return;
@@ -219,10 +219,20 @@ router.post('/mercadopago', async (req, res) => {
     const emailService = require('../../services/email.service');
 
     const productName = isBaixaTudoProduct ? 'BaixaTudo Pro' : 'IRP Master Automacao';
-    const result = await licenseService.renewLicense(email, days, {
+    const result = await licenseService.renewLicenseFromPayment(email, days, {
+      paymentId: payment.id,
       prefix: isBaixaTudoProduct ? 'BT' : (metadata.license_prefix || 'IRP'),
-      notes: `${productName} - ${metadata.plan || days + ' days'}`,
+      notes: `${productName} - ${metadata.plan || days + ' days'} - MP ${payment.id}`,
     });
+
+    if (result.duplicate) {
+      logger.info('MP payment webhook ignored because license was already generated', {
+        paymentId: payment.id,
+        email,
+        licenseKey: result.licenseKey.substring(0, 8) + '...',
+      });
+      return;
+    }
 
     // Send license key by email
     if (isBaixaTudoProduct) {

@@ -34,6 +34,22 @@ async function findByKey(licenseKey) {
   return rows[0] || null;
 }
 
+function paymentEventType(paymentId) {
+  return 'payment:' + String(paymentId || '').replace(/[^A-Za-z0-9._:-]/g, '').slice(0, 80);
+}
+
+async function findByPaymentEvent(paymentId) {
+  if (!paymentId) return null;
+  const rows = await prisma.$queryRawUnsafe(
+    `SELECT l.* FROM "IrpLicenseEvent" e
+     INNER JOIN "IrpLicense" l ON l."id" = e."licenseId"
+     WHERE e."eventType" = $1
+     ORDER BY e."createdAt" DESC LIMIT 1`,
+    paymentEventType(paymentId)
+  );
+  return rows[0] || null;
+}
+
 async function logEvent(licenseId, eventType, deviceId, extensionVersion) {
   try {
     await prisma.$executeRawUnsafe(
@@ -155,8 +171,13 @@ async function renewLicense(email, days, options = {}) {
     const base = new Date(existing.expiresAt) > new Date() ? new Date(existing.expiresAt) : new Date();
     const newExpiry = new Date(base.getTime() + days * 86400000);
     await prisma.$executeRawUnsafe(
-      `UPDATE "IrpLicense" SET "status"='active',"expiresAt"=$1,"updatedAt"=NOW() WHERE "id"=$2`,
-      newExpiry.toISOString(), existing.id
+      `UPDATE "IrpLicense"
+       SET "status"='active',
+           "expiresAt"=$1,
+           "notes"=TRIM(COALESCE("notes", '') || E'\n' || $3),
+           "updatedAt"=NOW()
+       WHERE "id"=$2`,
+      newExpiry.toISOString(), existing.id, notes
     );
     await logEvent(existing.id, 'renewed', null, null);
     logger.info('IRP license renewed', { licenseKey: existing.licenseKey, email });
@@ -167,4 +188,33 @@ async function renewLicense(email, days, options = {}) {
   return { renewed: false, licenseKey: newLicense.licenseKey, expiresAt: newLicense.expiresAt };
 }
 
-module.exports = { generateLicenseKey, createLicense, activateLicense, validateLicense, heartbeat, logoutLicense, renewLicense };
+async function renewLicenseFromPayment(email, days, options = {}) {
+  const paymentId = options.paymentId;
+  if (!paymentId) {
+    throw new Error('paymentId is required for automatic license generation');
+  }
+
+  const alreadyProcessed = await findByPaymentEvent(paymentId);
+  if (alreadyProcessed) {
+    logger.info('License payment already processed', {
+      paymentId,
+      email: alreadyProcessed.email,
+      licenseKey: alreadyProcessed.licenseKey,
+    });
+    return {
+      duplicate: true,
+      renewed: false,
+      licenseKey: alreadyProcessed.licenseKey,
+      expiresAt: alreadyProcessed.expiresAt,
+    };
+  }
+
+  const result = await renewLicense(email, days, options);
+  const license = await findByKey(result.licenseKey);
+  if (license) {
+    await logEvent(license.id, paymentEventType(paymentId), null, null);
+  }
+  return { duplicate: false, ...result };
+}
+
+module.exports = { generateLicenseKey, createLicense, activateLicense, validateLicense, heartbeat, logoutLicense, renewLicense, renewLicenseFromPayment };

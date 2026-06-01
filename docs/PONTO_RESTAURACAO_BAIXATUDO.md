@@ -90,3 +90,69 @@ git reset --hard 4c5da4e54324eb31621f69fe1c057ff1c6b2dc55
 
 Atencao: o comando acima descarta todas as alteracoes locais nao commitadas. Use
 somente quando tiver certeza de que nenhum outro trabalho local deve ser preservado.
+
+---
+
+## Novo ponto antes das proximas partes do BaixaTudo
+
+Data: 01/06/2026
+
+Este ponto registra o estado do repositorio antes de iniciar as proximas partes do
+BaixaTudo depois da publicacao inicial na Chrome Web Store.
+
+### Estado do Git
+
+Branch:
+
+```text
+main
+```
+
+Commit base local:
+
+```text
+d2a1e5a
+```
+
+Status antes da documentacao:
+
+```text
+sem alteracoes locais
+```
+
+Repositorio de origem informado pelo dono do projeto:
+
+```text
+https://github.com/adaojoas2025-ui/eduplay-platform
+```
+
+### Marco atual do produto
+
+- A extensao BaixaTudo ja foi enviada para a Chrome Web Store.
+- O item foi publicado como `nao apresentado`.
+- Link publico confirmado:
+
+```text
+https://chromewebstore.google.com/detail/baixatudo-video-downloader/njdlafdofhnnokoomgebclhgomhhkfbk
+```
+
+- ID da extensao:
+
+```text
+njdlafdofhnnokoomgebclhgomhhkfbk
+```
+
+### Proximas alteracoes planejadas
+
+As proximas alteracoes devem tratar de:
+
+- Sistema de licenca Pro no EducaplayJA.
+- Checkout Mercado Pago para mensal e anual.
+- Webhook automatico para gerar ou renovar licencas.
+- Painel administrativo para acompanhar licencas automaticas, reenviar email e cancelar/revogar quando necessario.
+- Validacao da licenca pela extensao.
+- Documentacao separada para a versao Firefox.
+
+Este ponto deve ser usado como referencia caso seja necessario separar a
+documentacao atual das implementacoes futuras.
+

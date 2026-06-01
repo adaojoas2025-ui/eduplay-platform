@@ -101,6 +101,7 @@ Mudancas:
 - `generateLicenseKey(prefix)`
 - `createLicense(email, days, notes, { prefix })`
 - `renewLicense(email, days, { prefix, notes })`
+- `renewLicenseFromPayment(email, days, { paymentId, prefix, notes })`
 
 Para BaixaTudo, o prefixo usado e:
 
@@ -230,64 +231,54 @@ enviada contem o comportamento desejado para a primeira publicacao. A versao atu
 da extensao local possui bloqueio por senha do dono e ainda precisa da tela final
 de ativacao de licenca `BT-...` caso a publicacao ja seja feita como Pro.
 
-## Gerar licenca manual sem pagamento
+## Administracao de licencas automaticas
 
-Tambem existe uma rota administrativa para gerar ou renovar licenca sem pagamento.
-Use apenas para testes, cortesia, suporte ou liberacao manual autorizada.
+A regra oficial do BaixaTudo e 100% automatica: a licenca comercial deve ser criada
+ou renovada somente depois da confirmacao de pagamento pelo Mercado Pago.
 
-### Pelo login ADMIN do EducaplayJA
+O administrador nao deve gerar licenca manualmente como substituto de pagamento.
+O painel administrativo deve ser usado apenas para suporte e acompanhamento:
 
-Estando logado como administrador no site, abra o console do navegador e execute:
+- consultar licencas geradas automaticamente;
+- verificar email, plano, validade e status;
+- reenviar email de ativacao;
+- cancelar, bloquear ou revogar licencas quando necessario;
+- auditar eventos de ativacao e validacao.
 
-```js
-fetch('https://eduplay-backend-yw7z.onrender.com/api/v1/licenses/admin/create-auth', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer ' + localStorage.getItem('token'),
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    product: 'baixatudo',
-    email: 'cliente@email.com',
-    days: 365,
-    notes: 'Licenca BaixaTudo Pro anual liberada manualmente'
-  })
-}).then(r => r.json()).then(console.log);
+Qualquer rota antiga de criacao administrativa deve ser tratada como legado interno
+e nao faz parte do fluxo oficial do produto.
+
+Implementacao aplicada em 01/06/2026:
+
+- rotas administrativas bloqueiam `product = baixatudo` e prefixo `BT`;
+- webhook do Mercado Pago chama `renewLicenseFromPayment`;
+- cada pagamento aprovado grava evento `payment:<id>` para impedir duplicidade;
+- compras repetidas renovam a validade da chave existente do mesmo email;
+- reenvio do mesmo webhook nao cria nem envia uma nova chave.
+
+---
+
+## Atualizacao de status em 01/06/2026
+
+A publicacao inicial na Chrome Web Store foi concluida como item `nao apresentado`.
+A proxima fase deve transformar a licenca Pro em um fluxo completo e estavel:
+
+- compra mensal ou anual pelo Mercado Pago;
+- webhook automatico para gerar ou renovar chave `BT`;
+- envio de email com chave e validade;
+- validacao da chave pela extensao;
+- painel administrativo para consultar, reenviar email, cancelar ou acompanhar licencas automaticas;
+- retorno para modo gratuito quando a licenca expirar.
+
+Link publico da extensao:
+
+```text
+https://chromewebstore.google.com/detail/baixatudo-video-downloader/njdlafdofhnnokoomgebclhgomhhkfbk
 ```
 
-Resposta esperada:
+Documento consolidado da fase atual:
 
-```json
-{
-  "ok": true,
-  "prefix": "BT",
-  "createdBy": "admin@educaplayja.com.br",
-  "renewed": false,
-  "licenseKey": "BT-XXXX-XXXX-XXXX-XXXX",
-  "expiresAt": "2027-05-26T00:00:00.000Z"
-}
+```text
+docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md
 ```
 
-Para plano mensal manual:
-
-```js
-body: JSON.stringify({
-  product: 'baixatudo',
-  email: 'cliente@email.com',
-  days: 30,
-  notes: 'Licenca BaixaTudo Pro mensal liberada manualmente'
-})
-```
-
-### Pelo segredo administrativo
-
-A rota antiga com segredo continua funcionando:
-
-```bash
-curl -X POST https://eduplay-backend-yw7z.onrender.com/api/v1/licenses/admin/create \
-  -H "x-admin-secret: SEU_ADMIN_SECRET" \
-  -H "Content-Type: application/json" \
-  -d "{\"product\":\"baixatudo\",\"email\":\"cliente@email.com\",\"days\":365}"
-```
-
-Essa rota tambem gera chave com prefixo `BT` quando `product` e `baixatudo`.

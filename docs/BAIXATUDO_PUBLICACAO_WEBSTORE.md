@@ -156,3 +156,34 @@ https://educaplayja.com.br/baixatudo/privacidade
 ```
 
 Depois disso, continuar a submissao da extensao gratuita na Chrome Web Store.
+
+---
+
+## Atualizacao de status em 01/06/2026
+
+A extensao foi publicada na Chrome Web Store como item `nao apresentado`.
+
+Link publico final:
+
+```text
+https://chromewebstore.google.com/detail/baixatudo-video-downloader/njdlafdofhnnokoomgebclhgomhhkfbk
+```
+
+ID da extensao:
+
+```text
+njdlafdofhnnokoomgebclhgomhhkfbk
+```
+
+Versao publicada no painel:
+
+```text
+2.1.6
+```
+
+Documento consolidado com o estado atual, modelo comercial, licencas e proximas
+etapas:
+
+```text
+docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md
+```
