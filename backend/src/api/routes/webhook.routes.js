@@ -222,7 +222,8 @@ router.post('/mercadopago', async (req, res) => {
     const result = await licenseService.renewLicenseFromPayment(email, days, {
       paymentId: payment.id,
       prefix: isBaixaTudoProduct ? 'BT' : (metadata.license_prefix || 'IRP'),
-      notes: `${productName} - ${metadata.plan || days + ' days'} - MP ${payment.id}`,
+      notes: `${productName} - ${metadata.plan || days + ' days'} - MP ${payment.id}${metadata.device_id ? ' - device ' + metadata.device_id : ''}`,
+      deviceId: metadata.device_id || null,
     });
 
     if (result.duplicate) {

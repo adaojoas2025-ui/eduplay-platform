@@ -168,6 +168,44 @@ Esse texto vale tanto para o plano mensal quanto para o anual. A diferenca fica 
 Mensal: data de expiracao em 30 dias
 Anual:  data de expiracao em 365 dias
 ```
+
+## Ativacao automatica sem colar chave
+
+A extensao tambem suporta ativacao automatica apos o pagamento, sem exigir que o usuario cole a chave manualmente.
+
+Fluxo:
+
+1. O usuario clica em `Pagar / ativar Pro` dentro do widget da extensao.
+2. A extensao gera ou reutiliza um `deviceId` local e abre:
+
+```text
+https://educaplayja.com.br/baixatudo?source=extension&deviceId=DEVICE_ID
+```
+
+3. A pagina publica envia o `deviceId` junto com o checkout:
+
+```text
+POST /api/v1/baixatudo/checkout
+```
+
+4. O backend grava o `device_id` na metadata da preferencia do Mercado Pago.
+5. Quando o pagamento e aprovado, o webhook cria ou renova a licenca BT e registra o evento de pagamento com o `deviceId`.
+6. A extensao consulta:
+
+```text
+POST /api/v1/baixatudo/licenses/sync
+```
+
+7. Se encontrar pagamento aprovado para aquele `deviceId`, o backend ativa a licenca automaticamente nesse navegador.
+
+Com a licenca valida, o widget mostra:
+
+```text
+Licenca ativa ate DD/MM/AAAA.
+Automatico Pro: baixar tudo
+```
+
+A chave BT continua sendo enviada por email e o campo manual permanece apenas como alternativa de recuperacao, caso o usuario troque de navegador, limpe os dados locais ou precise ativar em outro computador.
 ## Pagina publica
 
 Arquivo principal publicado:

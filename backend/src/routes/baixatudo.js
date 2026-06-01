@@ -64,13 +64,26 @@ router.get('/plans', (req, res) => {
 });
 
 router.post('/licenses/activate', (req, res) => handleBaixaTudoLicense(req, res, 'activate'));
+router.post('/licenses/sync', async (req, res) => {
+  try {
+    const { deviceId, extensionVersion } = req.body || {};
+    if (!deviceId) {
+      return res.status(400).json({ valid: false, reason: 'missing_device', message: 'deviceId e obrigatorio.' });
+    }
+    const result = await licenseService.claimLicenseByDevice(deviceId, extensionVersion, { prefix: 'BT' });
+    return res.status(result.valid ? 200 : 404).json({ product: 'baixatudo', ...result });
+  } catch (error) {
+    logger.error('BaixaTudo license sync error', { error: error.message });
+    return res.status(500).json({ valid: false, reason: 'server_error', message: 'Erro ao sincronizar licenca do BaixaTudo.' });
+  }
+});
 router.post('/licenses/validate', (req, res) => handleBaixaTudoLicense(req, res, 'validate'));
 router.post('/license/activate', (req, res) => handleBaixaTudoLicense(req, res, 'activate'));
 router.post('/license/validate', (req, res) => handleBaixaTudoLicense(req, res, 'validate'));
 
 router.post('/checkout', async (req, res) => {
   try {
-    const { plan = 'annual', email, name } = req.body || {};
+    const { plan = 'annual', email, name, deviceId } = req.body || {};
     const selectedPlan = PLANS[plan];
 
     if (!selectedPlan) {
@@ -91,6 +104,8 @@ router.post('/checkout', async (req, res) => {
     const nameParts = buyerName.split(/\s+/);
     const firstName = nameParts[0] || 'Cliente';
     const lastName = nameParts.slice(1).join(' ') || 'BaixaTudo';
+    const cleanDeviceId = String(deviceId || '').trim().replace(/[^A-Za-z0-9._:-]/g, '').slice(0, 120);
+    const deviceQuery = cleanDeviceId ? `&deviceId=${encodeURIComponent(cleanDeviceId)}` : '';
     const externalReference = `baixatudo_${plan}_${Date.now()}`;
 
     const preference = await mercadopago.createPreference({
@@ -112,9 +127,9 @@ router.post('/checkout', async (req, res) => {
         last_name: lastName,
       },
       back_urls: {
-        success: `${config.frontend.url}/baixatudo?status=success`,
-        failure: `${config.frontend.url}/baixatudo?status=failure`,
-        pending: `${config.frontend.url}/baixatudo?status=pending`,
+        success: `${config.frontend.url}/baixatudo?status=success${deviceQuery}`,
+        failure: `${config.frontend.url}/baixatudo?status=failure${deviceQuery}`,
+        pending: `${config.frontend.url}/baixatudo?status=pending${deviceQuery}`,
       },
       auto_return: 'approved',
       notification_url: `${config.backend.url}/api/v1/webhooks/mercadopago`,
@@ -128,6 +143,7 @@ router.post('/checkout', async (req, res) => {
         plan_label: selectedPlan.label,
         buyer_email: String(email).trim().toLowerCase(),
         buyer_name: buyerName,
+        device_id: cleanDeviceId,
       },
     });
 

@@ -50,6 +50,21 @@ async function findByPaymentEvent(paymentId) {
   return rows[0] || null;
 }
 
+async function findLatestPaymentLicenseByDevice(deviceId, prefix = 'BT') {
+  if (!deviceId) return null;
+  const rows = await prisma.$queryRawUnsafe(
+    `SELECT l.* FROM "IrpLicenseEvent" e
+     INNER JOIN "IrpLicense" l ON l."id" = e."licenseId"
+     WHERE e."deviceId" = $1
+       AND e."eventType" LIKE 'payment:%'
+       AND l."licenseKey" LIKE $2
+     ORDER BY e."createdAt" DESC LIMIT 1`,
+    deviceId,
+    normalizePrefix(prefix) + '-%'
+  );
+  return rows[0] || null;
+}
+
 async function logEvent(licenseId, eventType, deviceId, extensionVersion) {
   try {
     await prisma.$executeRawUnsafe(
@@ -212,9 +227,19 @@ async function renewLicenseFromPayment(email, days, options = {}) {
   const result = await renewLicense(email, days, options);
   const license = await findByKey(result.licenseKey);
   if (license) {
-    await logEvent(license.id, paymentEventType(paymentId), null, null);
+    await logEvent(license.id, paymentEventType(paymentId), options.deviceId || null, options.extensionVersion || null);
   }
   return { duplicate: false, ...result };
 }
 
-module.exports = { generateLicenseKey, createLicense, activateLicense, validateLicense, heartbeat, logoutLicense, renewLicense, renewLicenseFromPayment };
+async function claimLicenseByDevice(deviceId, extensionVersion, options = {}) {
+  const prefix = normalizePrefix(options.prefix || 'BT');
+  const license = await findLatestPaymentLicenseByDevice(deviceId, prefix);
+  if (!license) {
+    return { valid: false, reason: 'not_found', message: 'Pagamento aprovado ainda nao encontrado para este navegador.' };
+  }
+  const result = await activateLicense(license.licenseKey, deviceId, extensionVersion);
+  return { ...result, licenseKey: license.licenseKey };
+}
+
+module.exports = { generateLicenseKey, createLicense, activateLicense, validateLicense, heartbeat, logoutLicense, renewLicense, renewLicenseFromPayment, claimLicenseByDevice };

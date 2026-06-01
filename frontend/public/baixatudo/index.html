@@ -114,6 +114,9 @@
 
     <footer>EducaplayJA - BaixaTudo</footer>
     <script>
+      const checkoutParams = new URLSearchParams(window.location.search);
+      const checkoutDeviceId = checkoutParams.get('deviceId') || '';
+
       async function startCheckout(plan) {
         const status = document.getElementById('checkout-status');
         const name = document.getElementById('buyer-name').value.trim();
@@ -129,7 +132,7 @@
           const response = await fetch('https://eduplay-backend-yw7z.onrender.com/api/v1/baixatudo/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ plan, name, email })
+            body: JSON.stringify({ plan, name, email, deviceId: checkoutDeviceId })
           });
           const data = await response.json();
           if (!response.ok || !data.success || !data.data.paymentUrl) {
