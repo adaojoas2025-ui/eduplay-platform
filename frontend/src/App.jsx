@@ -23,6 +23,7 @@ import CompleteProfile from './pages/CompleteProfile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCommissions from './pages/admin/AdminCommissions';
 import AdminProducts from './pages/admin/AdminProducts';
+import AdminExtensions from './pages/admin/Extensions';
 import Gamification from './pages/Gamification';
 import GamificationAdmin from './pages/admin/GamificationAdmin';
 import UpgradeToProducer from './pages/UpgradeToProducer';
@@ -939,6 +940,7 @@ function App() {
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
         <Route path="/admin/commissions" element={<ProtectedRoute><AdminCommissions /></ProtectedRoute>} />
+        <Route path="/admin/extensions" element={<ProtectedRoute><AdminExtensions /></ProtectedRoute>} />
         <Route path="/admin/gamification" element={<ProtectedRoute><GamificationAdmin /></ProtectedRoute>} />
         <Route path="/admin/combos" element={<ProtectedRoute><ManageCombos /></ProtectedRoute>} />
         <Route path="/admin/apps" element={<ProtectedRoute><ManageApps /></ProtectedRoute>} />

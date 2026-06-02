@@ -1,25 +1,41 @@
-﻿# BaixaTudo - Licenca cortesia administrativa
+# BaixaTudo - Licenca cortesia administrativa
 
 Data: 02/06/2026
 
-Este documento registra como deve funcionar a geracao de licencas BaixaTudo de presente, cortesia, suporte ou teste interno no EducaplayJA.
+Este documento registra como funciona a geracao de licencas BaixaTudo de presente, cortesia, suporte ou teste interno no EducaplayJA.
 
 ## Estado atual
 
-O BaixaTudo Pro ja possui fluxo automatico de pagamento:
+O BaixaTudo Pro possui fluxo automatico de pagamento:
 
 1. Usuario acessa `https://educaplayja.com.br/baixatudo`.
 2. Escolhe plano mensal ou anual.
 3. Mercado Pago confirma o pagamento.
 4. Webhook do backend cria ou renova uma licenca `BT-...`.
-5. A extensao sincroniza a licenca automaticamente pelo `deviceId`.
+5. A extensao sincroniza a licenca automaticamente pelo `deviceId` quando o fluxo de pagamento retorna ao site.
 6. A chave tambem pode ser usada manualmente como recuperacao.
 
-A criacao manual comum esta bloqueada para BaixaTudo. As rotas antigas de administracao nao devem criar `BT`, para evitar liberar produto pago sem controle.
+A cortesia administrativa tambem foi implementada, mas somente dentro do Admin interno do EducaplayJA.
 
-## Necessidade
+## Local correto
 
-O administrador pode precisar dar uma licenca para alguem sem pagamento, por exemplo:
+Tela administrativa:
+
+```text
+/admin/extensions
+```
+
+Endpoint:
+
+```text
+POST /api/v1/admin/extensions/baixatudo/courtesy-licenses
+```
+
+Esta rota fica no Admin interno. Ela nao pertence ao menu financeiro do vendedor e nao deve ser confundida com `/seller`.
+
+## Quando usar cortesia
+
+O administrador pode dar uma licenca sem pagamento para:
 
 - presente;
 - teste controlado;
@@ -28,7 +44,7 @@ O administrador pode precisar dar uma licenca para alguem sem pagamento, por exe
 - demonstracao para avaliador;
 - ativacao propria do administrador.
 
-Esse caso nao e venda. Deve ser registrado como cortesia.
+Esse caso nao e venda. Ele deve ser registrado como cortesia.
 
 ## Regra oficial
 
@@ -44,79 +60,88 @@ Cortesia administrativa:
 source = courtesy
 ```
 
-A cortesia deve continuar usando chave com prefixo BaixaTudo:
+A cortesia continua usando chave com prefixo BaixaTudo:
 
 ```text
 BT-XXXX-XXXX-XXXX-XXXX
 ```
 
-Mas precisa de nota/evento identificando que foi criada manualmente por administrador.
+## Fluxo implementado
 
-## Fluxo recomendado
-
-1. Administrador logado no EducaplayJA acessa o painel de licencas.
-2. Clica em `Gerar cortesia BaixaTudo`.
+1. Administrador logado acessa `/admin/extensions`.
+2. Seleciona BaixaTudo.
 3. Informa email do usuario.
-4. Escolhe prazo: 30 dias, 365 dias ou personalizado.
+4. Escolhe prazo por horas, dias, meses ou anos.
 5. Informa motivo obrigatorio.
-6. Backend gera ou renova uma licenca `BT`.
-7. Backend registra evento de auditoria.
-8. Backend envia email com chave e validade.
-9. Usuario ativa pela extensao ou sincroniza quando houver recurso de sincronizacao por email.
+6. Backend cria ou renova uma licenca `BT`.
+7. Backend registra a origem como cortesia nas notas da licenca.
+8. Backend envia email com chave e validade, se a opcao de email estiver marcada.
 
-## Endpoint sugerido
-
-```text
-POST /api/v1/baixatudo/admin/courtesy-license
-```
-
-Autenticacao obrigatoria:
-
-```text
-JWT de administrador EducaplayJA
-```
-
-Payload:
+## Payload
 
 ```json
 {
   "email": "usuario@email.com",
-  "days": 365,
+  "durationValue": 30,
+  "durationUnit": "days",
   "reason": "presente do administrador",
   "sendEmail": true
 }
 ```
 
-Resposta:
+Unidades aceitas:
+
+```text
+hours
+days
+months
+years
+```
+
+Limites:
+
+```text
+minimo: 1 hora
+maximo: 10 anos
+```
+
+## Resposta esperada
 
 ```json
 {
-  "ok": true,
-  "source": "courtesy",
-  "licenseKey": "BT-XXXX-XXXX-XXXX-XXXX",
-  "expiresAt": "2027-06-02T00:00:00.000Z"
+  "success": true,
+  "message": "Licenca cortesia criada com sucesso.",
+  "data": {
+    "source": "courtesy",
+    "extension": "baixatudo",
+    "product": "baixatudo",
+    "email": "usuario@email.com",
+    "licenseKey": "BT-XXXX-XXXX-XXXX-XXXX",
+    "expiresAt": "2026-07-02T00:00:00.000Z",
+    "status": "ACTIVE",
+    "renewed": false,
+    "emailSent": true,
+    "duration": {
+      "value": 30,
+      "unit": "days",
+      "days": 30,
+      "label": "30 dias"
+    }
+  }
 }
 ```
 
-## Auditoria obrigatoria
+## Auditoria
 
-Registrar no minimo:
-
-```text
-licenseId
-email
-adminUserId
-adminEmail
-reason
-days
-source = courtesy
-createdAt
-```
-
-Evento sugerido:
+As notas da licenca registram:
 
 ```text
-courtesy:created
+source:courtesy
+product:baixatudo
+admin:<email do admin>
+admin_id:<id do admin>
+duration:<prazo escolhido>
+reason:<motivo informado>
 ```
 
 ## O que nao fazer
@@ -128,8 +153,8 @@ courtesy:created
 - Nao gerar cortesia sem motivo e prazo.
 - Nao usar a rota antiga `/api/v1/licenses/admin/create` para prefixo `BT`.
 
-## Relacao com pagamento automatico
+## Precisa subir nova extensao?
 
-O fluxo de pagamento automatico continua sendo o oficial para clientes pagantes. A cortesia e uma excecao administrativa rastreada.
+Para gerar cortesia no EducaplayJA, nao precisa subir outro pacote da extensao. A extensao continua validando a chave `BT` pelo backend.
 
-Isso permite presentear usuarios sem quebrar a logica comercial do BaixaTudo e sem depender de senha manual na extensao.
+So sera necessario novo pacote se a regra visual ou a ativacao automatica dentro da extensao mudar.

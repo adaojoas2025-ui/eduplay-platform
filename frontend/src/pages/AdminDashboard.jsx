@@ -617,6 +617,16 @@ export default function AdminDashboard() {
             </Link>
 
             <Link
+              to="/admin/extensions"
+              className="flex items-center gap-3 p-4 bg-red-50 hover:bg-red-100 rounded-lg transition"
+            >
+              <div className="text-3xl">BT</div>
+              <div>
+                <div className="font-semibold text-gray-800">Extensoes</div>
+                <div className="text-sm text-gray-600">Licencas cortesia</div>
+              </div>
+            </Link>
+            <Link
               to="/admin/apps"
               className="flex items-center gap-3 p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition"
             >

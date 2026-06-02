@@ -313,27 +313,50 @@ em mudar schema sem necessidade.
 
 ## Licenca cortesia ou presente
 
-Status em 02/06/2026: o BaixaTudo ja possui pagamento e ativacao automatica, mas ainda nao possui uma tela/rota final para gerar licencas cortesia.
+Status em 02/06/2026: implementado no Admin interno do EducaplayJA.
 
-Para presentear um usuario, a decisao tecnica correta e criar um fluxo administrativo separado do Mercado Pago. Essa licenca deve ser marcada como `source = courtesy` ou anotada como cortesia, para nao ser confundida com venda real.
+Tela:
 
-O fluxo futuro recomendado e:
+```text
+/admin/extensions
+```
 
-1. Administrador entra no EducaplayJA.
-2. Acessa area administrativa de licencas BaixaTudo.
-3. Clica em `Gerar cortesia`.
-4. Informa email, prazo e motivo.
-5. Backend cria chave `BT-...` ativa.
-6. Backend registra evento de auditoria com o administrador responsavel.
-7. Backend envia email ao usuario com chave e validade.
-8. Usuario ativa pela extensao usando o campo manual de recuperacao.
+Endpoint:
 
-Enquanto esse fluxo nao for implementado, nao ha caminho oficial seguro para gerar presente pelo painel.
+```text
+POST /api/v1/admin/extensions/baixatudo/courtesy-licenses
+```
 
-Regras de seguranca:
+A cortesia permite gerar ou renovar uma licenca `BT` sem pagamento, somente para uso administrativo. O fluxo aceita prazos por horas, dias, meses e anos, com motivo obrigatorio e envio opcional de email automatico.
 
-- nao usar a rota antiga de criacao administrativa para prefixo `BT`;
-- nao colocar segredo administrativo na extensao;
-- nao misturar licenca cortesia com licenca paga;
-- toda cortesia deve ter motivo, prazo e registro de auditoria;
-- licencas vendidas continuam nascendo somente do webhook do Mercado Pago.
+Payload principal:
+
+```json
+{
+  "email": "usuario@email.com",
+  "durationValue": 30,
+  "durationUnit": "days",
+  "reason": "presente do administrador",
+  "sendEmail": true
+}
+```
+
+Regras implementadas:
+
+- acesso somente para usuario com perfil `ADMIN`;
+- rota criada em `/api/v1/admin/extensions`, separada do painel de vendedor/financeiro;
+- prefixo da licenca BaixaTudo: `BT`;
+- se o email ja tiver licenca `BT`, a licenca e renovada;
+- se nao tiver, uma nova licenca e criada;
+- notas registram `source:courtesy`, produto, admin, prazo e motivo;
+- prazo minimo de 1 hora e maximo de 10 anos;
+- a extensao nao gera cortesia e nao recebe segredo administrativo.
+
+Isso nao exige novo pacote da extensao enquanto a extensao continuar validando chaves `BT` pelo backend. So sera necessario novo pacote se a regra visual, sincronizacao ou ativacao automatica da extensao mudar.
+
+Documentacao especifica:
+
+```text
+docs/ADMIN_EXTENSOES.md
+docs/BAIXATUDO_LICENCA_CORTESIA.md
+```
