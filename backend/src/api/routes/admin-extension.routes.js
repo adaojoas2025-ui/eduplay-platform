@@ -10,6 +10,7 @@ const { authorize } = require('../middlewares/rbac.middleware');
 const { USER_ROLES } = require('../../utils/constants');
 const licenseService = require('../../services/license.service');
 const emailService = require('../../services/email.service');
+const logger = require('../../utils/logger');
 
 const EXTENSIONS = {
   baixatudo: {
@@ -148,14 +149,24 @@ router.post('/:extensionId/courtesy-licenses', async (req, res, next) => {
     });
 
     let emailSent = false;
+    let emailError = null;
     if (sendEmail) {
-      await emailService.sendBaixaTudoLicenseEmail(
-        email,
-        license.licenseKey,
-        license.expiresAt,
-        `${extension.name} Pro Cortesia`
-      );
-      emailSent = true;
+      try {
+        await emailService.sendBaixaTudoLicenseEmail(
+          email,
+          license.licenseKey,
+          license.expiresAt,
+          `${extension.name} Pro Cortesia`
+        );
+        emailSent = true;
+      } catch (mailError) {
+        emailError = 'Licenca criada, mas o email automatico nao foi enviado agora.';
+        logger.warn('Courtesy license email failed', {
+          email,
+          extension: extension.id,
+          error: mailError.message,
+        });
+      }
     }
 
     res.status(201).json({
@@ -170,13 +181,24 @@ router.post('/:extensionId/courtesy-licenses', async (req, res, next) => {
         email,
         licenseKey: license.licenseKey,
         expiresAt: license.expiresAt,
-        status: license.status,
+        status: license.status || 'active',
         renewed: Boolean(license.renewed),
         emailSent,
+        emailError,
         duration,
       },
     });
   } catch (error) {
+    logger.error('Courtesy license generation failed', {
+      extensionId: req.params.extensionId,
+      adminEmail: req.user?.email,
+      targetEmail: normalizeEmail(req.body?.email),
+      durationValue: req.body?.durationValue ?? req.body?.value ?? req.body?.days,
+      durationUnit: req.body?.durationUnit || req.body?.unit,
+      error: error.message,
+      stack: error.stack,
+    });
+
     if (error.statusCode) {
       return res.status(error.statusCode).json({
         success: false,

@@ -119,3 +119,49 @@ Commit relacionado:
 ```text
 f6873c2 chore: surface admin extensions shortcut
 ```
+
+---
+
+## Correcao de cortesia em 02/06/2026
+
+Foi adicionada uma protecao no startup do backend para ambientes onde as tabelas de licenca ja existiam com schema antigo.
+
+O script `backend/scripts/start-with-migrate.js` agora garante, em producao, as colunas necessarias para:
+
+- criar licenca cortesia;
+- renovar licenca `BT`;
+- registrar validade;
+- registrar notas administrativas;
+- manter eventos de licenca.
+
+Tambem foi ajustada a rota:
+
+```text
+POST /api/v1/admin/extensions/baixatudo/courtesy-licenses
+```
+
+O envio de email automatico deixou de bloquear a geracao da cortesia. Se a licenca for criada e o email falhar, a resposta informa `emailError`, mas a chave continua valida.
+
+## Erro comum ao testar pacote
+
+Chrome e Firefox usam pacotes diferentes.
+
+Chrome:
+
+```text
+background.service_worker
+```
+
+Firefox:
+
+```text
+background.scripts
+```
+
+Se o pacote Firefox for carregado em `chrome://extensions`, o Chrome mostra:
+
+```text
+'background.scripts' requires manifest version of 2 or lower
+```
+
+Solucao: testar o pacote Chrome no Chrome e o pacote Firefox no Firefox.

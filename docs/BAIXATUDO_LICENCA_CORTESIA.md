@@ -158,3 +158,35 @@ reason:<motivo informado>
 Para gerar cortesia no EducaplayJA, nao precisa subir outro pacote da extensao. A extensao continua validando a chave `BT` pelo backend.
 
 So sera necessario novo pacote se a regra visual ou a ativacao automatica dentro da extensao mudar.
+
+## Correcao operacional em 02/06/2026
+
+Foi identificado erro 500 ao gerar cortesia em producao. A causa provavel era tabela antiga de licencas sem todas as colunas usadas pelo fluxo atual.
+
+Foi ajustado:
+
+- o script de inicializacao do backend agora garante as colunas da tabela `IrpLicense` com `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`;
+- o script tambem garante as colunas da tabela `IrpLicenseEvent`;
+- o envio de email de cortesia nao bloqueia mais a criacao da licenca, caso o provedor de email falhe;
+- o backend registra log detalhado com `Courtesy license generation failed` quando ainda houver erro.
+
+Depois do deploy, se a tela `/admin/extensions` ainda mostrar erro, consultar os logs do backend no Render procurando por:
+
+```text
+Courtesy license generation failed
+```
+
+## Pacotes Chrome e Firefox
+
+Nao misturar os pacotes:
+
+- Chrome / Chrome Web Store: usar pacote Manifest V3 com `background.service_worker`;
+- Firefox: usar pacote proprio com `background.scripts`.
+
+Se carregar o pacote do Firefox no Chrome, o Chrome mostra erro parecido com:
+
+```text
+'background.scripts' requires manifest version of 2 or lower
+```
+
+Esse erro nao e da licenca nem da cortesia. Ele significa apenas que o pacote errado foi carregado no navegador errado.
