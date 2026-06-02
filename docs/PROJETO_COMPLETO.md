@@ -4554,3 +4554,32 @@ fetch('https://eduplay-platform.onrender.com/api/v1/test/clear-financial-data', 
 **Documentos atualizados**:
 - `docs/BAIXATUDO_LICENCA_AUTOMATICA.md`
 - `docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md`
+
+---
+
+### 02/06/2026 - BaixaTudo: extensao publicada, link de instalacao e Admin de extensoes
+
+**Contexto**: A extensao BaixaTudo foi publicada na Chrome Web Store como item `Publicado - nao apresentado`. O usuario perguntou onde encontrar a extensao para instalar e confirmou que encontrou o card de extensoes no Admin Dashboard.
+
+**Link direto de instalacao**:
+
+```text
+https://chromewebstore.google.com/detail/baixatudo-video-downloader/njdlafdofhnnokoomgebclhgomhhkfbk
+```
+
+**Decisao de interface**:
+- O acesso ao gerador de licencas cortesia fica em `Admin Dashboard > Acoes Rapidas > BT Extensoes`.
+- O atalho nao foi colocado no menu suspenso do usuario Admin para nao misturar com rotas de vendedor/financeiro.
+- A tela direta e `https://educaplayja.com.br/#/admin/extensions`.
+
+**Commits relacionados**:
+
+```text
+3dc9b1d feat: add admin extension courtesy licenses
+f6873c2 chore: surface admin extensions shortcut
+```
+
+**Documentos atualizados**:
+- `docs/ADMIN_EXTENSOES.md`
+- `docs/BAIXATUDO_PUBLICACAO_WEBSTORE.md`
+- `docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md`

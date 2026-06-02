@@ -187,3 +187,44 @@ etapas:
 ```text
 docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md
 ```
+
+---
+
+## Atualizacao de instalacao em 02/06/2026
+
+A extensao esta publicada na Chrome Web Store como item `Publicado - nao apresentado`.
+
+Isso significa:
+
+- a extensao nao aparece na busca publica da Web Store;
+- a instalacao deve ser feita pelo link direto;
+- o botao de instalar aparece somente em navegador Chrome normal, com usuario logado;
+- em aba anonima ou modo visitante o Chrome pode bloquear instalacao.
+
+Link direto de instalacao:
+
+```text
+https://chromewebstore.google.com/detail/baixatudo-video-downloader/njdlafdofhnnokoomgebclhgomhhkfbk
+```
+
+ID da extensao:
+
+```text
+njdlafdofhnnokoomgebclhgomhhkfbk
+```
+
+Situacao atual:
+
+```text
+Publicado - nao apresentado
+Versao: 2.1.6
+```
+
+Orientacao ao usuario:
+
+1. Abrir o link direto no Chrome normal.
+2. Entrar na conta Google, se necessario.
+3. Clicar em `Usar no Chrome`.
+4. Evitar aba anonima para instalacao.
+
+A tela de analytics da Chrome Web Store Developer Dashboard nao e usada para instalar a extensao. Ela serve apenas para acompanhar instalacoes, impressoes, usuarios e metricas do item.

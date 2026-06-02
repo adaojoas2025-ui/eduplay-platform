@@ -93,3 +93,29 @@ Isso diferencia cortesia de venda Mercado Pago.
 A extensao BaixaTudo nao gera cortesia e nao recebe senha administrativa. A cortesia e criada no backend do EducaplayJA.
 
 Implementar cortesia no site nao exige novo pacote da extensao, desde que a extensao ja valide licencas `BT` pelo backend. O pacote so precisa mudar se futuramente for desejado ativar a cortesia automaticamente sem o usuario colar chave ou sem sincronizacao existente.
+
+---
+
+## Atualizacao de acesso visual em 02/06/2026
+
+O atalho da area de extensoes foi colocado no Admin Dashboard em:
+
+```text
+Admin Dashboard > Acoes Rapidas > BT Extensoes / Licencas cortesia
+```
+
+Link direto:
+
+```text
+https://educaplayja.com.br/#/admin/extensions
+```
+
+Observacao importante:
+
+O atalho nao foi colocado no menu suspenso do usuario Admin, porque esse menu tambem exibe opcoes ligadas ao vendedor e ao financeiro. Para evitar confusao entre os dois Admins, a area de extensoes fica centralizada em `Acoes Rapidas` no dashboard administrativo interno.
+
+Commit relacionado:
+
+```text
+f6873c2 chore: surface admin extensions shortcut
+```

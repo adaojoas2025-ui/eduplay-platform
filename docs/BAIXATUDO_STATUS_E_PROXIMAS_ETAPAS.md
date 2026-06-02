@@ -360,3 +360,47 @@ Documentacao especifica:
 docs/ADMIN_EXTENSOES.md
 docs/BAIXATUDO_LICENCA_CORTESIA.md
 ```
+
+---
+
+## Instalacao da extensao publicada
+
+Status em 02/06/2026: a extensao BaixaTudo esta publicada como `nao apresentada`.
+
+Link direto para instalar:
+
+```text
+https://chromewebstore.google.com/detail/baixatudo-video-downloader/njdlafdofhnnokoomgebclhgomhhkfbk
+```
+
+Como instalar:
+
+1. Usar o Chrome normal, nao aba anonima.
+2. Abrir o link direto.
+3. Fazer login na conta Google, se o Chrome solicitar.
+4. Clicar em `Usar no Chrome`.
+
+A extensao nao aparece na busca da Web Store enquanto estiver como `nao apresentada`. Isso e esperado e nao indica erro de publicacao.
+
+## Admin de licencas cortesia publicado
+
+A tela interna de cortesia foi publicada no EducaplayJA e aparece no Admin Dashboard em:
+
+```text
+Acoes Rapidas > BT Extensoes / Licencas cortesia
+```
+
+Link direto:
+
+```text
+https://educaplayja.com.br/#/admin/extensions
+```
+
+Essa area e separada do painel de vendedor/financeiro. Ela serve para administrar extensoes e gerar licencas cortesia do BaixaTudo.
+
+Commits relacionados:
+
+```text
+3dc9b1d feat: add admin extension courtesy licenses
+f6873c2 chore: surface admin extensions shortcut
+```
