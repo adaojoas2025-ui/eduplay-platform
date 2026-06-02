@@ -310,3 +310,30 @@ Antes de criar novas tabelas, revisar se o reaproveitamento atende ao fluxo atua
 Se atender, a proxima etapa deve focar em checkout, webhook, painel de acompanhamento e tela de ativacao, e nao
 em mudar schema sem necessidade.
 
+
+## Licenca cortesia ou presente
+
+Status em 02/06/2026: o BaixaTudo ja possui pagamento e ativacao automatica, mas ainda nao possui uma tela/rota final para gerar licencas cortesia.
+
+Para presentear um usuario, a decisao tecnica correta e criar um fluxo administrativo separado do Mercado Pago. Essa licenca deve ser marcada como `source = courtesy` ou anotada como cortesia, para nao ser confundida com venda real.
+
+O fluxo futuro recomendado e:
+
+1. Administrador entra no EducaplayJA.
+2. Acessa area administrativa de licencas BaixaTudo.
+3. Clica em `Gerar cortesia`.
+4. Informa email, prazo e motivo.
+5. Backend cria chave `BT-...` ativa.
+6. Backend registra evento de auditoria com o administrador responsavel.
+7. Backend envia email ao usuario com chave e validade.
+8. Usuario ativa pela extensao usando o campo manual de recuperacao.
+
+Enquanto esse fluxo nao for implementado, nao ha caminho oficial seguro para gerar presente pelo painel.
+
+Regras de seguranca:
+
+- nao usar a rota antiga de criacao administrativa para prefixo `BT`;
+- nao colocar segredo administrativo na extensao;
+- nao misturar licenca cortesia com licenca paga;
+- toda cortesia deve ter motivo, prazo e registro de auditoria;
+- licencas vendidas continuam nascendo somente do webhook do Mercado Pago.

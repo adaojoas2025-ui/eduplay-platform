@@ -4535,3 +4535,22 @@ fetch('https://eduplay-platform.onrender.com/api/v1/test/clear-financial-data', 
 - Lógica de comissões ajustada (90%/10%, produtos do admin = 100% plataforma)
 - Admin Dashboard: corrigido React Error #31 (objeto renderizado como filho JSX)
 - APK upload migrado de unsigned (limite 10MB) para signed via backend (limite 100MB multer)
+
+---
+
+### 02/06/2026 - BaixaTudo: documentacao de licenca cortesia
+
+**Contexto**: O BaixaTudo Pro funciona com pagamento e ativacao automatica via Mercado Pago. O usuario solicitou a possibilidade de gerar uma chave manualmente para presentear alguem.
+
+**Decisao registrada**:
+- Licenca comercial continua sendo criada somente pelo webhook do Mercado Pago.
+- Licenca de presente deve ser tratada como `cortesia administrativa`, separada de venda.
+- A rota antiga de criacao administrativa permanece bloqueada para prefixo `BT`.
+- Antes de usar cortesia em producao, deve ser implementada uma rota/painel especifico com autenticacao de administrador, prazo, motivo e auditoria.
+
+**Documento criado**:
+- `docs/BAIXATUDO_LICENCA_CORTESIA.md`
+
+**Documentos atualizados**:
+- `docs/BAIXATUDO_LICENCA_AUTOMATICA.md`
+- `docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md`

@@ -350,3 +350,54 @@ docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md
 ```
 
 
+
+## Licenca cortesia ou presente
+
+Status em 02/06/2026: ainda nao existe fluxo administrativo pronto para gerar licenca BaixaTudo de presente.
+
+A regra comercial continua sendo automatica: toda licenca vendida deve nascer de pagamento confirmado pelo Mercado Pago. Isso evita liberar acesso pago sem registro financeiro e mantem o webhook como fonte oficial para mensal e anual.
+
+Para dar uma licenca de presente, o modelo correto e criar um fluxo separado de cortesia administrativa. Esse fluxo deve ser diferente de uma venda e deve registrar claramente que nao houve pagamento.
+
+Regras recomendadas para cortesia:
+
+- somente administrador autenticado do EducaplayJA pode gerar;
+- nunca colocar senha administrativa dentro da extensao;
+- usar prefixo `BT`, mas com `source = courtesy` ou nota equivalente;
+- exigir email do beneficiario;
+- exigir plano/prazo, por exemplo 30 ou 365 dias;
+- exigir motivo, por exemplo presente, suporte, teste, parceria ou compensacao;
+- registrar quem criou, data, email, validade e motivo em `IrpLicenseEvent` ou campo de notas;
+- enviar a chave por email ao usuario;
+- permitir ativacao pela extensao usando o campo manual de recuperacao;
+- opcionalmente permitir sincronizacao por email/dispositivo no futuro.
+
+A rota antiga `/api/v1/licenses/admin/create` continua bloqueando `product = baixatudo` e prefixo `BT`. Portanto, hoje ela nao deve ser usada para BaixaTudo. Antes de gerar presentes de verdade, implementar uma rota nova e explicita, por exemplo:
+
+```text
+POST /api/v1/baixatudo/admin/courtesy-license
+```
+
+Payload sugerido:
+
+```json
+{
+  "email": "usuario@email.com",
+  "days": 365,
+  "reason": "presente do administrador",
+  "sendEmail": true
+}
+```
+
+Resposta esperada:
+
+```json
+{
+  "ok": true,
+  "source": "courtesy",
+  "licenseKey": "BT-XXXX-XXXX-XXXX-XXXX",
+  "expiresAt": "2027-06-02T00:00:00.000Z"
+}
+```
+
+Essa funcionalidade deve entrar como melhoria administrativa, nao como substituto do checkout automatico.
