@@ -8,6 +8,7 @@ const { prisma } = require('../config/database');
 const logger = require('../utils/logger');
 
 const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+let licenseSchemaReady = false;
 
 function normalizePrefix(prefix = 'IRP') {
   const clean = String(prefix || 'IRP').toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -27,7 +28,76 @@ function uuid() {
   });
 }
 
+function addDays(baseDate, days) {
+  return new Date(baseDate.getTime() + Number(days) * 86400000);
+}
+
+async function ensureLicenseSchema() {
+  if (licenseSchemaReady) return;
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "IrpLicense" (
+      "id" TEXT PRIMARY KEY,
+      "licenseKey" TEXT NOT NULL UNIQUE,
+      "email" TEXT,
+      "status" TEXT NOT NULL DEFAULT 'active',
+      "expiresAt" TIMESTAMP(3),
+      "activeDeviceId" TEXT,
+      "lastSeenAt" TIMESTAMP(3),
+      "extensionVersion" TEXT,
+      "notes" TEXT,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  const licenseColumns = [
+    '"licenseKey" TEXT',
+    '"email" TEXT',
+    '"status" TEXT NOT NULL DEFAULT \'active\'',
+    '"expiresAt" TIMESTAMP(3)',
+    '"activeDeviceId" TEXT',
+    '"lastSeenAt" TIMESTAMP(3)',
+    '"extensionVersion" TEXT',
+    '"notes" TEXT',
+    '"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP',
+    '"updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP',
+  ];
+
+  for (const column of licenseColumns) {
+    await prisma.$executeRawUnsafe(`ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS ${column}`);
+  }
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "IrpLicenseEvent" (
+      "id" TEXT PRIMARY KEY,
+      "licenseId" TEXT NOT NULL,
+      "eventType" TEXT NOT NULL,
+      "deviceId" TEXT,
+      "extensionVersion" TEXT,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  const eventColumns = [
+    '"licenseId" TEXT NOT NULL',
+    '"eventType" TEXT NOT NULL',
+    '"deviceId" TEXT',
+    '"extensionVersion" TEXT',
+    '"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP',
+    '"updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP',
+  ];
+
+  for (const column of eventColumns) {
+    await prisma.$executeRawUnsafe(`ALTER TABLE "IrpLicenseEvent" ADD COLUMN IF NOT EXISTS ${column}`);
+  }
+
+  licenseSchemaReady = true;
+}
+
 async function findByKey(licenseKey) {
+  await ensureLicenseSchema();
   const rows = await prisma.$queryRawUnsafe(
     `SELECT * FROM "IrpLicense" WHERE "licenseKey" = $1 LIMIT 1`, licenseKey
   );
@@ -40,6 +110,7 @@ function paymentEventType(paymentId) {
 
 async function findByPaymentEvent(paymentId) {
   if (!paymentId) return null;
+  await ensureLicenseSchema();
   const rows = await prisma.$queryRawUnsafe(
     `SELECT l.* FROM "IrpLicenseEvent" e
      INNER JOIN "IrpLicense" l ON l."id" = e."licenseId"
@@ -52,6 +123,7 @@ async function findByPaymentEvent(paymentId) {
 
 async function findLatestPaymentLicenseByDevice(deviceId, prefix = 'BT') {
   if (!deviceId) return null;
+  await ensureLicenseSchema();
   const rows = await prisma.$queryRawUnsafe(
     `SELECT l.* FROM "IrpLicenseEvent" e
      INNER JOIN "IrpLicense" l ON l."id" = e."licenseId"
@@ -67,6 +139,7 @@ async function findLatestPaymentLicenseByDevice(deviceId, prefix = 'BT') {
 
 async function logEvent(licenseId, eventType, deviceId, extensionVersion) {
   try {
+    await ensureLicenseSchema();
     await prisma.$executeRawUnsafe(
       `INSERT INTO "IrpLicenseEvent" ("id","licenseId","eventType","deviceId","extensionVersion","createdAt")
        VALUES ($1,$2,$3,$4,$5,NOW())`,
@@ -76,6 +149,7 @@ async function logEvent(licenseId, eventType, deviceId, extensionVersion) {
 }
 
 async function createLicense(email, days, notes = '', options = {}) {
+  await ensureLicenseSchema();
   const prefix = normalizePrefix(options.prefix || 'IRP');
   let licenseKey;
   let attempts = 0;
@@ -88,14 +162,15 @@ async function createLicense(email, days, notes = '', options = {}) {
   } while (true);
 
   const id = uuid();
+  const expiresAt = addDays(new Date(), days);
   await prisma.$executeRawUnsafe(
     `INSERT INTO "IrpLicense" ("id","licenseKey","email","status","expiresAt","notes","createdAt","updatedAt")
-     VALUES ($1,$2,$3,'active',NOW() + ($4 || ' days')::interval,$5,NOW(),NOW())`,
-    id, licenseKey, email, String(days), notes
+     VALUES ($1,$2,$3,'active',$4,$5,NOW(),NOW())`,
+    id, licenseKey, email, expiresAt, notes
   );
   await logEvent(id, 'created', null, null);
   logger.info('IRP license created', { licenseKey, email });
-  return { id, licenseKey, email, status: 'active', expiresAt: new Date(Date.now() + Number(days) * 86400000) };
+  return { id, licenseKey, email, status: 'active', expiresAt };
 }
 
 async function activateLicense(licenseKey, deviceId, extensionVersion) {
@@ -171,6 +246,7 @@ async function logoutLicense(licenseKey, deviceId) {
 }
 
 async function renewLicense(email, days, options = {}) {
+  await ensureLicenseSchema();
   const prefix = normalizePrefix(options.prefix || 'IRP');
   const notes = options.notes || 'new purchase';
   const rows = await prisma.$queryRawUnsafe(
@@ -184,15 +260,18 @@ async function renewLicense(email, days, options = {}) {
 
   if (existing) {
     const base = new Date(existing.expiresAt) > new Date() ? new Date(existing.expiresAt) : new Date();
-    const newExpiry = new Date(base.getTime() + days * 86400000);
+    const newExpiry = addDays(base, days);
     await prisma.$executeRawUnsafe(
       `UPDATE "IrpLicense"
        SET "status"='active',
            "expiresAt"=$1,
-           "notes"=TRIM(COALESCE("notes", '') || E'\n' || $3),
+           "notes"=CASE
+             WHEN COALESCE("notes", '') = '' THEN $3
+             ELSE "notes" || E'\n' || $3
+           END,
            "updatedAt"=NOW()
        WHERE "id"=$2`,
-      newExpiry.toISOString(), existing.id, notes
+      newExpiry, existing.id, notes
     );
     await logEvent(existing.id, 'renewed', null, null);
     logger.info('IRP license renewed', { licenseKey: existing.licenseKey, email });

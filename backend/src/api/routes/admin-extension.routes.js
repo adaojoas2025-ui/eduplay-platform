@@ -205,7 +205,11 @@ router.post('/:extensionId/courtesy-licenses', async (req, res, next) => {
         message: error.message,
       });
     }
-    next(error);
+
+    return res.status(500).json({
+      success: false,
+      message: `Erro ao gerar cortesia: ${error.message}`,
+    });
   }
 });
 
