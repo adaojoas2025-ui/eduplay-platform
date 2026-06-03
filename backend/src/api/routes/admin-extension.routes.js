@@ -24,6 +24,17 @@ const EXTENSIONS = {
       { id: 'annual', label: 'Anual', price: 39.9, days: 365 },
     ],
   },
+  'irp-master': {
+    id: 'irp-master',
+    name: 'IRP Master',
+    licensePrefix: 'IRP',
+    product: 'irp-master',
+    publicPage: 'https://educaplayja.com.br/irp-master',
+    plans: [
+      { id: 'monthly', label: 'Mensal', price: 50.0, days: 30 },
+      { id: 'annual', label: 'Anual', price: 239.9, days: 365 },
+    ],
+  },
 };
 
 const DURATION_UNITS = {

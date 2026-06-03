@@ -279,7 +279,7 @@ export default function AdminExtensions() {
                 <ul className="space-y-2 text-sm text-gray-700 list-disc pl-5">
                   <li>Cortesia nao substitui venda pelo Mercado Pago.</li>
                   <li>O motivo e registrado nas notas da licenca.</li>
-                  <li>Se o email ja tiver uma licenca BT, ela e renovada.</li>
+                  <li>Se o email ja tiver uma licenca do prefixo selecionado, ela e renovada.</li>
                   <li>A extensao nao gera cortesia e nao recebe senha administrativa.</li>
                 </ul>
               </section>

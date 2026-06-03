@@ -22,17 +22,21 @@ A rota e protegida por login e perfil `ADMIN`. Ela nao faz parte do painel de ve
 
 ## Objetivo
 
-Centralizar extensoes como o BaixaTudo em uma area propria, preparada para crescer quando novas extensoes forem publicadas.
+Centralizar extensoes como o BaixaTudo e a IRP Master em uma area propria, preparada para crescer quando novas extensoes forem publicadas.
 
-Hoje a primeira extensao cadastrada e:
+Extensoes cadastradas:
 
 ```text
 BaixaTudo
 Prefixo de licenca: BT
 Pagina publica: https://educaplayja.com.br/baixatudo
+
+IRP Master
+Prefixo de licenca: IRP
+Pagina publica: https://educaplayja.com.br/irp-master
 ```
 
-## Cortesia BaixaTudo
+## Cortesia por extensao
 
 O Admin pode gerar ou renovar uma licenca de cortesia para um usuario sem pagamento. Isso serve para presente, suporte, teste interno, avaliador, parceria ou liberacao propria do administrador.
 
@@ -40,6 +44,7 @@ Endpoint:
 
 ```text
 POST /api/v1/admin/extensions/baixatudo/courtesy-licenses
+POST /api/v1/admin/extensions/irp-master/courtesy-licenses
 ```
 
 Payload:
@@ -69,8 +74,8 @@ Regras atuais:
 - maximo: 10 anos;
 - motivo obrigatorio;
 - email valido obrigatorio;
-- se o email ja tiver licenca BT, a licenca e renovada;
-- se nao tiver, uma nova licenca BT e criada;
+- se o email ja tiver licenca do prefixo selecionado, a licenca e renovada;
+- se nao tiver, uma nova licenca e criada com o prefixo da extensao;
 - o email de licenca e enviado automaticamente quando `sendEmail` for verdadeiro.
 
 ## Auditoria
@@ -79,7 +84,7 @@ A cortesia grava notas na licenca com:
 
 ```text
 source:courtesy
-product:baixatudo
+product:<baixatudo ou irp-master>
 admin:<email do admin>
 admin_id:<id do admin>
 duration:<prazo escolhido>
@@ -90,9 +95,9 @@ Isso diferencia cortesia de venda Mercado Pago.
 
 ## Relacao com a extensao
 
-A extensao BaixaTudo nao gera cortesia e nao recebe senha administrativa. A cortesia e criada no backend do EducaplayJA.
+A extensao nao gera cortesia e nao recebe senha administrativa. A cortesia e criada no backend do EducaplayJA.
 
-Implementar cortesia no site nao exige novo pacote da extensao, desde que a extensao ja valide licencas `BT` pelo backend. O pacote so precisa mudar se futuramente for desejado ativar a cortesia automaticamente sem o usuario colar chave ou sem sincronizacao existente.
+Implementar cortesia no site nao exige novo pacote da extensao, desde que a extensao ja valide licencas do seu prefixo pelo backend. O pacote so precisa mudar se futuramente for desejado ativar a cortesia automaticamente sem o usuario colar chave ou sem sincronizacao existente.
 
 ---
 
@@ -129,7 +134,7 @@ Foi adicionada uma protecao no startup do backend para ambientes onde as tabelas
 O script `backend/scripts/start-with-migrate.js` agora garante, em producao, as colunas necessarias para:
 
 - criar licenca cortesia;
-- renovar licenca `BT`;
+- renovar licenca do prefixo selecionado;
 - registrar validade;
 - registrar notas administrativas;
 - manter eventos de licenca.
@@ -138,6 +143,7 @@ Tambem foi ajustada a rota:
 
 ```text
 POST /api/v1/admin/extensions/baixatudo/courtesy-licenses
+POST /api/v1/admin/extensions/irp-master/courtesy-licenses
 ```
 
 O envio de email automatico deixou de bloquear a geracao da cortesia. Se a licenca for criada e o email falhar, a resposta informa `emailError`, mas a chave continua valida.

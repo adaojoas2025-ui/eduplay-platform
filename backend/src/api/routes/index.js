@@ -30,6 +30,7 @@ const webhookRoutes = require('./webhook.routes');
 const contactRoutes = require('./contact.routes');
 const licenseRoutes = require('../../routes/licenses');
 const baixatudoRoutes = require('../../routes/baixatudo');
+const irpMasterRoutes = require('../../routes/irp-master');
 
 /**
  * Health check route
@@ -69,6 +70,7 @@ router.use('/webhooks', webhookRoutes);
 router.use('/contact', contactRoutes);
 router.use('/licenses', licenseRoutes);
 router.use('/baixatudo', baixatudoRoutes);
+router.use('/irp-master', irpMasterRoutes);
 
 /**
  * 404 handler for API routes
