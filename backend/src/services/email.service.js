@@ -721,6 +721,59 @@ const sendIrpLicenseEmail = async (email, licenseKey, expiresAt) => {
   }
 };
 
+/**
+ * Send BaixaTudo Pro license key to buyer after payment
+ * @param {string} email - Buyer email
+ * @param {string} licenseKey - Generated license key
+ * @param {Date} expiresAt - Expiration date
+ * @param {string} planLabel - Human-readable plan label
+ */
+const sendBaixaTudoLicenseEmail = async (email, licenseKey, expiresAt, planLabel = 'BaixaTudo Pro') => {
+  try {
+    const expiry = new Date(expiresAt).toLocaleDateString('pt-BR');
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #111827 0%, #7f1d1d 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0;">BaixaTudo Pro</h1>
+          <p style="color: #fecaca; margin: 8px 0 0;">Sua licença foi liberada automaticamente.</p>
+        </div>
+        <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+          <p>Olá,</p>
+          <p>Seu pagamento do plano <strong>${planLabel}</strong> foi confirmado. Aqui está sua chave de licença:</p>
+          <div style="background: white; border: 2px solid #dc2626; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+            <p style="font-size: 22px; font-weight: bold; color: #991b1b; letter-spacing: 2px; margin: 0;">${licenseKey}</p>
+          </div>
+          <p style="color: #6b7280; font-size: 14px;"><strong>Válida até:</strong> ${expiry}</p>
+          <h3 style="color: #333;">Como ativar:</h3>
+          <ol style="color: #374151; line-height: 2;">
+            <li>Abra a extensão <strong>BaixaTudo</strong> no Chrome</li>
+            <li>Entre na área de ativação Pro</li>
+            <li>Cole a chave acima e clique em <strong>Ativar</strong></li>
+            <li>Pronto: os recursos Pro serão liberados enquanto a licença estiver ativa</li>
+          </ol>
+          <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 13px; color: #78350f;">
+              Use o BaixaTudo somente com conteúdos próprios, autorizados ou permitidos pela plataforma de origem.
+            </p>
+          </div>
+          <p style="color: #6b7280; font-size: 13px;">Dúvidas? Responda este email ou fale com o suporte EducaplayJA.</p>
+          <p>Atenciosamente,<br><strong>Equipe EducaplayJA</strong></p>
+        </div>
+      </div>
+    `;
+
+    await emailConfig.sendEmail({
+      to: email,
+      subject: 'Sua licença BaixaTudo Pro',
+      html,
+    });
+
+    logger.info('BaixaTudo license email sent', { email, licenseKey: licenseKey.substring(0, 8) + '...' });
+  } catch (error) {
+    logger.error('Error sending BaixaTudo license email:', error);
+  }
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendVerificationEmail,
@@ -737,4 +790,5 @@ module.exports = {
   sendGuestPurchaseCredentials,
   sendLoginReminderEmail,
   sendIrpLicenseEmail,
+  sendBaixaTudoLicenseEmail,
 };

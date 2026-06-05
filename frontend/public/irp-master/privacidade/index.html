@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Politica de Privacidade da IRP Master</title>
+    <style>
+      body { margin: 0; font-family: Arial, sans-serif; color: #111827; background: #f9fafb; }
+      header { background: #064e3b; color: white; padding: 48px 20px; }
+      main { max-width: 900px; margin: 0 auto; padding: 38px 20px; }
+      h1 { font-size: 38px; margin: 0 0 12px; }
+      h2 { font-size: 24px; margin: 32px 0 12px; }
+      p, li { line-height: 1.65; }
+      a { color: #047857; font-weight: 700; }
+      .hero { max-width: 900px; margin: 0 auto; }
+      .lead { color: #d1fae5; font-size: 18px; }
+      .card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 28px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); }
+      .summary { background: #d1fae5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 18px; color: #064e3b; font-weight: 700; }
+      code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+      footer { text-align: center; color: #6b7280; padding: 32px 20px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="hero">
+        <h1>Politica de Privacidade da IRP Master</h1>
+        <p class="lead">Ultima atualizacao: 03/06/2026</p>
+      </div>
+    </header>
+
+    <main>
+      <article class="card">
+        <div class="summary">
+          A IRP Master nao vende dados pessoais, nao coleta senhas do Comprasnet, nao coleta
+          dados de pagamento e nao envia dados da tela do SIASG para o servidor de licencas.
+        </div>
+
+        <h2>1. Dados tratados pela extensao</h2>
+        <p>
+          Para funcionar, a extensao pode ler informacoes visiveis nas paginas autorizadas
+          do Comprasnet/SIASG e do catalogo oficial, como campos de formulario, tabelas,
+          codigos de itens, descricoes, quantidades, unidades e valores informados pelo
+          proprio usuario ou carregados por planilha.
+        </p>
+        <p>Esses dados sao usados localmente para montar planos de preenchimento, apoiar a conferencia e executar comandos solicitados pelo usuario.</p>
+
+        <h2>2. Dados que nao coletamos</h2>
+        <ul>
+          <li>Nao coletamos senhas do Comprasnet, SIASG ou EducaplayJA.</li>
+          <li>Nao coletamos dados de cartao, PIX ou pagamento.</li>
+          <li>Nao vendemos nem alugamos dados pessoais.</li>
+          <li>Nao usamos dados da extensao para publicidade comportamental.</li>
+          <li>Nao enviamos planilhas, itens ou dados oficiais da tela do SIASG ao servidor de licencas.</li>
+        </ul>
+
+        <h2>3. Licenca e identificador local</h2>
+        <p>
+          Para validar a licenca, a extensao gera um identificador tecnico local do navegador
+          chamado <code>deviceId</code>. Esse identificador e enviado ao EducaplayJA junto com
+          a chave de licenca e a versao da extensao. Ele nao contem senha, CPF, dados da tela
+          do SIASG ou conteudo de planilhas.
+        </p>
+
+        <h2>4. Armazenamento local</h2>
+        <p>
+          A extensao usa o armazenamento local do Chrome para salvar configuracoes, estado da
+          licenca, plano de automacao, progresso e preferencias do painel. Essas informacoes
+          ficam no navegador do usuario e podem ser removidas ao limpar dados da extensao.
+        </p>
+
+        <h2>5. Permissoes usadas</h2>
+        <ul>
+          <li><code>sidePanel</code>: exibe o painel lateral da extensao no Chrome.</li>
+          <li><code>storage</code> e <code>unlimitedStorage</code>: salvam configuracoes, plano e estado local.</li>
+          <li><code>scripting</code> e <code>tabs</code>: executam comandos nas paginas autorizadas quando o usuario inicia a rotina.</li>
+          <li><code>clipboardRead</code>: apoia fluxos de copia/importacao usados pelo painel.</li>
+          <li><code>cookies</code>: permite identificar cookie de sessao do Comprasnet para chamadas autorizadas do proprio usuario.</li>
+          <li><code>alarms</code>: mantem verificacoes periodicas de licenca ativa.</li>
+        </ul>
+
+        <h2>6. Compartilhamento de dados</h2>
+        <p>
+          O servidor de licencas do EducaplayJA recebe somente dados necessarios para ativar
+          e validar a licenca, como email do comprador, chave, validade, deviceId e versao
+          da extensao. Dados de pagamento sao processados pelo Mercado Pago.
+        </p>
+
+        <h2>7. Responsabilidade de uso</h2>
+        <p>
+          A IRP Master e uma ferramenta de apoio operacional. O usuario e responsavel por
+          revisar todos os dados antes de finalizar atos oficiais, respeitar normas internas,
+          legislacao aplicavel e regras do Comprasnet/SIASG.
+        </p>
+
+        <h2>8. Seguranca</h2>
+        <p>
+          Recomendamos manter o Chrome atualizado, carregar a extensao apenas de fonte oficial
+          e revisar as informacoes antes de executar qualquer automacao em ambiente oficial.
+        </p>
+
+        <h2>9. Alteracoes nesta politica</h2>
+        <p>
+          Podemos atualizar esta politica para refletir melhorias da extensao, exigencias da
+          Chrome Web Store ou mudancas legais. A data de atualizacao sera alterada quando houver nova versao.
+        </p>
+
+        <h2>10. Contato</h2>
+        <p>
+          EducaplayJA - IRP Master<br />
+          Email: <a href="mailto:ja.eduplay@gmail.com">ja.eduplay@gmail.com</a><br />
+          Email alternativo: <a href="mailto:contato@educaplayja.com.br">contato@educaplayja.com.br</a>
+        </p>
+
+        <p><a href="/irp-master">Voltar para a pagina da IRP Master</a></p>
+      </article>
+    </main>
+
+    <footer>EducaplayJA - IRP Master</footer>
+  </body>
+</html>

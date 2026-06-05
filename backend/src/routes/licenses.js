@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const { activate, validate, heartbeat, logout } = require('../controllers/licenseController');
 const licenseService = require('../services/license.service');
+const { authenticate, isAdmin } = require('../api/middlewares/auth.middleware');
 const jwt = require('jsonwebtoken');
 
 // Public license endpoints
@@ -43,13 +44,29 @@ function adminOnly(req, res, next) {
   return res.status(401).json({ error: 'Unauthorized' });
 }
 
-// POST /admin/create — cria ou renova licença por e-mail
+// POST /admin/create — cria ou renova licença por e-mail (x-admin-secret ou JWT)
 router.post('/admin/create', adminOnly, async (req, res) => {
-  const { email, days = 30, notes = '' } = req.body;
+  const { email, days = 30, notes = '', prefix = 'IRP', product = '' } = req.body;
   if (!email) return res.status(400).json({ error: 'email required' });
   try {
-    const result = await licenseService.renewLicense(email, Number(days));
-    return res.status(200).json({ ok: true, ...result });
+    const result = await licenseService.renewLicense(email, Number(days), {
+      prefix, notes: notes || `manual admin create - ${product || prefix}`,
+    });
+    return res.status(200).json({ ok: true, prefix, ...result });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /admin/create-auth — cria ou renova licença usando Bearer JWT do admin logado
+router.post('/admin/create-auth', authenticate, isAdmin, async (req, res) => {
+  const { email, days = 30, notes = '', prefix = 'IRP', product = '' } = req.body;
+  if (!email) return res.status(400).json({ error: 'email required' });
+  try {
+    const result = await licenseService.renewLicense(email, Number(days), {
+      prefix, notes: notes || `manual admin create by ${req.user.email} - ${product || prefix}`,
+    });
+    return res.status(200).json({ ok: true, prefix, createdBy: req.user.email, ...result });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
@@ -59,9 +76,7 @@ router.post('/admin/create', adminOnly, async (req, res) => {
 router.get('/admin/list', adminOnly, async (req, res) => {
   const { page = 1, limit = 50, status, email } = req.query;
   try {
-    const result = await licenseService.listLicenses({
-      page: Number(page), limit: Number(limit), status, email,
-    });
+    const result = await licenseService.listLicenses({ page: Number(page), limit: Number(limit), status, email });
     return res.status(200).json(result);
   } catch (e) {
     return res.status(500).json({ error: e.message });
@@ -100,7 +115,7 @@ router.patch('/admin/:id/unblock', adminOnly, async (req, res) => {
   }
 });
 
-// PATCH /admin/:id/renew — renova validade por N dias a partir de hoje (ou da expiração)
+// PATCH /admin/:id/renew — renova validade por N dias
 router.patch('/admin/:id/renew', adminOnly, async (req, res) => {
   const { days = 30 } = req.body;
   try {

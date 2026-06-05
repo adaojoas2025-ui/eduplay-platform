@@ -4535,3 +4535,77 @@ fetch('https://eduplay-platform.onrender.com/api/v1/test/clear-financial-data', 
 - Lógica de comissões ajustada (90%/10%, produtos do admin = 100% plataforma)
 - Admin Dashboard: corrigido React Error #31 (objeto renderizado como filho JSX)
 - APK upload migrado de unsigned (limite 10MB) para signed via backend (limite 100MB multer)
+
+---
+
+### 02/06/2026 - BaixaTudo: documentacao de licenca cortesia
+
+**Contexto**: O BaixaTudo Pro funciona com pagamento e ativacao automatica via Mercado Pago. O usuario solicitou a possibilidade de gerar uma chave manualmente para presentear alguem.
+
+**Decisao registrada**:
+- Licenca comercial continua sendo criada somente pelo webhook do Mercado Pago.
+- Licenca de presente deve ser tratada como `cortesia administrativa`, separada de venda.
+- A rota antiga de criacao administrativa permanece bloqueada para prefixo `BT`.
+- Antes de usar cortesia em producao, deve ser implementada uma rota/painel especifico com autenticacao de administrador, prazo, motivo e auditoria.
+
+**Documento criado**:
+- `docs/BAIXATUDO_LICENCA_CORTESIA.md`
+
+**Documentos atualizados**:
+- `docs/BAIXATUDO_LICENCA_AUTOMATICA.md`
+- `docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md`
+
+---
+
+### 02/06/2026 - BaixaTudo: extensao publicada, link de instalacao e Admin de extensoes
+
+**Contexto**: A extensao BaixaTudo foi publicada na Chrome Web Store como item `Publicado - nao apresentado`. O usuario perguntou onde encontrar a extensao para instalar e confirmou que encontrou o card de extensoes no Admin Dashboard.
+
+**Link direto de instalacao**:
+
+```text
+https://chromewebstore.google.com/detail/baixatudo-video-downloader/njdlafdofhnnokoomgebclhgomhhkfbk
+```
+
+**Decisao de interface**:
+- O acesso ao gerador de licencas cortesia fica em `Admin Dashboard > Acoes Rapidas > BT Extensoes`.
+- O atalho nao foi colocado no menu suspenso do usuario Admin para nao misturar com rotas de vendedor/financeiro.
+- A tela direta e `https://educaplayja.com.br/#/admin/extensions`.
+
+**Commits relacionados**:
+
+```text
+3dc9b1d feat: add admin extension courtesy licenses
+f6873c2 chore: surface admin extensions shortcut
+```
+
+**Documentos atualizados**:
+- `docs/ADMIN_EXTENSOES.md`
+- `docs/BAIXATUDO_PUBLICACAO_WEBSTORE.md`
+- `docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md`
+
+---
+
+### 05/06/2026 - BaixaTudo: validade mensal, sincronizacao e rebaixar curso
+
+**Contexto**: Foi identificado que uma compra mensal feita em `05/06` aparecia com validade ate `31/07`, porque a renovacao podia somar dias sobre uma validade antiga ainda ativa. Tambem foi necessario registrar a alternativa de recuperacao por chave manual quando a sincronizacao automatica por `deviceId` nao encontra o pagamento.
+
+**Mudancas registradas**:
+- Pagamentos comerciais BaixaTudo agora usam `renewFromNow:true` no webhook.
+- Compra mensal aprovada em `05/06` deve vencer em `05/07`.
+- O mesmo `paymentId` continua idempotente e nao renova duas vezes.
+- A extensao BaixaTudo 2.1.16 ganhou `Somente nao baixadas`.
+- A extensao BaixaTudo 2.1.16 ganhou `Rebaixar tudo` para limpar o historico local do curso e baixar novamente.
+
+**Arquivos principais**:
+- `backend/src/services/license.service.js`
+- `backend/src/api/routes/webhook.routes.js`
+- `docs/BAIXATUDO_LICENCA_AUTOMATICA.md`
+- `docs/BAIXATUDO_PUBLICACAO_WEBSTORE.md`
+- `docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md`
+
+**Commit relacionado**:
+
+```text
+56d9eb6 fix: reset BaixaTudo payment validity from purchase date
+```

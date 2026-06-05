@@ -23,6 +23,7 @@ import CompleteProfile from './pages/CompleteProfile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCommissions from './pages/admin/AdminCommissions';
 import AdminProducts from './pages/admin/AdminProducts';
+import AdminExtensions from './pages/admin/Extensions';
 import Gamification from './pages/Gamification';
 import GamificationAdmin from './pages/admin/GamificationAdmin';
 import UpgradeToProducer from './pages/UpgradeToProducer';
@@ -48,6 +49,10 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contact from './pages/Contact';
 import HelpArticle from './pages/HelpArticle';
 import ResetPassword from './pages/ResetPassword';
+import BaixaTudo from './pages/BaixaTudo';
+import BaixaTudoPrivacy from './pages/BaixaTudoPrivacy';
+import IrpMaster from './pages/IrpMaster';
+import IrpMasterPrivacy from './pages/IrpMasterPrivacy';
 
 
 // ============================================
@@ -908,6 +913,11 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/baixatudo" element={<BaixaTudo />} />
+        <Route path="/baixatudo/privacidade" element={<BaixaTudoPrivacy />} />
+        <Route path="/irp-master" element={<IrpMaster />} />
+        <Route path="/irp-master/privacidade" element={<IrpMasterPrivacy />} />
+        <Route path="/politica-de-privacidade-comprasnet-irp" element={<IrpMasterPrivacy />} />
         <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
         <Route path="/my-courses" element={<MyCourses />} />
         <Route path="/orders" element={<Orders />} />
@@ -935,6 +945,7 @@ function App() {
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
         <Route path="/admin/commissions" element={<ProtectedRoute><AdminCommissions /></ProtectedRoute>} />
+        <Route path="/admin/extensions" element={<ProtectedRoute><AdminExtensions /></ProtectedRoute>} />
         <Route path="/admin/gamification" element={<ProtectedRoute><GamificationAdmin /></ProtectedRoute>} />
         <Route path="/admin/combos" element={<ProtectedRoute><ManageCombos /></ProtectedRoute>} />
         <Route path="/admin/apps" element={<ProtectedRoute><ManageApps /></ProtectedRoute>} />

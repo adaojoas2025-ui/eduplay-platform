@@ -15,6 +15,7 @@ const cartRoutes = require('./cart.routes');
 const orderRoutes = require('./order.routes');
 const paymentRoutes = require('./payment.routes');
 const adminRoutes = require('./admin.routes');
+const adminExtensionRoutes = require('./admin-extension.routes');
 const sellerRoutes = require('./seller.routes');
 const gamificationRoutes = require('./gamification.routes');
 const appRoutes = require('./app.routes');
@@ -28,6 +29,8 @@ const diagnosticRoutes = require('./diagnostic.routes'); // TEMPORARY - For diag
 const webhookRoutes = require('./webhook.routes');
 const contactRoutes = require('./contact.routes');
 const licenseRoutes = require('../../routes/licenses');
+const baixatudoRoutes = require('../../routes/baixatudo');
+const irpMasterRoutes = require('../../routes/irp-master');
 
 /**
  * Health check route
@@ -51,6 +54,7 @@ router.use('/products', productRoutes);
 router.use('/cart', cartRoutes);
 router.use('/orders', orderRoutes);
 router.use('/payments', paymentRoutes);
+router.use('/admin/extensions', adminExtensionRoutes);
 router.use('/admin', adminRoutes);
 router.use('/seller', sellerRoutes);
 router.use('/gamification', gamificationRoutes);
@@ -65,6 +69,8 @@ router.use('/diagnostic', diagnosticRoutes); // TEMPORARY - For diagnostics
 router.use('/webhooks', webhookRoutes);
 router.use('/contact', contactRoutes);
 router.use('/licenses', licenseRoutes);
+router.use('/baixatudo', baixatudoRoutes);
+router.use('/irp-master', irpMasterRoutes);
 
 /**
  * 404 handler for API routes

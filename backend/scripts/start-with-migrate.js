@@ -23,10 +23,24 @@ async function ensureIrpTables() {
     const p = new PrismaClient();
     const sqls = [
       `CREATE TABLE IF NOT EXISTS "IrpLicense" ("id" TEXT NOT NULL,"licenseKey" TEXT NOT NULL,"email" TEXT NOT NULL,"status" TEXT NOT NULL DEFAULT 'active',"expiresAt" TIMESTAMP(3) NOT NULL,"activeDeviceId" TEXT,"lastSeenAt" TIMESTAMP(3),"extensionVersion" TEXT,"notes" TEXT,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "IrpLicense_pkey" PRIMARY KEY ("id"))`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "email" TEXT`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "status" TEXT NOT NULL DEFAULT 'active'`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "expiresAt" TIMESTAMP(3)`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "activeDeviceId" TEXT`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "lastSeenAt" TIMESTAMP(3)`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "extensionVersion" TEXT`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "notes" TEXT`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
       `CREATE UNIQUE INDEX IF NOT EXISTS "IrpLicense_licenseKey_key" ON "IrpLicense"("licenseKey")`,
       `CREATE INDEX IF NOT EXISTS "IrpLicense_email_idx" ON "IrpLicense"("email")`,
       `CREATE INDEX IF NOT EXISTS "IrpLicense_status_idx" ON "IrpLicense"("status")`,
       `CREATE TABLE IF NOT EXISTS "IrpLicenseEvent" ("id" TEXT NOT NULL,"licenseId" TEXT NOT NULL,"eventType" TEXT NOT NULL,"deviceId" TEXT,"extensionVersion" TEXT,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "IrpLicenseEvent_pkey" PRIMARY KEY ("id"))`,
+      `ALTER TABLE "IrpLicenseEvent" ADD COLUMN IF NOT EXISTS "licenseId" TEXT`,
+      `ALTER TABLE "IrpLicenseEvent" ADD COLUMN IF NOT EXISTS "eventType" TEXT`,
+      `ALTER TABLE "IrpLicenseEvent" ADD COLUMN IF NOT EXISTS "deviceId" TEXT`,
+      `ALTER TABLE "IrpLicenseEvent" ADD COLUMN IF NOT EXISTS "extensionVersion" TEXT`,
+      `ALTER TABLE "IrpLicenseEvent" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
       `CREATE INDEX IF NOT EXISTS "IrpLicenseEvent_licenseId_idx" ON "IrpLicenseEvent"("licenseId")`,
     ];
     for (const sql of sqls) {

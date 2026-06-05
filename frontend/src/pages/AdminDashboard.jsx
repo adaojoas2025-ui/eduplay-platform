@@ -573,6 +573,16 @@ export default function AdminDashboard() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link
+              to="/admin/extensions"
+              className="flex items-center gap-3 p-4 bg-red-50 hover:bg-red-100 rounded-lg transition"
+            >
+              <div className="text-3xl">BT</div>
+              <div>
+                <div className="font-semibold text-gray-800">Extensoes</div>
+                <div className="text-sm text-gray-600">Licencas cortesia</div>
+              </div>
+            </Link>
+            <Link
               to="/admin/users"
               className="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
             >
