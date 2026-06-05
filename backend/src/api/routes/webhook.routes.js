@@ -224,6 +224,7 @@ router.post('/mercadopago', async (req, res) => {
       prefix: isBaixaTudoProduct ? 'BT' : (metadata.license_prefix || 'IRP'),
       notes: `${productName} - ${metadata.plan || days + ' days'} - MP ${payment.id}${metadata.device_id ? ' - device ' + metadata.device_id : ''}`,
       deviceId: metadata.device_id || null,
+      renewFromNow: isBaixaTudoProduct,
     });
 
     if (result.duplicate) {

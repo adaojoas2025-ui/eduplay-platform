@@ -259,7 +259,9 @@ async function renewLicense(email, days, options = {}) {
   const existing = rows[0];
 
   if (existing) {
-    const base = new Date(existing.expiresAt) > new Date() ? new Date(existing.expiresAt) : new Date();
+    const base = options.renewFromNow === true
+      ? new Date()
+      : (new Date(existing.expiresAt) > new Date() ? new Date(existing.expiresAt) : new Date());
     const newExpiry = addDays(base, days);
     await prisma.$executeRawUnsafe(
       `UPDATE "IrpLicense"
