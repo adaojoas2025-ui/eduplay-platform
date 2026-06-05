@@ -4583,3 +4583,29 @@ f6873c2 chore: surface admin extensions shortcut
 - `docs/ADMIN_EXTENSOES.md`
 - `docs/BAIXATUDO_PUBLICACAO_WEBSTORE.md`
 - `docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md`
+
+---
+
+### 05/06/2026 - BaixaTudo: validade mensal, sincronizacao e rebaixar curso
+
+**Contexto**: Foi identificado que uma compra mensal feita em `05/06` aparecia com validade ate `31/07`, porque a renovacao podia somar dias sobre uma validade antiga ainda ativa. Tambem foi necessario registrar a alternativa de recuperacao por chave manual quando a sincronizacao automatica por `deviceId` nao encontra o pagamento.
+
+**Mudancas registradas**:
+- Pagamentos comerciais BaixaTudo agora usam `renewFromNow:true` no webhook.
+- Compra mensal aprovada em `05/06` deve vencer em `05/07`.
+- O mesmo `paymentId` continua idempotente e nao renova duas vezes.
+- A extensao BaixaTudo 2.1.16 ganhou `Somente nao baixadas`.
+- A extensao BaixaTudo 2.1.16 ganhou `Rebaixar tudo` para limpar o historico local do curso e baixar novamente.
+
+**Arquivos principais**:
+- `backend/src/services/license.service.js`
+- `backend/src/api/routes/webhook.routes.js`
+- `docs/BAIXATUDO_LICENCA_AUTOMATICA.md`
+- `docs/BAIXATUDO_PUBLICACAO_WEBSTORE.md`
+- `docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md`
+
+**Commit relacionado**:
+
+```text
+56d9eb6 fix: reset BaixaTudo payment validity from purchase date
+```

@@ -228,3 +228,30 @@ Orientacao ao usuario:
 4. Evitar aba anonima para instalacao.
 
 A tela de analytics da Chrome Web Store Developer Dashboard nao e usada para instalar a extensao. Ela serve apenas para acompanhar instalacoes, impressoes, usuarios e metricas do item.
+
+---
+
+## Atualizacao tecnica em 05/06/2026
+
+Pacote local mais recente preparado para envio:
+
+```text
+baixatudo-webstore-pago-2.1.16.zip
+```
+
+Alteracoes principais:
+
+- correcao no backend para compra mensal BaixaTudo valer 30 dias a partir do pagamento aprovado;
+- exemplo esperado: compra em `05/06` vence em `05/07`;
+- extensao com checkbox `Somente nao baixadas`;
+- extensao com botao `Rebaixar tudo`, que limpa o historico local do curso atual;
+- sincronizacao automatica por `deviceId` continua sendo o fluxo principal, com chave `BT-...` por email como recuperacao.
+
+Arquivos de referencia:
+
+```text
+backend/src/services/license.service.js
+backend/src/api/routes/webhook.routes.js
+docs/BAIXATUDO_LICENCA_AUTOMATICA.md
+docs/BAIXATUDO_STATUS_E_PROXIMAS_ETAPAS.md
+```

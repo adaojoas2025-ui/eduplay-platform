@@ -323,6 +323,17 @@ Implementacao aplicada em 01/06/2026:
 - compras repetidas renovam a validade da chave existente do mesmo email;
 - reenvio do mesmo webhook nao cria nem envia uma nova chave.
 
+Implementacao aplicada em 05/06/2026:
+
+- pagamentos comerciais do BaixaTudo usam `renewFromNow:true`;
+- compra mensal aprovada em `05/06` deve vencer em `05/07`;
+- a validade de pagamento novo nao e somada sobre uma licenca antiga ainda ativa;
+- o mesmo `paymentId` continua idempotente e nao renova duas vezes.
+
+Observacao: licencas cortesia administrativas continuam usando a regra geral de
+renovacao configurada pelo admin. A regra `renewFromNow:true` foi aplicada ao
+webhook de pagamento comercial BaixaTudo.
+
 ---
 
 ## Atualizacao de status em 01/06/2026

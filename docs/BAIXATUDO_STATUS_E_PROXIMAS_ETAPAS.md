@@ -1,6 +1,6 @@
 # BaixaTudo - Status atual e proximas etapas
 
-Data: 01/06/2026
+Data: 05/06/2026
 
 Este documento consolida o estado atual do BaixaTudo depois da publicacao inicial
 na Chrome Web Store e antes das proximas implementacoes de licenca, pagamento,
@@ -50,10 +50,16 @@ ID da extensao:
 njdlafdofhnnokoomgebclhgomhhkfbk
 ```
 
-Versao publicada/registrada no painel:
+Versao publicada/registrada inicialmente no painel:
 
 ```text
 2.1.6
+```
+
+Pacote local mais recente preparado para nova submissao:
+
+```text
+2.1.16
 ```
 
 Pagina oficial usada na ficha da loja:
@@ -101,6 +107,8 @@ completo deve ser tratado como recurso Pro, liberado por licenca valida.
 
 - Modo automatico completo liberado.
 - A extensao pode baixar todas as aulas detectadas, respeitando a fila local.
+- O usuario pode manter `Somente nao baixadas` ligado para baixar apenas aulas ainda pendentes.
+- O usuario pode usar `Rebaixar tudo` para limpar o historico local daquele curso e baixar novamente.
 - A extensao deve continuar usando o gerenciador nativo de downloads do navegador.
 - A extensao deve manter controle local de progresso para parar e retomar quando
   aplicavel.
@@ -157,6 +165,14 @@ Implementacao registrada em 01/06/2026:
 - se o Mercado Pago reenviar o mesmo pagamento, o backend reconhece duplicidade e nao cria nova licenca;
 - a extensao pode ativar e validar chaves BaixaTudo em endpoints separados de `/api/v1/baixatudo`;
 - rotas administrativas antigas nao podem criar licencas com produto `baixatudo` ou prefixo `BT`.
+
+Atualizacao registrada em 05/06/2026:
+
+- pagamento comercial mensal do BaixaTudo passa a valer a partir da data do pagamento aprovado;
+- exemplo esperado: compra em `05/06` vence em `05/07`;
+- o webhook envia `renewFromNow:true` para pagamentos BaixaTudo;
+- `payment:<id>` continua impedindo renovacao duplicada pelo mesmo webhook reenviado;
+- a extensao segue exibindo o `expiresAt` retornado pelo backend.
 
 ## Administracao de licencas
 
