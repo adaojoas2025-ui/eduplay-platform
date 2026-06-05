@@ -917,6 +917,7 @@ function App() {
         <Route path="/baixatudo/privacidade" element={<BaixaTudoPrivacy />} />
         <Route path="/irp-master" element={<IrpMaster />} />
         <Route path="/irp-master/privacidade" element={<IrpMasterPrivacy />} />
+        <Route path="/politica-de-privacidade-comprasnet-irp" element={<IrpMasterPrivacy />} />
         <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
         <Route path="/my-courses" element={<MyCourses />} />
         <Route path="/orders" element={<Orders />} />
