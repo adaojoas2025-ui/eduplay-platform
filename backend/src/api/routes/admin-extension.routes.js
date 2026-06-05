@@ -30,10 +30,12 @@ const EXTENSIONS = {
     licensePrefix: 'IRP',
     product: 'irp-master',
     publicPage: 'https://educaplayja.com.br/irp-master',
-    plans: [
-      { id: 'monthly', label: 'Mensal', price: 50.0, days: 30 },
-      { id: 'annual', label: 'Anual', price: 239.9, days: 365 },
-    ],
+    get plans() {
+      return [
+        { id: 'monthly', label: 'Mensal', price: parseFloat(process.env.IRP_PRICE_MONTHLY || '50.00'), days: parseInt(process.env.IRP_DAYS_MONTHLY || '30', 10) },
+        { id: 'annual',  label: 'Anual',  price: parseFloat(process.env.IRP_PRICE_ANNUAL  || '239.90'), days: parseInt(process.env.IRP_DAYS_ANNUAL  || '365', 10) },
+      ];
+    },
   },
 };
 

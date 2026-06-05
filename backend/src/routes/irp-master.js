@@ -10,22 +10,24 @@ const config = require('../config/env');
 const logger = require('../utils/logger');
 const licenseService = require('../services/license.service');
 
-const PLANS = {
-  monthly: {
-    id: 'irp-master-monthly',
-    title: 'IRP Master Mensal',
-    label: 'Mensal',
-    price: 50.00,
-    days: 30,
-  },
-  annual: {
-    id: 'irp-master-annual',
-    title: 'IRP Master Anual',
-    label: 'Anual',
-    price: 239.90,
-    days: 365,
-  },
-};
+function getPlans() {
+  return {
+    monthly: {
+      id: 'irp-master-monthly',
+      title: 'IRP Master Mensal',
+      label: 'Mensal',
+      price: parseFloat(process.env.IRP_PRICE_MONTHLY || '50.00'),
+      days: parseInt(process.env.IRP_DAYS_MONTHLY || '30', 10),
+    },
+    annual: {
+      id: 'irp-master-annual',
+      title: 'IRP Master Anual',
+      label: 'Anual',
+      price: parseFloat(process.env.IRP_PRICE_ANNUAL || '239.90'),
+      days: parseInt(process.env.IRP_DAYS_ANNUAL || '365', 10),
+    },
+  };
+}
 
 function isIrpLicenseKey(licenseKey) {
   return /^IRP-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(String(licenseKey || '').toUpperCase());
@@ -62,10 +64,7 @@ async function handleIrpLicense(req, res, action) {
 router.get('/plans', (req, res) => {
   res.json({
     success: true,
-    data: {
-      monthly: PLANS.monthly,
-      annual: PLANS.annual,
-    },
+    data: getPlans(),
   });
 });
 
@@ -91,7 +90,7 @@ router.post('/licenses/sync', async (req, res) => {
 router.post('/checkout', async (req, res) => {
   try {
     const { plan = 'annual', email, name, deviceId } = req.body || {};
-    const selectedPlan = PLANS[plan];
+    const selectedPlan = getPlans()[plan];
 
     if (!selectedPlan) {
       return res.status(400).json({ success: false, message: 'Plano invalido. Use monthly ou annual.' });
