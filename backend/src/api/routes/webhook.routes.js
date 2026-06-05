@@ -207,12 +207,13 @@ router.post('/mercadopago', async (req, res) => {
 
     // Determine validity in days from metadata or default to 30
     const days = parseInt(metadata.license_days || '30', 10) || 30;
+    const deviceId = metadata.device_id || metadata.deviceId || null;
 
-    // Create or renew license
+    // Create or renew license; associate deviceId so sync endpoint works
     const licenseService = require('../../services/license.service');
     const emailService = require('../../services/email.service');
 
-    const result = await licenseService.renewLicense(email, days);
+    const result = await licenseService.renewLicense(email, days, deviceId);
 
     // Send license key by email
     await emailService.sendIrpLicenseEmail(email, result.licenseKey, result.expiresAt);

@@ -280,4 +280,56 @@ router.delete('/cleanup/non-admin-users', async (req, res, next) => {
   }
 });
 
+// ── IRP Master: gerar licença cortesia ─────────────────────────────────────
+// POST /api/v1/admin/extensions/irp-master/courtesy-licenses
+router.post('/extensions/irp-master/courtesy-licenses', async (req, res) => {
+  try {
+    const licenseService = require('../../services/license.service');
+    const emailService   = require('../../services/email.service');
+
+    // Aceita tanto snake_case quanto camelCase para compatibilidade com o frontend
+    const email     = req.body.email;
+    const sendEmail = req.body.sendEmail   ?? req.body.enviarEmail ?? true;
+    const notes     = req.body.notes       || req.body.motivo      || req.body.notas || 'cortesia';
+    const prazo     = Number(req.body.prazo || req.body.days || 30);
+    const unidade   = (req.body.unidade    || req.body.unit  || 'Dias').toLowerCase();
+
+    if (!email) return res.status(400).json({ success: false, message: 'email é obrigatório.' });
+
+    // Converte prazo + unidade para dias
+    let days = prazo;
+    if (unidade === 'meses' || unidade === 'months') days = prazo * 30;
+    if (unidade === 'anos'  || unidade === 'years')  days = prazo * 365;
+    if (!days || days < 1) days = 1;
+
+    const result = await licenseService.renewLicense(email, days);
+
+    let emailSent = false;
+    if (sendEmail) {
+      try {
+        await emailService.sendIrpLicenseEmail(email, result.licenseKey, result.expiresAt);
+        emailSent = true;
+      } catch (e) { /* não bloqueia a resposta */ }
+    }
+
+    const statusLabel = result.renewed
+      ? (emailSent ? 'Renovada - email enviado' : 'Renovada')
+      : (emailSent ? 'Criada - email enviado'   : 'Criada');
+
+    return res.json({
+      success:    true,
+      email,
+      licenseKey: result.licenseKey,
+      expiresAt:  result.expiresAt,
+      status:     statusLabel,
+      prazo:      days,
+      days,
+      renewed:    result.renewed,
+      emailSent,
+    });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: e.message });
+  }
+});
+
 module.exports = router;
