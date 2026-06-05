@@ -194,7 +194,7 @@ app.get('/politica-de-privacidade-comprasnet-irp', (req, res) => {
     <p>O usuario deve utilizar a extensao apenas em contas, sistemas e processos para os quais possua autorizacao, respeitando as normas aplicaveis aos processos de compras publicas.</p>
 
     <h2>8. Contato</h2>
-    <p>Em caso de duvidas, suporte ou solicitacoes relacionadas a esta politica, entre em contato pelo site <a href="https://educaplayja.com.br">https://educaplayja.com.br</a>.</p>
+    <p>Em caso de duvidas, suporte ou solicitacoes relacionadas a esta politica, entre em contato pelo email <a href="mailto:ja.eduplay@gmail.com">ja.eduplay@gmail.com</a>.</p>
   </main>
 </body>
 </html>`);
