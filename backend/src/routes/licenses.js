@@ -28,7 +28,7 @@ router.post('/sync', async (req, res) => {
   }
 });
 
-// POST /trial — gera licença de teste grátis de 1 dia (uma única vez por e-mail/dispositivo)
+// POST /trial — gera licença de teste grátis de 1 dia (uma única vez por e-mail/dispositivo/IP)
 router.post('/trial', async (req, res) => {
   const { email, deviceId, extensionVersion } = req.body;
   if (!email || !deviceId) return res.status(400).json({ valid: false, message: 'E-mail e dispositivo são obrigatórios.' });
@@ -36,8 +36,10 @@ router.post('/trial', async (req, res) => {
     return res.status(400).json({ valid: false, message: 'E-mail inválido.' });
   }
   try {
-    const result = await licenseService.claimTrialLicense(email, deviceId, extensionVersion);
-    return res.status(result.valid ? 200 : 409).json(result);
+    const result = await licenseService.claimTrialLicense(email, deviceId, extensionVersion, req.ip);
+    if (result.valid) return res.status(200).json(result);
+    if (result.reason === 'limit_reached') return res.status(429).json(result);
+    return res.status(409).json(result);
   } catch (e) {
     return res.status(500).json({ valid: false, message: e.message });
   }

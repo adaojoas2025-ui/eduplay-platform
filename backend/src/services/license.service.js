@@ -110,6 +110,10 @@ async function ensureLicenseSchema() {
   await prisma.$executeRawUnsafe(
     `CREATE UNIQUE INDEX IF NOT EXISTS "IrpTrialClaim_deviceId_key" ON "IrpTrialClaim"("deviceId")`
   );
+  await prisma.$executeRawUnsafe(`ALTER TABLE "IrpTrialClaim" ADD COLUMN IF NOT EXISTS "ip" TEXT`);
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "IrpTrialClaim_ip_idx" ON "IrpTrialClaim"("ip")`
+  );
 
   licenseSchemaReady = true;
 }
@@ -383,8 +387,12 @@ async function syncLicenseByDeviceId(deviceId) {
   return { valid: true, licenseKey: license.licenseKey, expiresAt: license.expiresAt, daysRemaining, message: 'Licença sincronizada.' };
 }
 
+const TRIAL_IP_LIMIT = 2;
+const TRIAL_IP_WINDOW_DAYS = 30;
+
 // Gera licença de teste grátis (1 dia), uma única vez por e-mail (normalizado) e por dispositivo.
-async function claimTrialLicense(email, deviceId, extensionVersion) {
+// `ip` é um sinal extra: limita quantos testes podem sair da mesma rede em 30 dias.
+async function claimTrialLicense(email, deviceId, extensionVersion, ip) {
   await ensureLicenseSchema();
   if (!email || !deviceId) {
     return { valid: false, reason: 'missing_fields', message: 'E-mail e dispositivo são obrigatórios.' };
@@ -399,6 +407,16 @@ async function claimTrialLicense(email, deviceId, extensionVersion) {
     return { valid: false, reason: 'already_used', message: 'Você já utilizou seu teste grátis de 1 dia. Adquira uma licença para continuar usando.' };
   }
 
+  if (ip) {
+    const ipCount = await prisma.$queryRawUnsafe(
+      `SELECT COUNT(*)::int as count FROM "IrpTrialClaim" WHERE "ip"=$1 AND "createdAt" > NOW() - INTERVAL '${TRIAL_IP_WINDOW_DAYS} days'`,
+      ip
+    );
+    if (Number(ipCount[0].count) >= TRIAL_IP_LIMIT) {
+      return { valid: false, reason: 'limit_reached', message: 'Limite de testes grátis atingido para esta rede. Adquira uma licença para continuar.' };
+    }
+  }
+
   const license = await createLicense(email, 1, 'free trial - 1 day', { prefix: 'IRP' });
   await prisma.$executeRawUnsafe(
     `UPDATE "IrpLicense" SET "activeDeviceId"=$1,"extensionVersion"=$2,"updatedAt"=NOW() WHERE "id"=$3`,
@@ -408,8 +426,8 @@ async function claimTrialLicense(email, deviceId, extensionVersion) {
 
   try {
     await prisma.$executeRawUnsafe(
-      `INSERT INTO "IrpTrialClaim" ("id","emailNormalized","deviceId","licenseKey","createdAt") VALUES ($1,$2,$3,$4,NOW())`,
-      uuid(), emailNormalized, deviceId, license.licenseKey
+      `INSERT INTO "IrpTrialClaim" ("id","emailNormalized","deviceId","licenseKey","ip","createdAt") VALUES ($1,$2,$3,$4,$5,NOW())`,
+      uuid(), emailNormalized, deviceId, license.licenseKey, ip || null
     );
   } catch (e) {
     // Corrida entre duas requisições simultâneas — outro request já registrou o claim.
