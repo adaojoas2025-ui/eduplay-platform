@@ -722,6 +722,61 @@ const sendIrpLicenseEmail = async (email, licenseKey, expiresAt) => {
 };
 
 /**
+ * Send IRP Master 1-day free trial license key
+ * @param {string} email - Requester email
+ * @param {string} licenseKey - Generated trial license key
+ * @param {Date} expiresAt - Expiration date (1 day from now)
+ */
+const sendIrpTrialEmail = async (email, licenseKey, expiresAt) => {
+  try {
+    const expiry = new Date(expiresAt).toLocaleDateString('pt-BR');
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #1D4ED8 0%, #0D6E4B 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0;">🎁 IRP Master Automação</h1>
+          <p style="color: #bfdbfe; margin: 8px 0 0;">Seu teste grátis de 1 dia está liberado!</p>
+        </div>
+        <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+          <p>Olá,</p>
+          <p>Aqui está sua chave de teste gratuito, válida por <strong>1 dia</strong>:</p>
+          <div style="background: white; border: 2px solid #1D4ED8; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+            <p style="font-size: 22px; font-weight: bold; color: #1D4ED8; letter-spacing: 2px; margin: 0;">${licenseKey}</p>
+          </div>
+          <p style="color: #6b7280; font-size: 14px;"><strong>Válida até:</strong> ${expiry}</p>
+          <h3 style="color: #333;">Como ativar:</h3>
+          <ol style="color: #374151; line-height: 2;">
+            <li>Instale a extensão <strong>IRP Master Automação</strong> no Chrome</li>
+            <li>Abra a extensão — ela pedirá a chave de licença</li>
+            <li>Cole a chave acima e clique em <strong>Ativar</strong></li>
+            <li>Pronto — todas as funções estarão liberadas por 1 dia</li>
+          </ol>
+          <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 13px; color: #78350f;">
+              ⚠️ Este teste é único por e-mail e por dispositivo. Após o término do teste, será
+              necessário adquirir uma licença para continuar usando.
+              Acesse <a href="https://educaplayja.com.br/irp-master">educaplayja.com.br/irp-master</a> para assinar.
+            </p>
+          </div>
+          <p style="color: #6b7280; font-size: 13px;">Dúvidas? Entre em contato conosco.</p>
+          <p>Atenciosamente,<br><strong>Equipe IRP Master Automação</strong></p>
+        </div>
+      </div>
+    `;
+
+    await emailConfig.sendEmail({
+      to: email,
+      subject: '🎁 Seu teste grátis IRP Master Automação (1 dia)',
+      html,
+    });
+
+    logger.info('IRP trial email sent', { email, licenseKey: licenseKey.substring(0, 8) + '...' });
+  } catch (error) {
+    logger.error('Error sending IRP trial email:', error);
+    // Don't throw — email error should not block license creation
+  }
+};
+
+/**
  * Send BaixaTudo Pro license key to buyer after payment
  * @param {string} email - Buyer email
  * @param {string} licenseKey - Generated license key
@@ -790,5 +845,6 @@ module.exports = {
   sendGuestPurchaseCredentials,
   sendLoginReminderEmail,
   sendIrpLicenseEmail,
+  sendIrpTrialEmail,
   sendBaixaTudoLicenseEmail,
 };

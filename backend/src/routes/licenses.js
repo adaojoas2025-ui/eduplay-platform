@@ -28,6 +28,21 @@ router.post('/sync', async (req, res) => {
   }
 });
 
+// POST /trial — gera licença de teste grátis de 1 dia (uma única vez por e-mail/dispositivo)
+router.post('/trial', async (req, res) => {
+  const { email, deviceId, extensionVersion } = req.body;
+  if (!email || !deviceId) return res.status(400).json({ valid: false, message: 'E-mail e dispositivo são obrigatórios.' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email))) {
+    return res.status(400).json({ valid: false, message: 'E-mail inválido.' });
+  }
+  try {
+    const result = await licenseService.claimTrialLicense(email, deviceId, extensionVersion);
+    return res.status(result.valid ? 200 : 409).json(result);
+  } catch (e) {
+    return res.status(500).json({ valid: false, message: e.message });
+  }
+});
+
 // ── Admin middleware — aceita x-admin-secret OU Bearer JWT com role ADMIN ──
 function adminOnly(req, res, next) {
   const secret = req.headers['x-admin-secret'];

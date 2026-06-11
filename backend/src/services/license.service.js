@@ -6,6 +6,7 @@
 
 const { prisma } = require('../config/database');
 const logger = require('../utils/logger');
+const emailService = require('./email.service');
 
 const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 let licenseSchemaReady = false;
@@ -93,7 +94,40 @@ async function ensureLicenseSchema() {
     await prisma.$executeRawUnsafe(`ALTER TABLE "IrpLicenseEvent" ADD COLUMN IF NOT EXISTS ${column}`);
   }
 
+  // Registro de quem já usou o teste grátis de 1 dia (anti-abuso por e-mail + dispositivo)
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "IrpTrialClaim" (
+      "id" TEXT PRIMARY KEY,
+      "emailNormalized" TEXT NOT NULL,
+      "deviceId" TEXT NOT NULL,
+      "licenseKey" TEXT NOT NULL,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IrpTrialClaim_emailNormalized_key" ON "IrpTrialClaim"("emailNormalized")`
+  );
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IrpTrialClaim_deviceId_key" ON "IrpTrialClaim"("deviceId")`
+  );
+
   licenseSchemaReady = true;
+}
+
+// Normaliza e-mail para evitar burlar o teste grátis com variações (gmail.com ignora
+// pontos e tudo após "+", outros provedores ignoram apenas o "+").
+function normalizeEmailForTrial(email) {
+  const clean = String(email || '').trim().toLowerCase();
+  const at = clean.indexOf('@');
+  if (at === -1) return clean;
+  let local = clean.slice(0, at);
+  let domain = clean.slice(at + 1);
+  local = local.split('+')[0];
+  if (domain === 'gmail.com' || domain === 'googlemail.com') {
+    local = local.replace(/\./g, '');
+    domain = 'gmail.com';
+  }
+  return `${local}@${domain}`;
 }
 
 async function findByKey(licenseKey) {
@@ -349,6 +383,51 @@ async function syncLicenseByDeviceId(deviceId) {
   return { valid: true, licenseKey: license.licenseKey, expiresAt: license.expiresAt, daysRemaining, message: 'Licença sincronizada.' };
 }
 
+// Gera licença de teste grátis (1 dia), uma única vez por e-mail (normalizado) e por dispositivo.
+async function claimTrialLicense(email, deviceId, extensionVersion) {
+  await ensureLicenseSchema();
+  if (!email || !deviceId) {
+    return { valid: false, reason: 'missing_fields', message: 'E-mail e dispositivo são obrigatórios.' };
+  }
+
+  const emailNormalized = normalizeEmailForTrial(email);
+  const existing = await prisma.$queryRawUnsafe(
+    `SELECT * FROM "IrpTrialClaim" WHERE "emailNormalized"=$1 OR "deviceId"=$2 LIMIT 1`,
+    emailNormalized, deviceId
+  );
+  if (existing[0]) {
+    return { valid: false, reason: 'already_used', message: 'Você já utilizou seu teste grátis de 1 dia. Adquira uma licença para continuar usando.' };
+  }
+
+  const license = await createLicense(email, 1, 'free trial - 1 day', { prefix: 'IRP' });
+  await prisma.$executeRawUnsafe(
+    `UPDATE "IrpLicense" SET "activeDeviceId"=$1,"extensionVersion"=$2,"updatedAt"=NOW() WHERE "id"=$3`,
+    deviceId, extensionVersion || null, license.id
+  );
+  await logEvent(license.id, 'trial_claimed', deviceId, extensionVersion);
+
+  try {
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "IrpTrialClaim" ("id","emailNormalized","deviceId","licenseKey","createdAt") VALUES ($1,$2,$3,$4,NOW())`,
+      uuid(), emailNormalized, deviceId, license.licenseKey
+    );
+  } catch (e) {
+    // Corrida entre duas requisições simultâneas — outro request já registrou o claim.
+    return { valid: false, reason: 'already_used', message: 'Você já utilizou seu teste grátis de 1 dia. Adquira uma licença para continuar usando.' };
+  }
+
+  await emailService.sendIrpTrialEmail(email, license.licenseKey, license.expiresAt);
+  logger.info('IRP trial license claimed', { email: emailNormalized, licenseKey: license.licenseKey });
+
+  return {
+    valid: true,
+    licenseKey: license.licenseKey,
+    expiresAt: license.expiresAt,
+    daysRemaining: 1,
+    message: 'Teste grátis de 1 dia ativado! A chave também foi enviada para o seu e-mail.',
+  };
+}
+
 // ── Admin functions ─────────────────────────────────────────────────────────
 
 async function listLicenses({ page = 1, limit = 50, status, email } = {}) {
@@ -429,6 +508,7 @@ module.exports = {
   generateLicenseKey, createLicense, activateLicense, validateLicense,
   heartbeat, logoutLicense,
   renewLicense, renewLicenseFromPayment, claimLicenseByDevice, syncLicenseByDeviceId,
+  claimTrialLicense,
   listLicenses, getLicenseById, getLicenseEvents,
   blockLicense, unblockLicense, renewLicenseById, freeDevice,
 };
