@@ -53,6 +53,7 @@ import BaixaTudo from './pages/BaixaTudo';
 import BaixaTudoPrivacy from './pages/BaixaTudoPrivacy';
 import IrpMaster from './pages/IrpMaster';
 import IrpMasterPrivacy from './pages/IrpMasterPrivacy';
+import IrpMasterTutorial from './pages/IrpMasterTutorial';
 
 
 // ============================================
@@ -916,6 +917,7 @@ function App() {
         <Route path="/baixatudo" element={<BaixaTudo />} />
         <Route path="/baixatudo/privacidade" element={<BaixaTudoPrivacy />} />
         <Route path="/irp-master" element={<IrpMaster />} />
+        <Route path="/irp-master/tutorial" element={<IrpMasterTutorial />} />
         <Route path="/irp-master/privacidade" element={<IrpMasterPrivacy />} />
         <Route path="/politica-de-privacidade-comprasnet-irp" element={<IrpMasterPrivacy />} />
         <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
