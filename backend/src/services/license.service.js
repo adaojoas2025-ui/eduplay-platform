@@ -211,7 +211,7 @@ async function createLicense(email, days, notes = '', options = {}) {
   return { id, licenseKey, email, status: 'active', expiresAt };
 }
 
-async function activateLicense(licenseKey, deviceId, extensionVersion) {
+async function activateLicense(licenseKey, deviceId, extensionVersion, options = {}) {
   const license = await findByKey(licenseKey);
   if (!license) return { valid: false, reason: 'not_found', message: 'Chave de licença inválida.' };
   if (license.status === 'blocked') return { valid: false, reason: 'blocked', message: 'Licença bloqueada. Entre em contato com o suporte.' };
@@ -224,6 +224,14 @@ async function activateLicense(licenseKey, deviceId, extensionVersion) {
   }
 
   const deviceChanged = license.activeDeviceId && license.activeDeviceId !== deviceId;
+  if (options.strictDeviceBinding === true && deviceChanged) {
+    await logEvent(license.id, 'device_rejected', deviceId, extensionVersion);
+    return {
+      valid: false,
+      reason: 'device_changed',
+      message: 'Esta licenca ja esta vinculada a outro dispositivo.',
+    };
+  }
   await prisma.$executeRawUnsafe(
     `UPDATE "IrpLicense" SET "activeDeviceId"=$1,"lastSeenAt"=NOW(),"extensionVersion"=$2,"updatedAt"=NOW() WHERE "id"=$3`,
     deviceId, extensionVersion || null, license.id

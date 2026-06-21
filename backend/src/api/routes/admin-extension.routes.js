@@ -156,10 +156,16 @@ router.post('/:extensionId/courtesy-licenses', async (req, res, next) => {
       `reason:${reason}`,
     ].join(' | ');
 
-    const license = await licenseService.renewLicense(email, duration.days, {
-      prefix: extension.licensePrefix,
-      notes,
-    });
+    // BaixaTudo courtesy keys are single-use grants: every issue gets a new key
+    // and an expiry measured from now. IRP Master keeps its existing renewal flow.
+    const license = extension.id === 'baixatudo'
+      ? await licenseService.createLicense(email, duration.days, notes, {
+        prefix: extension.licensePrefix,
+      })
+      : await licenseService.renewLicense(email, duration.days, {
+        prefix: extension.licensePrefix,
+        notes,
+      });
 
     let emailSent = false;
     let emailError = null;

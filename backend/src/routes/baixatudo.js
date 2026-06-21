@@ -43,7 +43,7 @@ async function handleBaixaTudoLicense(req, res, action) {
     }
 
     const result = action === 'activate'
-      ? await licenseService.activateLicense(licenseKey, deviceId, extensionVersion)
+      ? await licenseService.activateLicense(licenseKey, deviceId, extensionVersion, { strictDeviceBinding: true })
       : await licenseService.validateLicense(licenseKey, deviceId, extensionVersion);
 
     return res.status(result.valid ? 200 : 403).json({ product: 'baixatudo', ...result });
