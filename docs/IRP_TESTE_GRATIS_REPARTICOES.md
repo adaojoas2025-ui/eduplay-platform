@@ -78,6 +78,20 @@ Admin Dashboard > Acoes Rapidas > IRP Licencas / Testes de 1 dia
 
 A tela mostra email, status, inicio, vencimento, ultimo uso, versao, dispositivo, fingerprint e chave mascarada. Ela e somente leitura.
 
+## Monitoramento de uso
+
+A mesma tela tambem mostra `Uso e tentativas recentes`.
+
+Essa area responde a pergunta: quem esta usando a extensao e quem tentou usar sem permissao?
+
+- `Permitida`: a chamada foi aceita pelo backend.
+- `Bloqueada`: a chamada foi negada pelo backend.
+- `Usando em 24h`: dispositivos unicos com uso permitido nas ultimas 24 horas.
+- `Bloqueadas 24h`: chamadas negadas nas ultimas 24 horas.
+
+Para saber o usuario, compare a chave mascarada da tentativa com a coluna `Chave` da tabela de testes/licencas.
+
+
 ## Privacidade
 
 O fingerprint nao le planilhas, arquivos, senhas, CPF, dados da tela do SIASG ou dados de pagamento.
@@ -91,4 +105,5 @@ c33c54e feat: add IRP trial admin view
 455f99e fix: use standard admin auth for IRP trials
 120dfa2 docs: document IRP trial admin view
 3e8b3cc fix: strengthen IRP trial tracking
+7504434 feat: add IRP license attempt monitoring
 ```

@@ -427,6 +427,54 @@ https://educaplayja.com.br/#/admin/irp-licenses
 
 A tela e somente leitura e mostra email, status, inicio, vencimento, ultimo uso, versao, dispositivo, fingerprint e chave mascarada.
 
+### Auditoria de uso e tentativas
+
+Atualizado em: 25/06/2026
+
+O backend registra chamadas da extensao na tabela `IrpLicenseAttempt` para permitir auditoria de uso e tentativas bloqueadas sem alterar a extensao.
+
+Tabela:
+
+```text
+IrpLicenseAttempt
+```
+
+Campos:
+
+- `action`: `activate`, `validate`, `heartbeat` ou `trial`;
+- `licenseKey`;
+- `deviceId`;
+- `extensionVersion`;
+- `ip`;
+- `valid`;
+- `reason`;
+- `message`;
+- `createdAt`.
+
+Endpoint administrativo:
+
+```text
+GET /api/v1/licenses/admin/attempts
+```
+
+Filtros:
+
+- `page`;
+- `limit`;
+- `valid=true|false`;
+- `action=activate|validate|heartbeat|trial`.
+
+Resumo retornado:
+
+- total de tentativas;
+- tentativas permitidas;
+- tentativas bloqueadas;
+- chamadas nas ultimas 24 horas;
+- bloqueadas nas ultimas 24 horas;
+- dispositivos unicos com uso permitido nas ultimas 24 horas.
+
+Observacao: como a validacao comum da extensao envia chave e dispositivo, mas nao email, o painel associa o uso ao usuario comparando a chave mascarada da tentativa com a chave exibida na tabela de licencas/testes.
+
 Privacidade: o `clientFingerprint` e um hash tecnico do ambiente do navegador. Ele nao le arquivos, planilhas, senhas, documentos, CPF, dados de pagamento ou dados da tela do SIASG.
 
 ## Commits relacionados
@@ -446,3 +494,4 @@ Privacidade: o `clientFingerprint` e um hash tecnico do ambiente do navegador. E
 | `455f99e` | fix: use standard admin auth for IRP trials |
 | `120dfa2` | docs: document IRP trial admin view |
 | `3e8b3cc` | fix: strengthen IRP trial tracking |
+| `7504434` | feat: add IRP license attempt monitoring |

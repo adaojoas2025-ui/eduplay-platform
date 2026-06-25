@@ -30,6 +30,7 @@ Endpoint de leitura:
 
 ```text
 GET /api/v1/licenses/admin/trials
+GET /api/v1/licenses/admin/attempts
 ```
 
 Essa tela tambem e protegida por login e perfil `ADMIN`.
@@ -168,6 +169,57 @@ Regras importantes:
 - os dados vem da tabela `IrpTrialClaim`, cruzados com `IrpLicense`;
 - o objetivo e suporte e auditoria do teste gratis, nao substituicao do fluxo de pagamento.
 
+## Monitoramento de uso e tentativas IRP
+
+Atualizado em: 25/06/2026
+
+A mesma tela administrativa tambem exibe a area:
+
+```text
+Uso e tentativas recentes
+```
+
+Essa area registra as chamadas que a extensao ja fazia ao backend, sem exigir alteracao na extensao:
+
+- ativacao de licenca;
+- validacao antes de executar automacao;
+- heartbeat/uso continuo;
+- pedido de teste gratis.
+
+Endpoint administrativo:
+
+```text
+GET /api/v1/licenses/admin/attempts
+```
+
+Tabela de auditoria:
+
+```text
+IrpLicenseAttempt
+```
+
+Campos principais:
+
+- data e hora da tentativa;
+- resultado: Permitida ou Bloqueada;
+- acao: ativacao, uso/validacao, uso continuo ou teste gratis;
+- motivo do bloqueio, quando existir;
+- versao da extensao;
+- dispositivo;
+- chave mascarada;
+- IP.
+
+Como interpretar:
+
+- `Permitida`: a licenca foi aceita pelo backend e a extensao podia continuar.
+- `Bloqueada`: o backend negou o uso, por exemplo por chave invalida, licenca vencida, dispositivo diferente ou campos ausentes.
+- `Usando em 24h`: quantidade de dispositivos unicos com chamadas permitidas nas ultimas 24 horas.
+- `Bloqueadas 24h`: quantidade de chamadas negadas nas ultimas 24 horas.
+
+Para identificar quem usou, compare a chave mascarada da area de tentativas com a coluna `Chave` da tabela de testes/licencas. Exemplo: se a tentativa mostra `IRP-J4VN...GFVV`, procure a mesma chave na tabela acima para ver o email associado.
+
+Observacao: tentativas antigas anteriores ao deploy do monitoramento nao aparecem nessa tabela, porque ainda nao eram gravadas.
+
 Commits relacionados:
 
 ```text
@@ -175,6 +227,7 @@ c33c54e feat: add IRP trial admin view
 455f99e fix: use standard admin auth for IRP trials
 120dfa2 docs: document IRP trial admin view
 3e8b3cc fix: strengthen IRP trial tracking
+7504434 feat: add IRP license attempt monitoring
 ```
 
 ## Relacao com a extensao

@@ -114,6 +114,7 @@ Atalho no painel:
 Endpoint administrativo:
 
 - `GET /api/v1/licenses/admin/trials`
+- `GET /api/v1/licenses/admin/attempts`
 
 Autorizacao:
 
@@ -141,6 +142,29 @@ Campos exibidos:
 - chave mascarada.
 
 Essa tela nao altera a extensao e nao altera licencas. Ela serve apenas para consulta, suporte e auditoria.
+
+## Admin - uso e tentativas recentes
+
+A tela `/admin/irp-licenses` tambem possui a area `Uso e tentativas recentes`.
+
+Ela mostra chamadas reais feitas pela extensao ao backend:
+
+- `activate`: ativacao da licenca;
+- `validate`: validacao antes de executar a automacao;
+- `heartbeat`: uso continuo;
+- `trial`: pedido de teste gratis.
+
+Cada tentativa recebe resultado:
+
+- `Permitida`: backend aceitou a licenca/tentativa;
+- `Bloqueada`: backend negou a tentativa.
+
+A area tambem mostra contadores:
+
+- `Usando em 24h`: dispositivos unicos com chamadas permitidas nas ultimas 24 horas;
+- `Bloqueadas 24h`: chamadas negadas nas ultimas 24 horas.
+
+Para descobrir quem usou, compare a chave mascarada da tentativa com a coluna `Chave` da tabela de testes/licencas. A extensao nao envia o email a cada validacao comum, entao a associacao e feita pela chave da licenca.
 
 ## Regra para reparticoes e empresas
 
