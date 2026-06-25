@@ -30,13 +30,13 @@ router.post('/sync', async (req, res) => {
 
 // POST /trial — gera licença de teste grátis de 1 dia (uma única vez por e-mail/dispositivo/IP)
 router.post('/trial', async (req, res) => {
-  const { email, deviceId, extensionVersion } = req.body;
+  const { email, deviceId, extensionVersion, clientFingerprint } = req.body;
   if (!email || !deviceId) return res.status(400).json({ valid: false, message: 'E-mail e dispositivo são obrigatórios.' });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email))) {
     return res.status(400).json({ valid: false, message: 'E-mail inválido.' });
   }
   try {
-    const result = await licenseService.claimTrialLicense(email, deviceId, extensionVersion, req.ip);
+    const result = await licenseService.claimTrialLicense(email, deviceId, extensionVersion, req.ip, clientFingerprint);
     if (result.valid) return res.status(200).json(result);
     if (result.reason === 'limit_reached') return res.status(429).json(result);
     return res.status(409).json(result);

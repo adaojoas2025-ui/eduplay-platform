@@ -87,6 +87,8 @@ Registro interno:
 - tabela `IrpTrialClaim`;
 - licenca criada com prefixo `IRP`;
 - validade de 1 dia;
+- bloqueio por e-mail normalizado, `deviceId` e `clientFingerprint`;
+- IP registrado apenas para auditoria, sem bloquear reparticoes ou empresas com varios computadores na mesma rede;
 - evento `trial_claimed` em `IrpLicenseEvent`;
 - notas da licenca com `free trial - 1 day`.
 
@@ -128,6 +130,7 @@ Campos exibidos:
 - ultimo uso;
 - versao;
 - dispositivo;
+- fingerprint;
 - chave mascarada.
 
 Essa tela nao altera a extensao e nao altera licencas. Ela serve apenas para consulta, suporte e auditoria.

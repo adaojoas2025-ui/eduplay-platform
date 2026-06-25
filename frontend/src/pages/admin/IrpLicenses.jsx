@@ -31,6 +31,12 @@ function shortDevice(value) {
   return `${value.slice(0, 22)}...`;
 }
 
+function shortFingerprint(value) {
+  if (!value) return '-';
+  if (value.length <= 18) return value;
+  return `${value.slice(0, 18)}...`;
+}
+
 function statusClass(status) {
   if (status === 'active') return 'bg-green-100 text-green-800';
   if (status === 'expired') return 'bg-yellow-100 text-yellow-800';
@@ -206,19 +212,20 @@ export default function AdminIrpLicenses() {
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Ultimo uso</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Versao</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Dispositivo</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Fingerprint</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Chave</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
                 {loading ? (
                   <tr>
-                    <td colSpan="8" className="px-4 py-8 text-center text-gray-600">
+                    <td colSpan="9" className="px-4 py-8 text-center text-gray-600">
                       Carregando testes IRP...
                     </td>
                   </tr>
                 ) : trials.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="px-4 py-8 text-center text-gray-600">
+                    <td colSpan="9" className="px-4 py-8 text-center text-gray-600">
                       Nenhum teste encontrado.
                     </td>
                   </tr>
@@ -236,6 +243,7 @@ export default function AdminIrpLicenses() {
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(trial.lastSeenAt)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{trial.extensionVersion || '-'}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700" title={trial.deviceId || ''}>{shortDevice(trial.deviceId)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700" title={trial.clientFingerprint || ''}>{shortFingerprint(trial.clientFingerprint)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700" title={trial.licenseKey || ''}>{maskKey(trial.licenseKey)}</td>
                     </tr>
                   ))

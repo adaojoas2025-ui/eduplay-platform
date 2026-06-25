@@ -114,6 +114,12 @@ async function ensureLicenseSchema() {
   await prisma.$executeRawUnsafe(
     `CREATE INDEX IF NOT EXISTS "IrpTrialClaim_ip_idx" ON "IrpTrialClaim"("ip")`
   );
+  await prisma.$executeRawUnsafe(`ALTER TABLE "IrpTrialClaim" ADD COLUMN IF NOT EXISTS "clientFingerprint" TEXT`);
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IrpTrialClaim_clientFingerprint_key"
+      ON "IrpTrialClaim"("clientFingerprint")
+      WHERE "clientFingerprint" IS NOT NULL AND "clientFingerprint" <> ''`
+  );
 
   licenseSchemaReady = true;
 }
@@ -132,6 +138,12 @@ function normalizeEmailForTrial(email) {
     domain = 'gmail.com';
   }
   return `${local}@${domain}`;
+}
+
+function normalizeTrialFingerprint(value) {
+  const clean = String(value || '').trim();
+  if (!clean || clean.length < 16) return null;
+  return clean.replace(/[^A-Za-z0-9._:-]/g, '').slice(0, 160) || null;
 }
 
 async function findByKey(licenseKey) {
@@ -395,35 +407,28 @@ async function syncLicenseByDeviceId(deviceId) {
   return { valid: true, licenseKey: license.licenseKey, expiresAt: license.expiresAt, daysRemaining, message: 'Licença sincronizada.' };
 }
 
-const TRIAL_IP_LIMIT = 2;
-const TRIAL_IP_WINDOW_DAYS = 30;
-
-// Gera licença de teste grátis (1 dia), uma única vez por e-mail (normalizado) e por dispositivo.
-// `ip` é um sinal extra: limita quantos testes podem sair da mesma rede em 30 dias.
-async function claimTrialLicense(email, deviceId, extensionVersion, ip) {
+// Gera licenca de teste gratis (1 dia), uma unica vez por email, instalacao e fingerprint local.
+// `ip` e apenas auditoria: nao bloqueia redes compartilhadas de orgaos ou empresas.
+async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFingerprint) {
   await ensureLicenseSchema();
   if (!email || !deviceId) {
     return { valid: false, reason: 'missing_fields', message: 'E-mail e dispositivo são obrigatórios.' };
   }
 
   const emailNormalized = normalizeEmailForTrial(email);
+  const fingerprint = normalizeTrialFingerprint(clientFingerprint);
   const existing = await prisma.$queryRawUnsafe(
-    `SELECT * FROM "IrpTrialClaim" WHERE "emailNormalized"=$1 OR "deviceId"=$2 LIMIT 1`,
-    emailNormalized, deviceId
+    `SELECT * FROM "IrpTrialClaim"
+      WHERE "emailNormalized"=$1
+         OR "deviceId"=$2
+         OR ($3::text IS NOT NULL AND "clientFingerprint"=$3)
+      LIMIT 1`,
+    emailNormalized, deviceId, fingerprint
   );
   if (existing[0]) {
     return { valid: false, reason: 'already_used', message: 'Você já utilizou seu teste grátis de 1 dia. Adquira uma licença para continuar usando.' };
   }
 
-  if (ip) {
-    const ipCount = await prisma.$queryRawUnsafe(
-      `SELECT COUNT(*)::int as count FROM "IrpTrialClaim" WHERE "ip"=$1 AND "createdAt" > NOW() - INTERVAL '${TRIAL_IP_WINDOW_DAYS} days'`,
-      ip
-    );
-    if (Number(ipCount[0].count) >= TRIAL_IP_LIMIT) {
-      return { valid: false, reason: 'limit_reached', message: 'Limite de testes grátis atingido para esta rede. Adquira uma licença para continuar.' };
-    }
-  }
 
   const license = await createLicense(email, 1, 'free trial - 1 day', { prefix: 'IRP' });
   await prisma.$executeRawUnsafe(
@@ -434,8 +439,8 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip) {
 
   try {
     await prisma.$executeRawUnsafe(
-      `INSERT INTO "IrpTrialClaim" ("id","emailNormalized","deviceId","licenseKey","ip","createdAt") VALUES ($1,$2,$3,$4,$5,NOW())`,
-      uuid(), emailNormalized, deviceId, license.licenseKey, ip || null
+      `INSERT INTO "IrpTrialClaim" ("id","emailNormalized","deviceId","licenseKey","ip","clientFingerprint","createdAt") VALUES ($1,$2,$3,$4,$5,$6,NOW())`,
+      uuid(), emailNormalized, deviceId, license.licenseKey, ip || null, fingerprint
     );
   } catch (e) {
     // Corrida entre duas requisições simultâneas — outro request já registrou o claim.
@@ -498,7 +503,7 @@ async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {
   params.push(safeLimit, offset);
   const rows = await prisma.$queryRawUnsafe(
     `SELECT c."id", c."emailNormalized" AS "email", c."deviceId", c."licenseKey",
-            c."createdAt", l."status", l."expiresAt", l."lastSeenAt",
+            c."clientFingerprint", c."createdAt", l."status", l."expiresAt", l."lastSeenAt",
             l."extensionVersion", l."notes"
        FROM "IrpTrialClaim" c
        LEFT JOIN "IrpLicense" l ON l."licenseKey" = c."licenseKey"

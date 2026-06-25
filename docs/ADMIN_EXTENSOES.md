@@ -155,11 +155,13 @@ A tela mostra:
 - ultimo uso;
 - versao da extensao;
 - dispositivo;
+- fingerprint;
 - chave mascarada.
 
 Regras importantes:
 
 - a tela nao cria, renova, bloqueia nem libera licenca;
+- o IP e mantido como auditoria e nao bloqueia reparticoes com varios computadores;
 - a consulta usa `authenticate` e `isAdmin`, o mesmo padrao das demais areas administrativas;
 - os dados vem da tabela `IrpTrialClaim`, cruzados com `IrpLicense`;
 - o objetivo e suporte e auditoria do teste gratis, nao substituicao do fluxo de pagamento.
