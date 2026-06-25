@@ -66,7 +66,7 @@ O admin pode gerar licenca cortesia para IRP Master usando:
 
 Atualizado em: 25/06/2026
 
-A IRP Master possui fluxo de teste gratis de 1 dia. O backend registra cada uso para evitar abuso por email, dispositivo e rede.
+A IRP Master possui fluxo de teste gratis de 1 dia. O backend registra cada uso para evitar abuso por email, dispositivo e identificacao tecnica do navegador.
 
 Endpoint publico usado pela extensao:
 
@@ -78,9 +78,16 @@ Dados minimos enviados:
 {
   "email": "usuario@email.com",
   "deviceId": "device-id-da-extensao",
+  "clientFingerprint": "hash-tecnico-da-extensao",
   "extensionVersion": "1.0.0"
 }
 ```
+
+Observacao de versao:
+
+- a extensao `1.0.12` envia email e `deviceId`;
+- a extensao `1.0.13` passa a enviar tambem `clientFingerprint`;
+- o pacote local gerado para esse ajuste e `C:\Users\adao\Downloads\IRP-Master-Automacao-v1.0.13-fingerprint.zip`.
 
 Registro interno:
 
@@ -134,6 +141,20 @@ Campos exibidos:
 - chave mascarada.
 
 Essa tela nao altera a extensao e nao altera licencas. Ela serve apenas para consulta, suporte e auditoria.
+
+## Regra para reparticoes e empresas
+
+O sistema nao deve bloquear o teste gratis apenas por IP. Em orgaos publicos, escolas, escritorios e reparticoes, varios computadores podem compartilhar a mesma internet e o mesmo IP externo. Bloquear por IP impediria que usuarios legitimos testassem em maquinas diferentes.
+
+Regra adotada:
+
+- usuarios diferentes podem testar em computadores/perfis diferentes mesmo na mesma rede;
+- o mesmo email nao deve receber varios testes gratis;
+- o mesmo `deviceId` nao deve receber varios testes gratis;
+- o mesmo `clientFingerprint`, enviado a partir da extensao `1.0.13`, nao deve receber varios testes gratis;
+- o IP continua salvo apenas como sinal de auditoria e suporte.
+
+Limite tecnico: em extensao de navegador, nao existe acesso confiavel ao numero de serie real do computador. Por isso o fingerprint e uma identificacao tecnica aproximada do ambiente do navegador, sem ler arquivos, planilhas, senhas ou documentos do usuario.
 
 ## Privacidade
 

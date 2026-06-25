@@ -376,6 +376,59 @@ if (origin && origin.startsWith('chrome-extension://')) {
 
 ---
 
+---
+
+## Teste gratis de 1 dia - controle anti-abuso
+
+Atualizado em: 25/06/2026
+
+O teste gratis da IRP Master cria uma licenca com validade de 1 dia e registra o uso na tabela `IrpTrialClaim`.
+
+Endpoint publico:
+
+```text
+POST /api/v1/licenses/trial
+```
+
+Payload esperado a partir da extensao `1.0.13`:
+
+```json
+{
+  "email": "usuario@email.com",
+  "deviceId": "dev_...",
+  "clientFingerprint": "hash-tecnico",
+  "extensionVersion": "1.0.13"
+}
+```
+
+Regras de bloqueio automatico:
+
+- mesmo email normalizado;
+- mesmo `deviceId`;
+- mesmo `clientFingerprint`.
+
+O IP e gravado apenas para auditoria. Ele nao bloqueia o teste, porque reparticoes, escolas, empresas e orgaos publicos podem ter varios computadores usando o mesmo IP externo.
+
+Campos importantes em `IrpTrialClaim`:
+
+- `emailNormalized`;
+- `deviceId`;
+- `clientFingerprint`;
+- `ip`;
+- `licenseKey`;
+- `createdAt`.
+
+Tela administrativa:
+
+```text
+GET /api/v1/licenses/admin/trials
+https://educaplayja.com.br/#/admin/irp-licenses
+```
+
+A tela e somente leitura e mostra email, status, inicio, vencimento, ultimo uso, versao, dispositivo, fingerprint e chave mascarada.
+
+Privacidade: o `clientFingerprint` e um hash tecnico do ambiente do navegador. Ele nao le arquivos, planilhas, senhas, documentos, CPF, dados de pagamento ou dados da tela do SIASG.
+
 ## Commits relacionados
 
 | Hash | Descrição |
@@ -389,3 +442,7 @@ if (origin && origin.startsWith('chrome-extension://')) {
 | `405a748` | fix: expose error message for debugging |
 | `42a1ffb` | fix: rewrite license service with raw SQL |
 | `1b881ca` | fix: allow Chrome extension origins in CORS |
+| `c33c54e` | feat: add IRP trial admin view |
+| `455f99e` | fix: use standard admin auth for IRP trials |
+| `120dfa2` | docs: document IRP trial admin view |
+| `3e8b3cc` | fix: strengthen IRP trial tracking |

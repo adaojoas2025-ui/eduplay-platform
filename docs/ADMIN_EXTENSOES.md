@@ -162,6 +162,8 @@ Regras importantes:
 
 - a tela nao cria, renova, bloqueia nem libera licenca;
 - o IP e mantido como auditoria e nao bloqueia reparticoes com varios computadores;
+- a partir da extensao `1.0.13`, o campo `clientFingerprint` ajuda a reduzir repeticao de teste no mesmo navegador/perfil;
+- a extensao `1.0.12` ainda nao envia `clientFingerprint`, entao a protecao completa depende do pacote novo publicado ou instalado para teste;
 - a consulta usa `authenticate` e `isAdmin`, o mesmo padrao das demais areas administrativas;
 - os dados vem da tabela `IrpTrialClaim`, cruzados com `IrpLicense`;
 - o objetivo e suporte e auditoria do teste gratis, nao substituicao do fluxo de pagamento.
@@ -171,6 +173,8 @@ Commits relacionados:
 ```text
 c33c54e feat: add IRP trial admin view
 455f99e fix: use standard admin auth for IRP trials
+120dfa2 docs: document IRP trial admin view
+3e8b3cc fix: strengthen IRP trial tracking
 ```
 
 ## Relacao com a extensao
