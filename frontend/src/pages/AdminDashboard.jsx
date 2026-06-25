@@ -594,6 +594,17 @@ export default function AdminDashboard() {
             </Link>
 
             <Link
+              to="/admin/irp-licenses"
+              className="flex items-center gap-3 p-4 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition"
+            >
+              <div className="text-3xl">IRP</div>
+              <div>
+                <div className="font-semibold text-gray-800">Licencas IRP</div>
+                <div className="text-sm text-gray-600">Testes de 1 dia</div>
+              </div>
+            </Link>
+
+            <Link
               to="/admin/products"
               className="flex items-center gap-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition"
             >

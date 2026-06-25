@@ -100,6 +100,17 @@ router.get('/admin/list', adminOnly, async (req, res) => {
   }
 });
 
+// GET /admin/trials - lista testes gratis IRP Master de 1 dia
+router.get('/admin/trials', adminOnly, async (req, res) => {
+  const { page = 1, limit = 50, state, email } = req.query;
+  try {
+    const result = await licenseService.listTrialClaims({ page, limit, state, email });
+    return res.status(200).json(result);
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // GET /admin/:id/events — histórico de eventos da licença
 router.get('/admin/:id/events', adminOnly, async (req, res) => {
   try {

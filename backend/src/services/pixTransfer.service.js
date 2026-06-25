@@ -1,11 +1,9 @@
-const { PrismaClient } = require('@prisma/client');
+const { prisma } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 const env = require('../config/env');
 const mercadopago = require('../config/mercadopago');
 const asaas = require('../config/asaas');
 const logger = require('../utils/logger');
-
-const prisma = new PrismaClient();
 
 // PIX key types
 const PIX_KEY_TYPES = {

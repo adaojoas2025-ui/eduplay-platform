@@ -477,6 +477,48 @@ async function listLicenses({ page = 1, limit = 50, status, email } = {}) {
   return { licenses: rows, total: Number(total[0].count), page, limit };
 }
 
+async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {
+  await ensureLicenseSchema();
+  const safePage = Math.max(1, Number(page) || 1);
+  const safeLimit = Math.min(100, Math.max(1, Number(limit) || 50));
+  const offset = (safePage - 1) * safeLimit;
+  const params = [];
+  let where = '';
+
+  if (email) {
+    params.push(`%${String(email).trim()}%`);
+    where += ` AND c."emailNormalized" ILIKE $${params.length}`;
+  }
+  if (state === 'active') {
+    where += ` AND l."status" = 'active' AND l."expiresAt" >= NOW()`;
+  } else if (state === 'expired') {
+    where += ` AND (l."expiresAt" < NOW() OR l."status" <> 'active')`;
+  }
+
+  params.push(safeLimit, offset);
+  const rows = await prisma.$queryRawUnsafe(
+    `SELECT c."id", c."emailNormalized" AS "email", c."deviceId", c."licenseKey",
+            c."createdAt", l."status", l."expiresAt", l."lastSeenAt",
+            l."extensionVersion", l."notes"
+       FROM "IrpTrialClaim" c
+       LEFT JOIN "IrpLicense" l ON l."licenseKey" = c."licenseKey"
+      WHERE 1=1${where}
+      ORDER BY c."createdAt" DESC
+      LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    ...params
+  );
+  const countParams = params.slice(0, params.length - 2);
+  const total = await prisma.$queryRawUnsafe(
+    `SELECT COUNT(*)::int AS count
+       FROM "IrpTrialClaim" c
+       LEFT JOIN "IrpLicense" l ON l."licenseKey" = c."licenseKey"
+      WHERE 1=1${where}`,
+    ...countParams
+  );
+
+  return { trials: rows, total: Number(total[0].count), page: safePage, limit: safeLimit };
+}
+
 async function getLicenseById(id) {
   await ensureLicenseSchema();
   const rows = await prisma.$queryRawUnsafe(`SELECT * FROM "IrpLicense" WHERE "id" = $1 LIMIT 1`, id);
@@ -535,6 +577,6 @@ module.exports = {
   heartbeat, logoutLicense,
   renewLicense, renewLicenseFromPayment, claimLicenseByDevice, syncLicenseByDeviceId,
   claimTrialLicense,
-  listLicenses, getLicenseById, getLicenseEvents,
+  listLicenses, listTrialClaims, getLicenseById, getLicenseEvents,
   blockLicense, unblockLicense, renewLicenseById, freeDevice,
 };

@@ -24,6 +24,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminCommissions from './pages/admin/AdminCommissions';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminExtensions from './pages/admin/Extensions';
+import AdminIrpLicenses from './pages/admin/IrpLicenses';
 import Gamification from './pages/Gamification';
 import GamificationAdmin from './pages/admin/GamificationAdmin';
 import UpgradeToProducer from './pages/UpgradeToProducer';
@@ -948,6 +949,7 @@ function App() {
         <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
         <Route path="/admin/commissions" element={<ProtectedRoute><AdminCommissions /></ProtectedRoute>} />
         <Route path="/admin/extensions" element={<ProtectedRoute><AdminExtensions /></ProtectedRoute>} />
+        <Route path="/admin/irp-licenses" element={<ProtectedRoute><AdminIrpLicenses /></ProtectedRoute>} />
         <Route path="/admin/gamification" element={<ProtectedRoute><GamificationAdmin /></ProtectedRoute>} />
         <Route path="/admin/combos" element={<ProtectedRoute><ManageCombos /></ProtectedRoute>} />
         <Route path="/admin/apps" element={<ProtectedRoute><ManageApps /></ProtectedRoute>} />
