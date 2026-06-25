@@ -37,6 +37,7 @@ router.post('/trial', async (req, res) => {
   }
   try {
     const result = await licenseService.claimTrialLicense(email, deviceId, extensionVersion, req.ip, clientFingerprint);
+    await licenseService.recordLicenseAttempt({ action: 'trial', licenseKey: result.licenseKey, deviceId, extensionVersion, ip: req.ip, valid: result.valid, reason: result.reason, message: result.message });
     if (result.valid) return res.status(200).json(result);
     if (result.reason === 'limit_reached') return res.status(429).json(result);
     return res.status(409).json(result);
@@ -105,6 +106,17 @@ router.get('/admin/trials', authenticate, isAdmin, async (req, res) => {
   const { page = 1, limit = 50, state, email } = req.query;
   try {
     const result = await licenseService.listTrialClaims({ page, limit, state, email });
+    return res.status(200).json(result);
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /admin/attempts - lista usos e tentativas bloqueadas da extensao
+router.get('/admin/attempts', authenticate, isAdmin, async (req, res) => {
+  const { page = 1, limit = 50, valid, action } = req.query;
+  try {
+    const result = await licenseService.listLicenseAttempts({ page, limit, valid, action });
     return res.status(200).json(result);
   } catch (e) {
     return res.status(500).json({ error: e.message });

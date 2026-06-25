@@ -121,6 +121,44 @@ async function ensureLicenseSchema() {
       WHERE "clientFingerprint" IS NOT NULL AND "clientFingerprint" <> ''`
   );
 
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "IrpLicenseAttempt" (
+      "id" TEXT PRIMARY KEY,
+      "action" TEXT NOT NULL,
+      "licenseKey" TEXT,
+      "deviceId" TEXT,
+      "extensionVersion" TEXT,
+      "ip" TEXT,
+      "valid" BOOLEAN NOT NULL DEFAULT false,
+      "reason" TEXT,
+      "message" TEXT,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  const attemptColumns = [
+    "\"action\" TEXT NOT NULL DEFAULT 'validate'",
+    '"licenseKey" TEXT',
+    '"deviceId" TEXT',
+    '"extensionVersion" TEXT',
+    '"ip" TEXT',
+    '"valid" BOOLEAN NOT NULL DEFAULT false',
+    '"reason" TEXT',
+    '"message" TEXT',
+    '"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP',
+  ];
+
+  for (const column of attemptColumns) {
+    await prisma.$executeRawUnsafe(`ALTER TABLE "IrpLicenseAttempt" ADD COLUMN IF NOT EXISTS ${column}`);
+  }
+
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "IrpLicenseAttempt_createdAt_idx" ON "IrpLicenseAttempt"("createdAt" DESC)`
+  );
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "IrpLicenseAttempt_valid_idx" ON "IrpLicenseAttempt"("valid")`
+  );
   licenseSchemaReady = true;
 }
 
@@ -528,6 +566,74 @@ async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {
   return { trials: rows, total: Number(total[0].count), page: safePage, limit: safeLimit };
 }
 
+async function recordLicenseAttempt({ action, licenseKey, deviceId, extensionVersion, ip, valid, reason, message } = {}) {
+  try {
+    await ensureLicenseSchema();
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "IrpLicenseAttempt" ("id","action","licenseKey","deviceId","extensionVersion","ip","valid","reason","message","createdAt")
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())`,
+      uuid(),
+      String(action || 'validate').slice(0, 40),
+      licenseKey ? String(licenseKey).slice(0, 80) : null,
+      deviceId ? String(deviceId).slice(0, 180) : null,
+      extensionVersion ? String(extensionVersion).slice(0, 40) : null,
+      ip ? String(ip).slice(0, 80) : null,
+      Boolean(valid),
+      reason ? String(reason).slice(0, 80) : null,
+      message ? String(message).slice(0, 300) : null
+    );
+  } catch (e) {
+    logger.warn('Could not record IRP license attempt', { error: e.message });
+  }
+}
+
+async function listLicenseAttempts({ page = 1, limit = 50, valid, action } = {}) {
+  await ensureLicenseSchema();
+  const safePage = Math.max(1, Number(page) || 1);
+  const safeLimit = Math.min(100, Math.max(1, Number(limit) || 50));
+  const offset = (safePage - 1) * safeLimit;
+  const params = [];
+  let where = '';
+
+  if (valid === 'true' || valid === true) {
+    where += ' AND "valid" = true';
+  } else if (valid === 'false' || valid === false) {
+    where += ' AND "valid" = false';
+  }
+  if (action) {
+    params.push(String(action).trim());
+    where += ` AND "action" = $${params.length}`;
+  }
+
+  params.push(safeLimit, offset);
+  const attempts = await prisma.$queryRawUnsafe(
+    `SELECT "id", "action", "licenseKey", "deviceId", "extensionVersion", "ip", "valid", "reason", "message", "createdAt"
+       FROM "IrpLicenseAttempt"
+      WHERE 1=1${where}
+      ORDER BY "createdAt" DESC
+      LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    ...params
+  );
+  const countParams = params.slice(0, params.length - 2);
+  const total = await prisma.$queryRawUnsafe(
+    `SELECT COUNT(*)::int AS count FROM "IrpLicenseAttempt" WHERE 1=1${where}`,
+    ...countParams
+  );
+  const summary = await prisma.$queryRawUnsafe(
+    `SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE "valid" = true)::int AS allowed,
+        COUNT(*) FILTER (WHERE "valid" = false)::int AS denied,
+        COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '24 hours')::int AS last24h,
+        COUNT(*) FILTER (WHERE "valid" = true AND "createdAt" >= NOW() - INTERVAL '24 hours')::int AS allowed24h,
+        COUNT(*) FILTER (WHERE "valid" = false AND "createdAt" >= NOW() - INTERVAL '24 hours')::int AS denied24h,
+        COUNT(DISTINCT "deviceId") FILTER (WHERE "valid" = true AND "createdAt" >= NOW() - INTERVAL '24 hours' AND "deviceId" IS NOT NULL)::int AS activeDevices24h
+       FROM "IrpLicenseAttempt"`
+  );
+
+  return { attempts, total: Number(total[0].count), page: safePage, limit: safeLimit, summary: summary[0] || {} };
+}
+
 async function getLicenseById(id) {
   await ensureLicenseSchema();
   const rows = await prisma.$queryRawUnsafe(`SELECT * FROM "IrpLicense" WHERE "id" = $1 LIMIT 1`, id);
@@ -587,5 +693,6 @@ module.exports = {
   renewLicense, renewLicenseFromPayment, claimLicenseByDevice, syncLicenseByDeviceId,
   claimTrialLicense,
   listLicenses, listTrialClaims, getLicenseById, getLicenseEvents,
+  recordLicenseAttempt, listLicenseAttempts,
   blockLicense, unblockLicense, renewLicenseById, freeDevice,
 };
