@@ -62,6 +62,76 @@ O admin pode gerar licenca cortesia para IRP Master usando:
 
 - `POST /api/v1/admin/extensions/irp-master/courtesy-licenses`
 
+## Teste gratis de 1 dia
+
+Atualizado em: 25/06/2026
+
+A IRP Master possui fluxo de teste gratis de 1 dia. O backend registra cada uso para evitar abuso por email, dispositivo e rede.
+
+Endpoint publico usado pela extensao:
+
+- `POST /api/v1/licenses/trial`
+
+Dados minimos enviados:
+
+```json
+{
+  "email": "usuario@email.com",
+  "deviceId": "device-id-da-extensao",
+  "extensionVersion": "1.0.0"
+}
+```
+
+Registro interno:
+
+- tabela `IrpTrialClaim`;
+- licenca criada com prefixo `IRP`;
+- validade de 1 dia;
+- evento `trial_claimed` em `IrpLicenseEvent`;
+- notas da licenca com `free trial - 1 day`.
+
+## Admin - consulta de testes
+
+Foi adicionada uma tela somente leitura para o administrador ver quem usou o teste de 1 dia.
+
+Link direto:
+
+- `/admin/irp-licenses`
+
+Atalho no painel:
+
+- `Admin Dashboard > Acoes Rapidas > IRP Licencas / Testes de 1 dia`
+
+Endpoint administrativo:
+
+- `GET /api/v1/licenses/admin/trials`
+
+Autorizacao:
+
+- login obrigatorio;
+- perfil `ADMIN`;
+- middleware `authenticate` + `isAdmin`.
+
+Filtros:
+
+- `page`
+- `limit`
+- `state=active|expired`
+- `email`
+
+Campos exibidos:
+
+- email;
+- status;
+- inicio;
+- vencimento;
+- ultimo uso;
+- versao;
+- dispositivo;
+- chave mascarada.
+
+Essa tela nao altera a extensao e nao altera licencas. Ela serve apenas para consulta, suporte e auditoria.
+
 ## Privacidade
 
 A politica declara que a extensao:

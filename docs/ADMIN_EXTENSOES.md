@@ -20,6 +20,20 @@ Backend:
 
 A rota e protegida por login e perfil `ADMIN`. Ela nao faz parte do painel de vendedor, nao fica em `/seller` e nao deve ser usada para produtos comuns do marketplace.
 
+Consulta de testes IRP Master:
+
+```text
+/admin/irp-licenses
+```
+
+Endpoint de leitura:
+
+```text
+GET /api/v1/licenses/admin/trials
+```
+
+Essa tela tambem e protegida por login e perfil `ADMIN`.
+
 ## Objetivo
 
 Centralizar extensoes como o BaixaTudo e a IRP Master em uma area propria, preparada para crescer quando novas extensoes forem publicadas.
@@ -92,6 +106,70 @@ reason:<motivo>
 ```
 
 Isso diferencia cortesia de venda Mercado Pago.
+
+## Consulta de testes IRP Master de 1 dia
+
+Atualizado em: 25/06/2026
+
+Foi adicionada uma area somente leitura para o administrador acompanhar quem ativou o teste gratis de 1 dia da IRP Master.
+
+Local no painel:
+
+```text
+Admin Dashboard > Acoes Rapidas > IRP Licencas / Testes de 1 dia
+```
+
+Link direto:
+
+```text
+https://educaplayja.com.br/#/admin/irp-licenses
+```
+
+Frontend:
+
+```text
+frontend/src/pages/admin/IrpLicenses.jsx
+```
+
+Backend:
+
+```text
+GET /api/v1/licenses/admin/trials
+```
+
+Filtros aceitos:
+
+```text
+page
+limit
+state=active|expired
+email
+```
+
+A tela mostra:
+
+- email normalizado;
+- status da licenca;
+- data de inicio do teste;
+- vencimento;
+- ultimo uso;
+- versao da extensao;
+- dispositivo;
+- chave mascarada.
+
+Regras importantes:
+
+- a tela nao cria, renova, bloqueia nem libera licenca;
+- a consulta usa `authenticate` e `isAdmin`, o mesmo padrao das demais areas administrativas;
+- os dados vem da tabela `IrpTrialClaim`, cruzados com `IrpLicense`;
+- o objetivo e suporte e auditoria do teste gratis, nao substituicao do fluxo de pagamento.
+
+Commits relacionados:
+
+```text
+c33c54e feat: add IRP trial admin view
+455f99e fix: use standard admin auth for IRP trials
+```
 
 ## Relacao com a extensao
 
