@@ -432,7 +432,7 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFi
 
   const license = await createLicense(email, 1, 'free trial - 1 day', { prefix: 'IRP' });
   await prisma.$executeRawUnsafe(
-    `UPDATE "IrpLicense" SET "activeDeviceId"=$1,"extensionVersion"=$2,"updatedAt"=NOW() WHERE "id"=$3`,
+    `UPDATE "IrpLicense" SET "activeDeviceId"=$1,"extensionVersion"=$2,"lastSeenAt"=NOW(),"updatedAt"=NOW() WHERE "id"=$3`,
     deviceId, extensionVersion || null, license.id
   );
   await logEvent(license.id, 'trial_claimed', deviceId, extensionVersion);
@@ -503,8 +503,12 @@ async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {
   params.push(safeLimit, offset);
   const rows = await prisma.$queryRawUnsafe(
     `SELECT c."id", c."emailNormalized" AS "email", c."deviceId", c."licenseKey",
-            c."clientFingerprint", c."createdAt", l."status", l."expiresAt", l."lastSeenAt",
-            l."extensionVersion", l."notes"
+            c."clientFingerprint", c."createdAt",
+            CASE
+              WHEN l."status" = 'active' AND l."expiresAt" < NOW() THEN 'expired'
+              ELSE COALESCE(l."status", 'missing')
+            END AS "status",
+            l."expiresAt", l."lastSeenAt", l."extensionVersion", l."notes"
        FROM "IrpTrialClaim" c
        LEFT JOIN "IrpLicense" l ON l."licenseKey" = c."licenseKey"
       WHERE 1=1${where}
