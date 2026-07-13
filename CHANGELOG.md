@@ -1,5 +1,49 @@
 # CHANGELOG - EDUPLAYJA Platform
 
+## [2026-07-13] - Rastreamento de uso do BaixaTudo (paridade com IRP Master) + correção de auth admin
+
+### Resumo
+O BaixaTudo (extensão Chrome de download) usava a mesma infraestrutura de licença da IRP Master, mas sem nenhum registro de uso real: `activate`/`validate`/`sync` nunca gravavam tentativas, não havia heartbeat nem endpoint de logout, e não existia nenhum painel admin além da emissão de cortesia. Trazido para paridade com o sistema já existente da IRP Master, sem replicar o teste grátis de 1 dia (o BaixaTudo não tem essa modalidade).
+
+Ver detalhes completos em `backend/docs/baixatudo-license-security.md`.
+
+---
+
+### 1. Backend — rastreamento de uso
+
+**Arquivos:** `backend/src/routes/baixatudo.js`, `backend/src/services/license.service.js`, `backend/src/routes/licenses.js`
+
+- `activate`/`validate`/`sync` do BaixaTudo agora gravam cada tentativa em `IrpLicenseAttempt` (tabela compartilhada com a IRP Master, diferenciada pelo prefixo da chave).
+- Novos endpoints: `POST /api/v1/baixatudo/licenses/heartbeat` e `POST /api/v1/baixatudo/licenses/logout`.
+- `listLicenses`/`listLicenseAttempts` e as rotas `/admin/list`/`/admin/attempts` aceitam `?prefix=BT|IRP` para filtrar por produto.
+- Correção de bug: alias SQL `activeDevices24h` sem aspas era dobrado para minúsculo pelo Postgres, quebrando o tile "Usando em 24h" (afetava também o painel da IRP Master).
+
+### 2. Correção de autenticação admin
+
+**Arquivo:** `backend/src/routes/licenses.js`
+
+- O middleware `adminOnly` só aceitava um Bearer JWT com `role: 'ADMIN'` no próprio payload, mas o fluxo de login ativo assina tokens só com `{ userId, type }`. Isso derrubava com 401 qualquer admin real chamando `/admin/list` e rotas irmãs. Corrigido para buscar o papel no banco pelo `userId` quando o token não traz `role`, igual ao middleware `isAdmin` já usado por `/admin/attempts`.
+
+### 3. Extensão BaixaTudo (background.js)
+
+- Heartbeat a cada hora via `chrome.alarms`.
+- Gate de validação server-side antes do download automático: com licença válida libera a fila completa; sem licença (ou inválida) limita a 1 aula de amostra por pasta; falha de rede usa o último estado local conhecido como tolerância.
+
+### 4. Dashboard admin
+
+**Arquivo:** `frontend/src/pages/admin/BaixaTudoLicenses.jsx` (novo), roteado em `/admin/baixatudo-licenses`, linkado em `AdminDashboard.jsx` e `Extensions.jsx`.
+
+---
+
+### Commits
+
+| Hash | Descrição |
+|------|-----------|
+| `3da291b` | feat: add BaixaTudo license attempt tracking and admin dashboard |
+| `d5c0f8e` | fix: adminOnly rejects modern JWTs that lack a role claim |
+
+---
+
 ## [2026-03-04] - Email de Acesso ao Produto após Compra + Endpoint de Re-envio
 
 ### Resumo
