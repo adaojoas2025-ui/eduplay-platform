@@ -8,6 +8,7 @@ const router = express.Router();
 const { activate, validate, heartbeat, logout } = require('../controllers/licenseController');
 const licenseService = require('../services/license.service');
 const { authenticate, isAdmin } = require('../api/middlewares/auth.middleware');
+const { prisma } = require('../config/database');
 const jwt = require('jsonwebtoken');
 
 // Public license endpoints
@@ -47,7 +48,7 @@ router.post('/trial', async (req, res) => {
 });
 
 // ── Admin middleware — aceita x-admin-secret OU Bearer JWT com role ADMIN ──
-function adminOnly(req, res, next) {
+async function adminOnly(req, res, next) {
   const secret = req.headers['x-admin-secret'];
   if (secret === (process.env.ADMIN_SECRET || 'irpmaster2026admin')) return next();
 
@@ -56,7 +57,13 @@ function adminOnly(req, res, next) {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+      // Tokens modernos (src/config/jwt.js) trazem so { userId, type }, sem "role" —
+      // busca o papel real no banco em vez de confiar so no payload do token.
       if (decoded.role === 'ADMIN') return next();
+      if (decoded.userId) {
+        const user = await prisma.users.findUnique({ where: { id: decoded.userId }, select: { role: true } });
+        if (user?.role === 'ADMIN') return next();
+      }
     } catch (_) {}
   }
   return res.status(401).json({ error: 'Unauthorized' });
