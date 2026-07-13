@@ -605,6 +605,17 @@ export default function AdminDashboard() {
             </Link>
 
             <Link
+              to="/admin/baixatudo-licenses"
+              className="flex items-center gap-3 p-4 bg-red-50 hover:bg-red-100 rounded-lg transition"
+            >
+              <div className="text-3xl">BT</div>
+              <div>
+                <div className="font-semibold text-gray-800">Licencas BaixaTudo</div>
+                <div className="text-sm text-gray-600">Uso e tentativas</div>
+              </div>
+            </Link>
+
+            <Link
               to="/admin/products"
               className="flex items-center gap-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition"
             >

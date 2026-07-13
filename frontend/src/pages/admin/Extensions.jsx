@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../services/api';
 
 const UNIT_OPTIONS = [
@@ -94,11 +95,19 @@ export default function AdminExtensions() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Admin - Extensoes</h1>
-          <p className="text-gray-600 mt-1">
-            Gestao administrativa de extensoes. Este painel nao pertence ao financeiro do vendedor.
-          </p>
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Admin - Extensoes</h1>
+            <p className="text-gray-600 mt-1">
+              Gestao administrativa de extensoes. Este painel nao pertence ao financeiro do vendedor.
+            </p>
+          </div>
+          <Link
+            to="/admin/baixatudo-licenses"
+            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+          >
+            Ver uso e tentativas do BaixaTudo
+          </Link>
         </div>
 
         {error && (

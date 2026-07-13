@@ -32,20 +32,29 @@ function isBaixaTudoLicenseKey(licenseKey) {
   return /^BT-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(String(licenseKey || '').toUpperCase());
 }
 
+async function recordAttemptSafe(payload) {
+  await licenseService.recordLicenseAttempt(payload);
+}
+
 async function handleBaixaTudoLicense(req, res, action) {
+  const { licenseKey, deviceId, extensionVersion } = req.body || {};
   try {
-    const { licenseKey, deviceId, extensionVersion } = req.body || {};
     if (!licenseKey || !deviceId) {
-      return res.status(400).json({ valid: false, reason: 'missing_fields', message: 'licenseKey e deviceId sao obrigatorios.' });
+      const result = { valid: false, reason: 'missing_fields', message: 'licenseKey e deviceId sao obrigatorios.' };
+      await recordAttemptSafe({ action, licenseKey, deviceId, extensionVersion, ip: req.ip, ...result });
+      return res.status(400).json(result);
     }
     if (!isBaixaTudoLicenseKey(licenseKey)) {
-      return res.status(403).json({ valid: false, reason: 'wrong_product', message: 'Esta chave nao pertence ao BaixaTudo.' });
+      const result = { valid: false, reason: 'wrong_product', message: 'Esta chave nao pertence ao BaixaTudo.' };
+      await recordAttemptSafe({ action, licenseKey, deviceId, extensionVersion, ip: req.ip, ...result });
+      return res.status(403).json(result);
     }
 
     const result = action === 'activate'
       ? await licenseService.activateLicense(licenseKey, deviceId, extensionVersion, { strictDeviceBinding: true })
       : await licenseService.validateLicense(licenseKey, deviceId, extensionVersion);
 
+    await recordAttemptSafe({ action, licenseKey, deviceId, extensionVersion, ip: req.ip, ...result });
     return res.status(result.valid ? 200 : 403).json({ product: 'baixatudo', ...result });
   } catch (error) {
     logger.error('BaixaTudo license validation error', { error: error.message });
@@ -65,12 +74,15 @@ router.get('/plans', (req, res) => {
 
 router.post('/licenses/activate', (req, res) => handleBaixaTudoLicense(req, res, 'activate'));
 router.post('/licenses/sync', async (req, res) => {
+  const { deviceId, extensionVersion } = req.body || {};
   try {
-    const { deviceId, extensionVersion } = req.body || {};
     if (!deviceId) {
-      return res.status(400).json({ valid: false, reason: 'missing_device', message: 'deviceId e obrigatorio.' });
+      const result = { valid: false, reason: 'missing_device', message: 'deviceId e obrigatorio.' };
+      await recordAttemptSafe({ action: 'sync', deviceId, extensionVersion, ip: req.ip, ...result });
+      return res.status(400).json(result);
     }
     const result = await licenseService.claimLicenseByDevice(deviceId, extensionVersion, { prefix: 'BT' });
+    await recordAttemptSafe({ action: 'sync', licenseKey: result.licenseKey, deviceId, extensionVersion, ip: req.ip, ...result });
     return res.status(result.valid ? 200 : 404).json({ product: 'baixatudo', ...result });
   } catch (error) {
     logger.error('BaixaTudo license sync error', { error: error.message });
@@ -80,6 +92,37 @@ router.post('/licenses/sync', async (req, res) => {
 router.post('/licenses/validate', (req, res) => handleBaixaTudoLicense(req, res, 'validate'));
 router.post('/license/activate', (req, res) => handleBaixaTudoLicense(req, res, 'activate'));
 router.post('/license/validate', (req, res) => handleBaixaTudoLicense(req, res, 'validate'));
+
+router.post('/licenses/heartbeat', async (req, res) => {
+  const { licenseKey, deviceId } = req.body || {};
+  try {
+    if (!licenseKey || !deviceId) {
+      const result = { valid: false, reason: 'missing_fields' };
+      await recordAttemptSafe({ action: 'heartbeat', licenseKey, deviceId, ip: req.ip, ...result });
+      return res.status(400).json(result);
+    }
+    const result = await licenseService.heartbeat(licenseKey, deviceId);
+    await recordAttemptSafe({ action: 'heartbeat', licenseKey, deviceId, ip: req.ip, ...result });
+    return res.status(200).json({ product: 'baixatudo', ...result });
+  } catch (error) {
+    logger.error('BaixaTudo license heartbeat error', { error: error.message });
+    return res.status(500).json({ valid: false });
+  }
+});
+
+router.post('/licenses/logout', async (req, res) => {
+  try {
+    const { licenseKey, deviceId } = req.body || {};
+    if (!licenseKey || !deviceId) {
+      return res.status(400).json({ ok: false });
+    }
+    const result = await licenseService.logoutLicense(licenseKey, deviceId);
+    return res.status(200).json({ product: 'baixatudo', ...result });
+  } catch (error) {
+    logger.error('BaixaTudo license logout error', { error: error.message });
+    return res.status(500).json({ ok: false });
+  }
+});
 
 router.post('/checkout', async (req, res) => {
   try {

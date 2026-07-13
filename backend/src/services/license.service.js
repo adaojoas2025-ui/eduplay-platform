@@ -499,13 +499,14 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFi
 
 // ── Admin functions ─────────────────────────────────────────────────────────
 
-async function listLicenses({ page = 1, limit = 50, status, email } = {}) {
+async function listLicenses({ page = 1, limit = 50, status, email, prefix } = {}) {
   await ensureLicenseSchema();
   const offset = (page - 1) * limit;
   let where = '';
   const params = [];
   if (status) { params.push(status); where += ` AND "status" = $${params.length}`; }
   if (email)  { params.push(`%${email}%`); where += ` AND "email" ILIKE $${params.length}`; }
+  if (prefix) { params.push(`${normalizePrefix(prefix)}-%`); where += ` AND "licenseKey" LIKE $${params.length}`; }
   params.push(limit, offset);
   const rows = await prisma.$queryRawUnsafe(
     `SELECT id,"licenseKey","email","status","expiresAt","activeDeviceId","lastSeenAt","extensionVersion","notes","createdAt","updatedAt"
@@ -587,7 +588,7 @@ async function recordLicenseAttempt({ action, licenseKey, deviceId, extensionVer
   }
 }
 
-async function listLicenseAttempts({ page = 1, limit = 50, valid, action } = {}) {
+async function listLicenseAttempts({ page = 1, limit = 50, valid, action, prefix } = {}) {
   await ensureLicenseSchema();
   const safePage = Math.max(1, Number(page) || 1);
   const safeLimit = Math.min(100, Math.max(1, Number(limit) || 50));
@@ -604,6 +605,10 @@ async function listLicenseAttempts({ page = 1, limit = 50, valid, action } = {})
     params.push(String(action).trim());
     where += ` AND "action" = $${params.length}`;
   }
+  if (prefix) {
+    params.push(`${normalizePrefix(prefix)}-%`);
+    where += ` AND "licenseKey" LIKE $${params.length}`;
+  }
 
   params.push(safeLimit, offset);
   const attempts = await prisma.$queryRawUnsafe(
@@ -619,6 +624,8 @@ async function listLicenseAttempts({ page = 1, limit = 50, valid, action } = {})
     `SELECT COUNT(*)::int AS count FROM "IrpLicenseAttempt" WHERE 1=1${where}`,
     ...countParams
   );
+  const summaryWhere = prefix ? ` WHERE "licenseKey" LIKE $1` : '';
+  const summaryParams = prefix ? [`${normalizePrefix(prefix)}-%`] : [];
   const summary = await prisma.$queryRawUnsafe(
     `SELECT
         COUNT(*)::int AS total,
@@ -627,8 +634,9 @@ async function listLicenseAttempts({ page = 1, limit = 50, valid, action } = {})
         COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '24 hours')::int AS last24h,
         COUNT(*) FILTER (WHERE "valid" = true AND "createdAt" >= NOW() - INTERVAL '24 hours')::int AS allowed24h,
         COUNT(*) FILTER (WHERE "valid" = false AND "createdAt" >= NOW() - INTERVAL '24 hours')::int AS denied24h,
-        COUNT(DISTINCT "deviceId") FILTER (WHERE "valid" = true AND "createdAt" >= NOW() - INTERVAL '24 hours' AND "deviceId" IS NOT NULL)::int AS activeDevices24h
-       FROM "IrpLicenseAttempt"`
+        COUNT(DISTINCT "deviceId") FILTER (WHERE "valid" = true AND "createdAt" >= NOW() - INTERVAL '24 hours' AND "deviceId" IS NOT NULL)::int AS "activeDevices24h"
+       FROM "IrpLicenseAttempt"${summaryWhere}`,
+    ...summaryParams
   );
 
   return { attempts, total: Number(total[0].count), page: safePage, limit: safeLimit, summary: summary[0] || {} };

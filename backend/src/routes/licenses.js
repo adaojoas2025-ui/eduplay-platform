@@ -90,11 +90,11 @@ router.post('/admin/create-auth', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-// GET /admin/list — lista licenças (paginado, filtro status/email)
+// GET /admin/list — lista licenças (paginado, filtro status/email/prefix)
 router.get('/admin/list', adminOnly, async (req, res) => {
-  const { page = 1, limit = 50, status, email } = req.query;
+  const { page = 1, limit = 50, status, email, prefix } = req.query;
   try {
-    const result = await licenseService.listLicenses({ page: Number(page), limit: Number(limit), status, email });
+    const result = await licenseService.listLicenses({ page: Number(page), limit: Number(limit), status, email, prefix });
     return res.status(200).json(result);
   } catch (e) {
     return res.status(500).json({ error: e.message });
@@ -114,9 +114,9 @@ router.get('/admin/trials', authenticate, isAdmin, async (req, res) => {
 
 // GET /admin/attempts - lista usos e tentativas bloqueadas da extensao
 router.get('/admin/attempts', authenticate, isAdmin, async (req, res) => {
-  const { page = 1, limit = 50, valid, action } = req.query;
+  const { page = 1, limit = 50, valid, action, prefix } = req.query;
   try {
-    const result = await licenseService.listLicenseAttempts({ page, limit, valid, action });
+    const result = await licenseService.listLicenseAttempts({ page, limit, valid, action, prefix });
     return res.status(200).json(result);
   } catch (e) {
     return res.status(500).json({ error: e.message });
