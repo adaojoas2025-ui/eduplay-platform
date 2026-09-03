@@ -200,6 +200,34 @@ test('claimTrialLicense: sem linha em IrpConfig, usa o fallback de 11 itens', as
   assert.equal(created.activeDeviceId, 'device-novo');
 });
 
+test('claimTrialLicense: instalacao nova sem e-mail nenhum tambem libera o trial', async () => {
+  const { prisma, licenses } = makeFakeDb(null);
+  const licenseService = loadServiceWithFakeDb(prisma);
+
+  const result = await licenseService.claimTrialLicense(
+    null, 'device-sem-email', '1.0.14', '127.0.0.1', 'fingerprint-abcdefabcdefabcdef',
+  );
+  assert.equal(result.valid, true);
+  assert.equal(result.quota.itemsLimit, 11);
+  assert.doesNotMatch(result.message, /e-mail/);
+
+  const created = licenses[result.licenseKey];
+  assert.match(created.email, /@sem-email\.irpmaster\.local$/);
+  assert.equal(created.activeDeviceId, 'device-sem-email');
+});
+
+test('claimTrialLicense: mesmo dispositivo sem e-mail nao pega um segundo trial', async () => {
+  const { prisma } = makeFakeDb(null);
+  const licenseService = loadServiceWithFakeDb(prisma);
+
+  const first = await licenseService.claimTrialLicense(null, 'device-repetido', '1.0.14', '127.0.0.1', 'fp-1111111111111111');
+  assert.equal(first.valid, true);
+
+  const second = await licenseService.claimTrialLicense(null, 'device-repetido', '1.0.14', '127.0.0.1', 'fp-1111111111111111');
+  assert.equal(second.valid, false);
+  assert.equal(second.reason, 'already_used');
+});
+
 test('consumeTrialItems: dispositivo diferente do vinculado e rejeitado', async () => {
   const { prisma } = makeFakeDb(baseLicense());
   const licenseService = loadServiceWithFakeDb(prisma);

@@ -529,7 +529,17 @@ Editar via `IrpConfig` (SQL direto ou Prisma Studio) muda o limite de trials **f
 imediatamente, sem precisar publicar nova versao do backend nem da extensao. Trials ja
 concedidos mantem o `trialItemsLimit` que foi gravado no momento da criacao.
 
-### POST /api/v1/licenses/trial — resposta estendida
+### POST /api/v1/licenses/trial — resposta estendida, e-mail agora opcional
+
+Atualizado em: 03/09/2026 — decisao explicita do dono do produto: `email` deixou de ser
+obrigatorio nessa rota. Quando informado, funciona exatamente como antes (entra na
+checagem antiabuso, recebe a chave por e-mail). Quando **ausente**, a extensao libera o
+trial automaticamente numa instalacao nova, sem pedir nada na tela — usa um e-mail
+placeholder derivado do `deviceId` (`device-<id>@sem-email.irpmaster.local`, nunca
+enviado) so pra preencher as colunas que ainda exigem um valor. A checagem antiabuso
+(`emailNormalized OR deviceId OR clientFingerprint`) continua rodando igual, mas sem
+e-mail real os unicos dois sinais que sobram sao `deviceId`/`clientFingerprint` —
+protecao mais fraca que com e-mail, troca consciente aceita pelo dono do produto.
 
 ```json
 {

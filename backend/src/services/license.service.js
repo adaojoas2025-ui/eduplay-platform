@@ -513,11 +513,23 @@ async function syncLicenseByDeviceId(deviceId) {
 // extensao via `consumeTrialItems`/POST /trial/consume.
 async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFingerprint) {
   await ensureLicenseSchema();
-  if (!email || !deviceId) {
-    return { valid: false, reason: 'missing_fields', message: 'E-mail e dispositivo são obrigatórios.' };
+  if (!deviceId) {
+    return { valid: false, reason: 'missing_fields', message: 'Dispositivo é obrigatório.' };
   }
 
-  const emailNormalized = normalizeEmailForTrial(email);
+  // E-mail agora e opcional: instalacao nova sem e-mail nenhum tambem pode pegar o
+  // trial (liberacao automatica, sem pedir nada na tela). Nesse caso a protecao
+  // antiabuso fica so por conta de deviceId/clientFingerprint (mais fraca que com
+  // e-mail real, decisao consciente do dono do produto). Usa um e-mail placeholder
+  // derivado do proprio deviceId so pra preencher as colunas que ainda exigem um
+  // valor (IrpLicense.email, IrpTrialClaim.emailNormalized) — nunca enviado, nunca
+  // mostrado como se fosse um e-mail real de cliente.
+  const temEmailReal = !!(email && String(email).trim());
+  const emailEfetivo = temEmailReal
+    ? String(email).trim()
+    : 'device-' + String(deviceId).replace(/[^A-Za-z0-9]/g, '').slice(0, 40) + '@sem-email.irpmaster.local';
+
+  const emailNormalized = normalizeEmailForTrial(emailEfetivo);
   const fingerprint = normalizeTrialFingerprint(clientFingerprint);
   const existing = await prisma.$queryRawUnsafe(
     `SELECT * FROM "IrpTrialClaim"
@@ -534,7 +546,7 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFi
   const itemsLimit = await getConfigNumber('trial_items_limit_default', TRIAL_ITEMS_LIMIT_FALLBACK);
   const safetyNetDays = await getConfigNumber('trial_safety_net_days', TRIAL_SAFETY_NET_DAYS_FALLBACK);
 
-  const license = await createLicense(email, safetyNetDays, 'free trial - item-limited', { prefix: 'IRP' });
+  const license = await createLicense(emailEfetivo, safetyNetDays, 'free trial - item-limited' + (temEmailReal ? '' : ' (sem e-mail, liberacao automatica)'), { prefix: 'IRP' });
   await prisma.$executeRawUnsafe(
     `UPDATE "IrpLicense"
        SET "activeDeviceId"=$1,"extensionVersion"=$2,"lastSeenAt"=NOW(),
@@ -554,8 +566,10 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFi
     return { valid: false, reason: 'already_used', message: 'Você já utilizou seu teste grátis. Adquira uma licença para continuar usando.' };
   }
 
-  await emailService.sendIrpTrialEmail(email, license.licenseKey, license.expiresAt, itemsLimit);
-  logger.info('IRP trial license claimed', { email: emailNormalized, licenseKey: license.licenseKey, itemsLimit });
+  if (temEmailReal) {
+    await emailService.sendIrpTrialEmail(emailEfetivo, license.licenseKey, license.expiresAt, itemsLimit);
+  }
+  logger.info('IRP trial license claimed', { email: emailNormalized, licenseKey: license.licenseKey, itemsLimit, temEmailReal });
 
   return {
     valid: true,
@@ -563,7 +577,9 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFi
     expiresAt: license.expiresAt,
     daysRemaining: safetyNetDays,
     quota: { itemsLimit, itemsUsed: 0, itemsRemaining: itemsLimit },
-    message: `Teste grátis ativado! Você pode processar até ${itemsLimit} itens. A chave também foi enviada para o seu e-mail.`,
+    message: temEmailReal
+      ? `Teste grátis ativado! Você pode processar até ${itemsLimit} itens. A chave também foi enviada para o seu e-mail.`
+      : `Teste grátis ativado! Você pode processar até ${itemsLimit} itens.`,
   };
 }
 
