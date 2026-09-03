@@ -69,14 +69,14 @@
         <div class="plans">
           <div class="card">
             <h2>Mensal</h2>
-            <div class="price">R$ 50,00</div>
-            <p class="muted">Validade de 30 dias.</p>
+            <div class="price" id="price-monthly">R$ 50,00</div>
+            <p class="muted" id="detail-monthly">Validade de 30 dias.</p>
             <button type="button" onclick="startCheckout('monthly')">Comprar mensal</button>
           </div>
           <div class="card">
             <h2>Anual</h2>
-            <div class="price">R$ 239,90</div>
-            <p class="muted">Validade de 365 dias.</p>
+            <div class="price" id="price-annual">R$ 239,90</div>
+            <p class="muted" id="detail-annual">Validade de 365 dias.</p>
             <button type="button" onclick="startCheckout('annual')">Comprar anual</button>
           </div>
         </div>
@@ -94,6 +94,28 @@
     <script>
       const checkoutParams = new URLSearchParams(window.location.search);
       const checkoutDeviceId = checkoutParams.get('deviceId') || '';
+
+      // Os precos acima (R$ 50,00 / R$ 239,90) sao so valores de partida, iguais aos do
+      // componente React (src/pages/IrpMaster.jsx) — o preco real vem do backend, que le
+      // as variaveis de ambiente IRP_PRICE_MONTHLY/IRP_PRICE_ANNUAL/IRP_DAYS_MONTHLY/
+      // IRP_DAYS_ANNUAL (Render), pra poder mudar sem publicar nova versao do frontend.
+      (function atualizarPrecos() {
+        fetch('https://eduplay-backend-yw7z.onrender.com/api/v1/irp-master/plans')
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (!data || !data.success || !data.data) return;
+            ['monthly', 'annual'].forEach(function (key) {
+              var p = data.data[key];
+              if (!p) return;
+              var precoEl = document.getElementById('price-' + key);
+              var detailEl = document.getElementById('detail-' + key);
+              var n = Number(p.price);
+              if (precoEl && isFinite(n)) precoEl.textContent = 'R$ ' + n.toFixed(2).replace('.', ',');
+              if (detailEl && p.days != null) detailEl.textContent = 'Validade de ' + p.days + ' dias.';
+            });
+          })
+          .catch(function () {}); // API fora do ar: mantem os valores de partida
+      })();
 
       async function startCheckout(plan) {
         const status = document.getElementById('checkout-status');

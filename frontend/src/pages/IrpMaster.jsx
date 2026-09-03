@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   FiCheckCircle,
   FiClipboard,
@@ -63,10 +63,19 @@ const permissions = [
   },
 ];
 
-const plans = [
+// Valores de partida (usados so ate a resposta de GET /irp-master/plans chegar, ou se a
+// chamada falhar) — o preco real e definido no backend via as variaveis de ambiente
+// IRP_PRICE_MONTHLY/IRP_PRICE_ANNUAL/IRP_DAYS_MONTHLY/IRP_DAYS_ANNUAL (Render), pra poder
+// mudar o preco sem precisar publicar uma nova versao do frontend.
+const planosPadrao = [
   { id: 'monthly', label: 'Mensal', price: 'R$ 50,00', detail: 'Validade de 30 dias.' },
   { id: 'annual', label: 'Anual', price: 'R$ 239,90', detail: 'Validade de 365 dias.' },
 ];
+
+function formatarPreco(valor) {
+  const n = Number(valor);
+  return Number.isFinite(n) ? 'R$ ' + n.toFixed(2).replace('.', ',') : '';
+}
 
 export default function IrpMaster() {
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
@@ -76,6 +85,30 @@ export default function IrpMaster() {
   const [status, setStatus] = useState('');
   const [statusType, setStatusType] = useState('neutral');
   const [loadingPlan, setLoadingPlan] = useState('');
+  const [plans, setPlans] = useState(planosPadrao);
+
+  useEffect(() => {
+    let cancelado = false;
+    fetch(`${API_BASE}/irp-master/plans`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (cancelado || !data || !data.success || !data.data) return;
+        const novosPlanos = ['monthly', 'annual']
+          .filter((key) => data.data[key])
+          .map((key) => {
+            const p = data.data[key];
+            return {
+              id: key,
+              label: p.label || (key === 'monthly' ? 'Mensal' : 'Anual'),
+              price: formatarPreco(p.price),
+              detail: `Validade de ${p.days} dias.`,
+            };
+          });
+        if (novosPlanos.length) setPlans(novosPlanos);
+      })
+      .catch(() => {}); // API fora do ar: mantem os valores de partida em vez de quebrar a pagina
+    return () => { cancelado = true; };
+  }, []);
 
   async function startCheckout(plan) {
     if (!email.trim()) {
