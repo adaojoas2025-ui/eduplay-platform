@@ -43,41 +43,6 @@ export default function AdminIrpLicenses() {
   const [error, setError] = useState('');
   const limit = 50;
 
-  // Gerar licenca de presente/cortesia: mesma rota que ja existe pro admin (POST
-  // /licenses/admin/create-auth), so que agora com um formulario em vez de precisar
-  // chamar a API na mao. Duracao livre em dias (1 mes, 2 meses, o que for) -- nao e
-  // limitada por itens, e igual a uma licenca paga.
-  const [giftEmail, setGiftEmail] = useState('');
-  const [giftDays, setGiftDays] = useState(30);
-  const [giftNotes, setGiftNotes] = useState('');
-  const [giftLoading, setGiftLoading] = useState(false);
-  const [giftError, setGiftError] = useState('');
-  const [giftResult, setGiftResult] = useState(null);
-
-  async function createGiftLicense(event) {
-    event.preventDefault();
-    if (!giftEmail.trim()) { setGiftError('Informe o email de quem vai receber.'); return; }
-    setGiftLoading(true);
-    setGiftError('');
-    setGiftResult(null);
-    try {
-      const response = await api.post('/licenses/admin/create-auth', {
-        email: giftEmail.trim(),
-        days: Number(giftDays) || 30,
-        notes: giftNotes.trim() || 'presente/cortesia',
-        prefix: 'IRP',
-        product: 'IRP Master (presente)',
-      });
-      setGiftResult(response.data);
-      setGiftEmail('');
-      setGiftNotes('');
-    } catch (err) {
-      setGiftError(err.response?.data?.error || err.response?.data?.message || err.message || 'Erro ao gerar licenca.');
-    } finally {
-      setGiftLoading(false);
-    }
-  }
-
   const totals = useMemo(() => trials.reduce((acc, trial) => {
     if (trial.status === 'active') acc.active += 1;
     if (trial.status === 'expired') acc.expired += 1;
@@ -131,35 +96,6 @@ export default function AdminIrpLicenses() {
           <div className="rounded-lg border bg-white p-4 shadow-sm"><div className="text-sm font-semibold text-gray-500">Vencidos na pagina</div><div className="mt-2 text-3xl font-bold text-yellow-700">{totals.expired}</div></div>
           <div className="rounded-lg border bg-white p-4 shadow-sm"><div className="text-sm font-semibold text-gray-500">Usando em 24h</div><div className="mt-2 text-3xl font-bold text-blue-700">{Number(attemptSummary.activeDevices24h || 0)}</div></div>
           <div className="rounded-lg border bg-white p-4 shadow-sm"><div className="text-sm font-semibold text-gray-500">Bloqueadas 24h</div><div className="mt-2 text-3xl font-bold text-red-700">{Number(attemptSummary.denied24h || 0)}</div></div>
-        </section>
-
-        <section className="mb-6 rounded-lg border bg-white p-4 shadow-sm">
-          <h2 className="mb-3 text-lg font-bold text-gray-900">Gerar licenca de presente/cortesia</h2>
-          <p className="mb-3 text-sm text-gray-600">Cria uma licenca sem limite de itens (igual uma paga), valida pelo numero de dias escolhido. A chave e devolvida aqui na tela — copie e envie pra quem vai receber.</p>
-          <form onSubmit={createGiftLicense} className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_120px_1fr_auto] md:items-end">
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">Email de quem recebe</label>
-              <input type="email" required value={giftEmail} onChange={(event) => setGiftEmail(event.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none" placeholder="destinatario@email.com" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">Dias de validade</label>
-              <input type="number" min="1" value={giftDays} onChange={(event) => setGiftDays(event.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none" placeholder="30" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">Observacao (opcional)</label>
-              <input type="text" value={giftNotes} onChange={(event) => setGiftNotes(event.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none" placeholder="ex: parceiro, indicacao..." />
-            </div>
-            <button type="submit" disabled={giftLoading} className="rounded-md bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
-              {giftLoading ? 'Gerando...' : 'Gerar licenca'}
-            </button>
-          </form>
-          {giftError && <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{giftError}</div>}
-          {giftResult && (
-            <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-              Licenca gerada: <span className="font-mono font-bold">{giftResult.licenseKey}</span>
-              {giftResult.expiresAt && <> — valida ate {formatDate(giftResult.expiresAt)}</>}
-            </div>
-          )}
         </section>
 
         <section className="mb-6 rounded-lg border bg-white p-4 shadow-sm">
