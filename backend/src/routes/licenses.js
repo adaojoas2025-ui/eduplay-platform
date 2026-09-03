@@ -115,6 +115,22 @@ router.post('/admin/create-auth', authenticate, isAdmin, async (req, res) => {
   }
 });
 
+// POST /admin/reset-trial-claim — libera um novo teste gratis pra um e-mail (suporte a
+// cliente legitimo que trocou de dispositivo/reinstalou, ou teste manual do proprio
+// dono do produto). NAO cria licenca nenhuma — so remove o bloqueio de "ja usei o
+// teste gratis", deixando o proximo POST /trial (chamado normalmente pela extensao)
+// seguir o fluxo real de novo.
+router.post('/admin/reset-trial-claim', adminOnly, async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'email required' });
+  try {
+    const result = await licenseService.resetTrialClaim(email);
+    return res.status(200).json({ ok: true, ...result });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // GET /admin/list — lista licenças (paginado, filtro status/email/prefix)
 router.get('/admin/list', adminOnly, async (req, res) => {
   const { page = 1, limit = 50, status, email, prefix } = req.query;

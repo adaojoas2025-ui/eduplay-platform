@@ -598,6 +598,27 @@ necessaria so pra saber se ainda sobra cota, apenas pra *reportar* uso depois de
 para uma licenca em trial — e preciso checar tambem `quota.itemsRemaining > 0`. As duas
 condicoes sao independentes e precisam ser verdadeiras juntas.
 
+### POST /api/v1/licenses/admin/reset-trial-claim *(novo)*
+
+Uso administrativo: libera um novo teste grátis pra um e-mail, removendo o registro em
+`IrpTrialClaim` que bloqueia um segundo pedido (`already_used`). Não cria nem altera
+nenhuma licença — só limpa o bloqueio, deixando o próximo `POST /trial` (chamado
+normalmente pela extensão) seguir o fluxo real de novo. Útil pra suporte a um cliente
+legítimo que reinstalou/trocou de dispositivo, e para o próprio dono do produto testar o
+fluxo de trial repetidamente sem precisar de um e-mail novo a cada vez.
+
+**Request:**
+```
+Header: x-admin-secret: irpmaster2026admin
+POST /api/v1/licenses/admin/reset-trial-claim
+{ "email": "cliente@example.com" }
+```
+
+**Response:**
+```json
+{ "ok": true, "removed": 1, "emailNormalized": "cliente@example.com", "licenseKeys": ["IRP-XXXX-XXXX-XXXX-XXXX"] }
+```
+
 ### Teste automatizado
 
 `backend/tests/irp-trial-item-quota.test.js` (roda com `node --test tests/irp-trial-item-quota.test.js`,

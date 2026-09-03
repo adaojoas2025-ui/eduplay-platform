@@ -661,6 +661,21 @@ async function listLicenses({ page = 1, limit = 50, status, email, prefix } = {}
   return { licenses: rows, total: Number(total[0].count), page, limit };
 }
 
+// Remove o registro de "ja usou o teste gratis" de um e-mail, liberando um novo trial
+// pra esse e-mail (uso administrativo: suporte a cliente legitimo que trocou de
+// dispositivo/reinstalou, ou teste manual do proprio dono do produto). Nao mexe na
+// licenca de trial ja emitida anteriormente (se existir) nem no seu consumo — so libera
+// um NOVO pedido de teste gratis passar pela checagem de "already_used".
+async function resetTrialClaim(email) {
+  await ensureLicenseSchema();
+  const emailNormalized = normalizeEmailForTrial(email);
+  const rows = await prisma.$queryRawUnsafe(
+    `DELETE FROM "IrpTrialClaim" WHERE "emailNormalized"=$1 RETURNING "licenseKey"`,
+    emailNormalized
+  );
+  return { removed: rows.length, emailNormalized, licenseKeys: rows.map(r => r.licenseKey) };
+}
+
 async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {
   await ensureLicenseSchema();
   const safePage = Math.max(1, Number(page) || 1);
@@ -839,7 +854,7 @@ module.exports = {
   generateLicenseKey, createLicense, activateLicense, validateLicense,
   heartbeat, logoutLicense,
   renewLicense, renewLicenseFromPayment, claimLicenseByDevice, syncLicenseByDeviceId,
-  claimTrialLicense, consumeTrialItems,
+  claimTrialLicense, consumeTrialItems, resetTrialClaim,
   listLicenses, listTrialClaims, getLicenseById, getLicenseEvents,
   recordLicenseAttempt, listLicenseAttempts,
   blockLicense, unblockLicense, renewLicenseById, freeDevice,
