@@ -29,7 +29,7 @@ router.post('/sync', async (req, res) => {
   }
 });
 
-// POST /trial — gera licença de teste grátis de 1 dia (uma única vez por e-mail/dispositivo/IP)
+// POST /trial — gera licença de teste grátis limitada por quantidade de itens (uma única vez por e-mail/dispositivo/IP)
 router.post('/trial', async (req, res) => {
   const { email, deviceId, extensionVersion, clientFingerprint } = req.body;
   if (!email || !deviceId) return res.status(400).json({ valid: false, message: 'E-mail e dispositivo são obrigatórios.' });
@@ -41,6 +41,24 @@ router.post('/trial', async (req, res) => {
     await licenseService.recordLicenseAttempt({ action: 'trial', licenseKey: result.licenseKey, deviceId, extensionVersion, ip: req.ip, valid: result.valid, reason: result.reason, message: result.message });
     if (result.valid) return res.status(200).json(result);
     if (result.reason === 'limit_reached') return res.status(429).json(result);
+    return res.status(409).json(result);
+  } catch (e) {
+    return res.status(500).json({ valid: false, message: e.message });
+  }
+});
+
+// POST /trial/consume — extensão reporta quantos itens uma execução realmente processou
+// com sucesso, uma vez por execução (runId). Sem efeito (quota:null) numa licença paga.
+router.post('/trial/consume', async (req, res) => {
+  const { licenseKey, deviceId, runId, itemsCompleted, flow } = req.body;
+  if (!licenseKey || !deviceId || !runId) {
+    return res.status(400).json({ valid: false, message: 'licenseKey, deviceId e runId são obrigatórios.' });
+  }
+  try {
+    const result = await licenseService.consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, flow });
+    await licenseService.recordLicenseAttempt({ action: 'trial_consume', licenseKey, deviceId, extensionVersion: null, ip: req.ip, valid: result.valid, reason: result.reason, message: result.message });
+    if (result.valid) return res.status(200).json(result);
+    if (result.reason === 'not_found') return res.status(404).json(result);
     return res.status(409).json(result);
   } catch (e) {
     return res.status(500).json({ valid: false, message: e.message });

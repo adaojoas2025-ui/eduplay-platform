@@ -32,6 +32,9 @@ async function ensureIrpTables() {
       `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "notes" TEXT`,
       `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
       `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
+      // Trial por quantidade de itens (em vez de so por tempo) — NULL = licenca paga/cortesia
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "trialItemsLimit" INTEGER`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "trialItemsUsed" INTEGER NOT NULL DEFAULT 0`,
       `CREATE UNIQUE INDEX IF NOT EXISTS "IrpLicense_licenseKey_key" ON "IrpLicense"("licenseKey")`,
       `CREATE INDEX IF NOT EXISTS "IrpLicense_email_idx" ON "IrpLicense"("email")`,
       `CREATE INDEX IF NOT EXISTS "IrpLicense_status_idx" ON "IrpLicense"("status")`,
@@ -42,6 +45,12 @@ async function ensureIrpTables() {
       `ALTER TABLE "IrpLicenseEvent" ADD COLUMN IF NOT EXISTS "extensionVersion" TEXT`,
       `ALTER TABLE "IrpLicenseEvent" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
       `CREATE INDEX IF NOT EXISTS "IrpLicenseEvent_licenseId_idx" ON "IrpLicenseEvent"("licenseId")`,
+      // Ledger de idempotencia do consumo de itens do trial (POST /trial/consume)
+      `CREATE TABLE IF NOT EXISTS "IrpTrialConsumption" ("id" TEXT NOT NULL,"runId" TEXT NOT NULL,"licenseKey" TEXT NOT NULL,"itemsRequested" INTEGER NOT NULL DEFAULT 0,"itemsApplied" INTEGER NOT NULL DEFAULT 0,"flow" TEXT,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "IrpTrialConsumption_pkey" PRIMARY KEY ("id"))`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "IrpTrialConsumption_runId_key" ON "IrpTrialConsumption"("runId")`,
+      `CREATE INDEX IF NOT EXISTS "IrpTrialConsumption_licenseKey_idx" ON "IrpTrialConsumption"("licenseKey")`,
+      // Config chave/valor pra ajustar limite de itens do trial sem publicar nova versao
+      `CREATE TABLE IF NOT EXISTS "IrpConfig" ("key" TEXT NOT NULL,"value" TEXT NOT NULL,"updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "IrpConfig_pkey" PRIMARY KEY ("key"))`,
     ];
     for (const sql of sqls) {
       try { await p.$executeRawUnsafe(sql); } catch(e) { /* already exists */ }

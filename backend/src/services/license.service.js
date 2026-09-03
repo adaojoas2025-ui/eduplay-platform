@@ -63,6 +63,11 @@ async function ensureLicenseSchema() {
     '"notes" TEXT',
     '"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP',
     '"updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP',
+    // Trial por quantidade de itens (em vez de so por tempo): NULL = licenca paga/cortesia,
+    // sem limite de itens. Gravado como snapshot no momento da criacao do trial, entao
+    // mudar o valor padrao depois nunca afeta trials ja concedidos.
+    '"trialItemsLimit" INTEGER',
+    '"trialItemsUsed" INTEGER NOT NULL DEFAULT 0',
   ];
 
   for (const column of licenseColumns) {
@@ -159,7 +164,62 @@ async function ensureLicenseSchema() {
   await prisma.$executeRawUnsafe(
     `CREATE INDEX IF NOT EXISTS "IrpLicenseAttempt_valid_idx" ON "IrpLicenseAttempt"("valid")`
   );
+
+  // Ledger de idempotencia do consumo de itens do trial: garante que uma mesma execucao
+  // da automacao (identificada por "runId", gerado uma vez pela extensao) nunca e
+  // contabilizada duas vezes, mesmo com reenvio de rede.
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "IrpTrialConsumption" (
+      "id" TEXT PRIMARY KEY,
+      "runId" TEXT NOT NULL,
+      "licenseKey" TEXT NOT NULL,
+      "itemsRequested" INTEGER NOT NULL DEFAULT 0,
+      "itemsApplied" INTEGER NOT NULL DEFAULT 0,
+      "flow" TEXT,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IrpTrialConsumption_runId_key" ON "IrpTrialConsumption"("runId")`
+  );
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "IrpTrialConsumption_licenseKey_idx" ON "IrpTrialConsumption"("licenseKey")`
+  );
+
+  // Config pequena, chave/valor, pra ajustar limite de itens do trial e a rede de
+  // seguranca de dias sem precisar publicar uma nova versao do backend.
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "IrpConfig" (
+      "key" TEXT PRIMARY KEY,
+      "value" TEXT NOT NULL,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   licenseSchemaReady = true;
+}
+
+const TRIAL_ITEMS_LIMIT_FALLBACK = 11;
+const TRIAL_SAFETY_NET_DAYS_FALLBACK = 30;
+
+// Le um valor numerico de configuracao tunavel em runtime (tabela IrpConfig), com
+// fallback fixo caso a linha nao exista ou o banco ainda nao tenha a tabela.
+async function getConfigNumber(key, fallback) {
+  try {
+    await ensureLicenseSchema();
+    const rows = await prisma.$queryRawUnsafe(`SELECT "value" FROM "IrpConfig" WHERE "key"=$1 LIMIT 1`, key);
+    const n = rows[0] ? Number(rows[0].value) : NaN;
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function quotaFromLicense(license) {
+  if (!license || license.trialItemsLimit == null) return null;
+  const limit = Number(license.trialItemsLimit);
+  const used = Number(license.trialItemsUsed) || 0;
+  return { itemsLimit: limit, itemsUsed: used, itemsRemaining: Math.max(0, limit - used) };
 }
 
 // Normaliza e-mail para evitar burlar o teste grátis com variações (gmail.com ignora
@@ -289,7 +349,7 @@ async function activateLicense(licenseKey, deviceId, extensionVersion, options =
   await logEvent(license.id, deviceChanged ? 'device_changed' : 'activated', deviceId, extensionVersion);
 
   const daysRemaining = Math.ceil((new Date(license.expiresAt) - now) / 86400000);
-  return { valid: true, status: 'active', expiresAt: license.expiresAt, daysRemaining, message: 'Licença ativada com sucesso.' };
+  return { valid: true, status: 'active', expiresAt: license.expiresAt, daysRemaining, quota: quotaFromLicense(license), message: 'Licença ativada com sucesso.' };
 }
 
 async function validateLicense(licenseKey, deviceId, extensionVersion) {
@@ -315,7 +375,7 @@ async function validateLicense(licenseKey, deviceId, extensionVersion) {
   await logEvent(license.id, 'validated', deviceId, extensionVersion);
 
   const daysRemaining = Math.ceil((new Date(license.expiresAt) - now) / 86400000);
-  return { valid: true, status: 'active', expiresAt: license.expiresAt, daysRemaining, message: 'Licença válida.' };
+  return { valid: true, status: 'active', expiresAt: license.expiresAt, daysRemaining, quota: quotaFromLicense(license), message: 'Licença válida.' };
 }
 
 async function heartbeat(licenseKey, deviceId) {
@@ -328,7 +388,7 @@ async function heartbeat(licenseKey, deviceId) {
   await prisma.$executeRawUnsafe(
     `UPDATE "IrpLicense" SET "lastSeenAt"=NOW(),"updatedAt"=NOW() WHERE "id"=$1`, license.id
   );
-  return { valid: true };
+  return { valid: true, quota: quotaFromLicense(license) };
 }
 
 async function logoutLicense(licenseKey, deviceId) {
@@ -442,11 +502,15 @@ async function syncLicenseByDeviceId(deviceId) {
   const now = new Date();
   const daysRemaining = Math.ceil((new Date(license.expiresAt) - now) / 86400000);
   await logEvent(license.id, 'synced', deviceId, null);
-  return { valid: true, licenseKey: license.licenseKey, expiresAt: license.expiresAt, daysRemaining, message: 'Licença sincronizada.' };
+  return { valid: true, licenseKey: license.licenseKey, expiresAt: license.expiresAt, daysRemaining, quota: quotaFromLicense(license), message: 'Licença sincronizada.' };
 }
 
-// Gera licenca de teste gratis (1 dia), uma unica vez por email, instalacao e fingerprint local.
-// `ip` e apenas auditoria: nao bloqueia redes compartilhadas de orgaos ou empresas.
+// Gera licenca de teste gratis limitada por QUANTIDADE DE ITENS (nao mais por tempo),
+// uma unica vez por email, instalacao e fingerprint local. `ip` e apenas auditoria: nao
+// bloqueia redes compartilhadas de orgaos ou empresas. `expiresAt` continua existindo
+// como rede de seguranca (dias), mas quem realmente bloqueia o uso e trialItemsLimit/
+// trialItemsUsed, verificado a cada validate/heartbeat via `quota` e consumido pela
+// extensao via `consumeTrialItems`/POST /trial/consume.
 async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFingerprint) {
   await ensureLicenseSchema();
   if (!email || !deviceId) {
@@ -464,14 +528,19 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFi
     emailNormalized, deviceId, fingerprint
   );
   if (existing[0]) {
-    return { valid: false, reason: 'already_used', message: 'Você já utilizou seu teste grátis de 1 dia. Adquira uma licença para continuar usando.' };
+    return { valid: false, reason: 'already_used', message: 'Você já utilizou seu teste grátis. Adquira uma licença para continuar usando.' };
   }
 
+  const itemsLimit = await getConfigNumber('trial_items_limit_default', TRIAL_ITEMS_LIMIT_FALLBACK);
+  const safetyNetDays = await getConfigNumber('trial_safety_net_days', TRIAL_SAFETY_NET_DAYS_FALLBACK);
 
-  const license = await createLicense(email, 1, 'free trial - 1 day', { prefix: 'IRP' });
+  const license = await createLicense(email, safetyNetDays, 'free trial - item-limited', { prefix: 'IRP' });
   await prisma.$executeRawUnsafe(
-    `UPDATE "IrpLicense" SET "activeDeviceId"=$1,"extensionVersion"=$2,"lastSeenAt"=NOW(),"updatedAt"=NOW() WHERE "id"=$3`,
-    deviceId, extensionVersion || null, license.id
+    `UPDATE "IrpLicense"
+       SET "activeDeviceId"=$1,"extensionVersion"=$2,"lastSeenAt"=NOW(),
+           "trialItemsLimit"=$3,"trialItemsUsed"=0,"updatedAt"=NOW()
+     WHERE "id"=$4`,
+    deviceId, extensionVersion || null, itemsLimit, license.id
   );
   await logEvent(license.id, 'trial_claimed', deviceId, extensionVersion);
 
@@ -482,18 +551,89 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFi
     );
   } catch (e) {
     // Corrida entre duas requisições simultâneas — outro request já registrou o claim.
-    return { valid: false, reason: 'already_used', message: 'Você já utilizou seu teste grátis de 1 dia. Adquira uma licença para continuar usando.' };
+    return { valid: false, reason: 'already_used', message: 'Você já utilizou seu teste grátis. Adquira uma licença para continuar usando.' };
   }
 
-  await emailService.sendIrpTrialEmail(email, license.licenseKey, license.expiresAt);
-  logger.info('IRP trial license claimed', { email: emailNormalized, licenseKey: license.licenseKey });
+  await emailService.sendIrpTrialEmail(email, license.licenseKey, license.expiresAt, itemsLimit);
+  logger.info('IRP trial license claimed', { email: emailNormalized, licenseKey: license.licenseKey, itemsLimit });
 
   return {
     valid: true,
     licenseKey: license.licenseKey,
     expiresAt: license.expiresAt,
-    daysRemaining: 1,
-    message: 'Teste grátis de 1 dia ativado! A chave também foi enviada para o seu e-mail.',
+    daysRemaining: safetyNetDays,
+    quota: { itemsLimit, itemsUsed: 0, itemsRemaining: itemsLimit },
+    message: `Teste grátis ativado! Você pode processar até ${itemsLimit} itens. A chave também foi enviada para o seu e-mail.`,
+  };
+}
+
+// Registra itens realmente processados com sucesso por uma execucao de automacao
+// (identificada por runId, gerado uma vez pela extensao por execucao). Idempotente: um
+// runId ja processado nunca soma de novo, mesmo em reenvio de rede ou corrida entre
+// duas chamadas simultaneas com o mesmo runId (a unicidade de "runId" e a garantia
+// atomica — o INSERT em IrpTrialConsumption acontece ANTES do UPDATE em IrpLicense, e so
+// prossegue pro UPDATE quem realmente "ganhou" a insercao daquele runId).
+async function consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, flow }) {
+  await ensureLicenseSchema();
+  if (!licenseKey || !deviceId || !runId) {
+    return { valid: false, reason: 'missing_fields', message: 'Dados incompletos para registrar uso do teste.' };
+  }
+
+  const license = await findByKey(licenseKey);
+  if (!license) return { valid: false, reason: 'not_found', message: 'Chave de licença inválida.' };
+  if (license.activeDeviceId && license.activeDeviceId !== deviceId) {
+    return { valid: false, reason: 'device_changed', message: 'Esta licença foi ativada em outro dispositivo.' };
+  }
+
+  // Licenca paga/cortesia (sem limite de itens): nada a consumir, mas a extensao pode
+  // chamar essa rota sem precisar saber antecipadamente se ainda esta em trial.
+  if (license.trialItemsLimit == null) {
+    return { valid: true, quota: null, applied: 0, alreadyConsumed: false };
+  }
+
+  const itemsRequested = Math.max(0, Math.trunc(Number(itemsCompleted) || 0));
+
+  try {
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "IrpTrialConsumption" ("id","runId","licenseKey","itemsRequested","itemsApplied","flow","createdAt")
+       VALUES ($1,$2,$3,$4,0,$5,NOW())`,
+      uuid(), runId, licenseKey, itemsRequested, flow || null
+    );
+  } catch (e) {
+    // runId ja existe (indice unico) — essa execucao ja foi contabilizada antes.
+    const already = await prisma.$queryRawUnsafe(`SELECT * FROM "IrpTrialConsumption" WHERE "runId"=$1 LIMIT 1`, runId);
+    const fresh = await findByKey(licenseKey);
+    return {
+      valid: true,
+      quota: quotaFromLicense(fresh),
+      applied: already[0] ? already[0].itemsApplied : 0,
+      alreadyConsumed: true,
+    };
+  }
+
+  // So chega aqui se o INSERT acima teve sucesso: esta e, garantidamente, a primeira vez
+  // que esse runId e processado, mesmo sob corrida entre requisicoes simultaneas.
+  const updated = await prisma.$queryRawUnsafe(
+    `UPDATE "IrpLicense"
+        SET "trialItemsUsed" = LEAST("trialItemsLimit", "trialItemsUsed" + $1), "updatedAt"=NOW()
+      WHERE "id"=$2
+      RETURNING "trialItemsUsed","trialItemsLimit"`,
+    itemsRequested, license.id
+  );
+  const novoUsado = updated[0].trialItemsUsed;
+  const limite = updated[0].trialItemsLimit;
+  const aplicado = novoUsado - (license.trialItemsUsed || 0);
+
+  await prisma.$executeRawUnsafe(
+    `UPDATE "IrpTrialConsumption" SET "itemsApplied"=$1 WHERE "runId"=$2`, aplicado, runId
+  );
+  await logEvent(license.id, 'trial_items_consumed', deviceId, null);
+
+  return {
+    valid: true,
+    quota: { itemsLimit: limite, itemsUsed: novoUsado, itemsRemaining: Math.max(0, limite - novoUsado) },
+    applied: aplicado,
+    alreadyConsumed: false,
   };
 }
 
@@ -699,7 +839,7 @@ module.exports = {
   generateLicenseKey, createLicense, activateLicense, validateLicense,
   heartbeat, logoutLicense,
   renewLicense, renewLicenseFromPayment, claimLicenseByDevice, syncLicenseByDeviceId,
-  claimTrialLicense,
+  claimTrialLicense, consumeTrialItems,
   listLicenses, listTrialClaims, getLicenseById, getLicenseEvents,
   recordLicenseAttempt, listLicenseAttempts,
   blockLicense, unblockLicense, renewLicenseById, freeDevice,

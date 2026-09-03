@@ -477,6 +477,145 @@ Observacao: como a validacao comum da extensao envia chave e dispositivo, mas na
 
 Privacidade: o `clientFingerprint` e um hash tecnico do ambiente do navegador. Ele nao le arquivos, planilhas, senhas, documentos, CPF, dados de pagamento ou dados da tela do SIASG.
 
+## Teste gratis por quantidade de itens (substitui o teste de 1 dia)
+
+Atualizado em: 03/09/2026
+
+**Motivo da mudanca:** o uso do IRP Master e esporadico (um cadastro completo de IRP a cada
+~3 meses por cliente). Com o teste de 24h antigo, quem testava conseguia terminar o
+trabalho inteiro de graca numa unica sessao e so precisava da ferramenta de novo meses
+depois — sem nenhuma receita associada aquele uso. O teste gratis agora e limitado por
+**quantidade de itens processados com sucesso** (nao mais por tempo): o suficiente pra
+provar que a automacao funciona, nao o suficiente pra terminar um trabalho real.
+
+O pool de itens e **compartilhado entre as tres automacoes que escrevem no portal**
+(UASG Local/Quantidade, Detalhes do Item, Beneficios ME/EPP) — nao ha limite separado por
+categoria. **Limite padrao: 11 itens no total**, entre qualquer combinacao das tres.
+
+`expiresAt` continua existindo, mas agora e so uma rede de seguranca (30 dias por padrao,
+tambem configuravel) — quem realmente bloqueia o uso e `trialItemsLimit`/`trialItemsUsed`.
+
+### Colunas novas em `IrpLicense`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `trialItemsLimit` | INTEGER, nullable | Limite de itens do trial, gravado como snapshot na criacao. `NULL` = licenca paga/cortesia, sem limite de itens. |
+| `trialItemsUsed` | INTEGER, default 0 | Itens ja consumidos (nunca ultrapassa `trialItemsLimit`, mesmo com valor inflado enviado pelo cliente). |
+
+### Tabela nova `IrpTrialConsumption` (idempotencia)
+
+Garante que uma mesma execucao da automacao (`runId`, gerado uma vez pela extensao por
+execucao) nunca e contada duas vezes, mesmo com reenvio de rede. `runId` tem indice
+**unico** — a insercao nessa tabela e o proprio mecanismo atomico que decide quem "ganha"
+o direito de incrementar `trialItemsUsed` numa corrida entre chamadas simultaneas com o
+mesmo `runId`.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `runId` | TEXT, unique | Identificador da execucao, gerado uma vez pela extensao |
+| `licenseKey` | TEXT | Licenca associada |
+| `itemsRequested` | INTEGER | Valor enviado pelo cliente |
+| `itemsApplied` | INTEGER | Quanto foi de fato somado (pode ser menor que `itemsRequested` se estourasse o limite; 0 numa repeticao do mesmo `runId`) |
+| `flow` | TEXT | `'uasg_local'` \| `'detalhes'` \| `'beneficios'` |
+
+### Tabela nova `IrpConfig` (chave/valor, tunavel sem deploy)
+
+| Chave | Fallback se a linha nao existir |
+|---|---|
+| `trial_items_limit_default` | `11` |
+| `trial_safety_net_days` | `30` |
+
+Editar via `IrpConfig` (SQL direto ou Prisma Studio) muda o limite de trials **futuros**
+imediatamente, sem precisar publicar nova versao do backend nem da extensao. Trials ja
+concedidos mantem o `trialItemsLimit` que foi gravado no momento da criacao.
+
+### POST /api/v1/licenses/trial — resposta estendida
+
+```json
+{
+  "valid": true,
+  "licenseKey": "IRP-XXXX-XXXX-XXXX-XXXX",
+  "expiresAt": "2026-10-03T00:00:00.000Z",
+  "daysRemaining": 30,
+  "quota": { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 },
+  "message": "Teste grátis ativado! Você pode processar até 11 itens..."
+}
+```
+
+### POST /api/v1/licenses/trial/consume *(novo)*
+
+Chamado pela extensao apos cada execucao de UASG Local/Quantidade, Detalhes do Item ou
+Beneficios ME/EPP, reportando quantos itens foram processados com sucesso.
+
+**Request:**
+```json
+{
+  "licenseKey": "IRP-XXXX-XXXX-XXXX-XXXX",
+  "deviceId": "dev_...",
+  "runId": "uuid-gerado-pela-extensao-por-execucao",
+  "itemsCompleted": 7,
+  "flow": "detalhes"
+}
+```
+
+**Response (licenca em trial):**
+```json
+{
+  "valid": true,
+  "quota": { "itemsLimit": 11, "itemsUsed": 7, "itemsRemaining": 4 },
+  "applied": 7,
+  "alreadyConsumed": false
+}
+```
+
+**Response (licenca paga/cortesia — `trialItemsLimit` NULL, nada a consumir):**
+```json
+{ "valid": true, "quota": null, "applied": 0, "alreadyConsumed": false }
+```
+
+**Response (mesmo `runId` reenviado — idempotente, nao soma de novo):**
+```json
+{
+  "valid": true,
+  "quota": { "itemsLimit": 11, "itemsUsed": 7, "itemsRemaining": 4 },
+  "applied": 7,
+  "alreadyConsumed": true
+}
+```
+
+Erros: `404` com `reason:"not_found"` (chave invalida) ou `409` com `reason:"device_changed"`
+(licenca ativada em outro dispositivo).
+
+### `validate`, `heartbeat`, `activate`, `sync` — todos ganham `quota`
+
+Todas as respostas dessas quatro rotas passam a incluir o mesmo campo `quota` (ou `null`
+pra licenca sem limite de itens). Isso deixa a checagem de cota "de carona" na chamada de
+licenca que a extensao ja faz antes de cada acao — nenhuma chamada de rede nova e
+necessaria so pra saber se ainda sobra cota, apenas pra *reportar* uso depois de um run
+(`/trial/consume`).
+
+**Importante:** `valid:true` sozinho **nao** significa mais "pode iniciar uma nova automacao"
+para uma licenca em trial — e preciso checar tambem `quota.itemsRemaining > 0`. As duas
+condicoes sao independentes e precisam ser verdadeiras juntas.
+
+### Teste automatizado
+
+`backend/tests/irp-trial-item-quota.test.js` (roda com `node --test tests/irp-trial-item-quota.test.js`,
+sem precisar de banco real nem `npm install` — usa um mock em memoria com indice unico
+real de `runId`, igual ao padrao ja usado em `tests/baixatudo-license-fix.test.js`) cobre
+especificamente: (1) idempotencia de `/trial/consume` com `runId` repetido — o ponto de
+maior risco de bug de receita dessa mudanca; (2) trava no limite mesmo com valor inflado
+enviado pelo cliente; (3) licenca paga nunca e afetada; (4) dispositivo trocado e
+rejeitado; (5) `claimTrialLicense` usa o fallback de 11 itens quando `IrpConfig` nao tem
+a linha `trial_items_limit_default`.
+
+### E-mail do trial (`sendIrpTrialEmail`)
+
+Assinatura mudou de `(email, licenseKey, expiresAt)` para
+`(email, licenseKey, expiresAt, itemsLimit)`. O texto do e-mail nao fala mais em "1 dia" —
+fala em "ate N itens" (com `expiresAt` mencionado como validade secundaria/rede de
+seguranca).
+
 ## Commits relacionados
 
 | Hash | Descrição |

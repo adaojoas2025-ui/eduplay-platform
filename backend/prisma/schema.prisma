@@ -554,6 +554,10 @@ model IrpLicense {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   events           IrpLicenseEvent[]
+  // Trial por quantidade de itens (em vez de so por tempo): NULL = licenca paga/cortesia,
+  // sem limite de itens. Snapshot do limite vigente no momento da criacao do trial.
+  trialItemsLimit  Int?
+  trialItemsUsed   Int               @default(0)
 
   @@index([licenseKey])
   @@index([email])
@@ -570,4 +574,27 @@ model IrpLicenseEvent {
   createdAt        DateTime   @default(now())
 
   @@index([licenseId])
+}
+
+// Ledger de idempotencia do consumo de itens do trial (POST /trial/consume): garante que
+// uma mesma execucao da automacao (runId, gerado uma vez pela extensao) nunca e contada
+// duas vezes, mesmo com reenvio de rede.
+model IrpTrialConsumption {
+  id             String   @id @default(uuid())
+  runId          String   @unique
+  licenseKey     String
+  itemsRequested Int      @default(0)
+  itemsApplied   Int      @default(0)
+  flow           String?
+  createdAt      DateTime @default(now())
+
+  @@index([licenseKey])
+}
+
+// Config chave/valor pequena, tunavel sem publicar nova versao do backend (ex.: limite
+// padrao de itens do trial).
+model IrpConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @default(now())
 }
