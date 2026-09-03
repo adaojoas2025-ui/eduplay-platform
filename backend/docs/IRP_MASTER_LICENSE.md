@@ -378,11 +378,29 @@ if (origin && origin.startsWith('chrome-extension://')) {
 
 ---
 
-## Teste gratis de 1 dia - controle anti-abuso
+## Teste gratis - controle anti-abuso (DESATIVADO em 03/09/2026 — ver aviso abaixo)
 
-Atualizado em: 25/06/2026
+Atualizado em: 25/06/2026. **Bloqueio removido em 03/09/2026 — decisao explicita do dono
+do produto.**
 
-O teste gratis da IRP Master cria uma licenca com validade de 1 dia e registra o uso na tabela `IrpTrialClaim`.
+> ⚠️ **Estado atual (03/09/2026 em diante): NAO HA MAIS BLOQUEIO.** `POST /trial` concede
+> um trial novo (`trial_items_limit_default` itens, hoje 11) a CADA chamada, mesmo
+> repetindo o mesmo e-mail, `deviceId` ou `clientFingerprint`. A tabela `IrpTrialClaim`
+> continua sendo alimentada (auditoria/analytics — ver quantas vezes um dispositivo
+> pediu trial), mas nao bloqueia mais nada. Decisao tomada apos o dono do produto
+> confirmar explicitamente (duas vezes, incluindo uma pergunta direta comparando as duas
+> opcoes) que quer isso pra TODO MUNDO, nao so pra teste proprio — ciente de que isso
+> significa que ninguem precisa comprar uma licenca pra usar a ferramenta (basta clicar
+> em "Testar grátis" de novo quando os itens acabarem).
+>
+> **Para reverter** (voltar a bloquear repeticao), em `license.service.js`,
+> `claimTrialLicense`: recolocar a consulta `SELECT * FROM "IrpTrialClaim" WHERE
+> "emailNormalized"=$1 OR "deviceId"=$2 OR ($3::text IS NOT NULL AND
+> "clientFingerprint"=$3) LIMIT 1` antes de criar a licenca, retornando `{valid:false,
+> reason:'already_used', message:'...'}` se encontrar algo — e reverter o `catch` vazio
+> do `INSERT INTO "IrpTrialClaim"` pra voltar a retornar esse mesmo erro em caso de
+> corrida. Essa logica exata (removida) fica documentada no historico do Git do commit
+> que fez essa mudanca.
 
 Endpoint publico:
 
@@ -390,18 +408,19 @@ Endpoint publico:
 POST /api/v1/licenses/trial
 ```
 
-Payload esperado a partir da extensao `1.0.13`:
+Payload esperado a partir da extensao `1.0.13`+ (o `email` e opcional desde 03/09/2026 —
+quando ausente, libera o trial automaticamente sem pedir nada na extensao):
 
 ```json
 {
   "email": "usuario@email.com",
   "deviceId": "dev_...",
   "clientFingerprint": "hash-tecnico",
-  "extensionVersion": "1.0.13"
+  "extensionVersion": "1.0.14"
 }
 ```
 
-Regras de bloqueio automatico:
+Regras de bloqueio automatico (histórico — **desativadas**, ver aviso acima):
 
 - mesmo email normalizado;
 - mesmo `deviceId`;

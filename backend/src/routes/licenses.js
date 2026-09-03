@@ -29,10 +29,11 @@ router.post('/sync', async (req, res) => {
   }
 });
 
-// POST /trial — gera licença de teste grátis limitada por quantidade de itens (uma única
-// vez por dispositivo/IP; e-mail é opcional — quando informado, também entra na checagem
-// antiabuso e recebe a chave por e-mail; instalação nova sem e-mail nenhum também libera o
-// trial automaticamente, protegida só por deviceId/clientFingerprint).
+// POST /trial — gera licença de teste grátis limitada por quantidade de itens. Decisão
+// explícita do dono do produto (03/09/2026): NUNCA bloqueia, nem repetindo o mesmo
+// e-mail/dispositivo/fingerprint — cada chamada concede um trial novo de
+// `trial_items_limit_default` itens. E-mail continua opcional (quando informado,
+// também recebe a chave por e-mail).
 router.post('/trial', async (req, res) => {
   const { email, deviceId, extensionVersion, clientFingerprint } = req.body;
   if (!deviceId) return res.status(400).json({ valid: false, message: 'Dispositivo é obrigatório.' });

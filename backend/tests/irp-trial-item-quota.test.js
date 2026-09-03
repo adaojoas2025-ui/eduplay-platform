@@ -216,16 +216,24 @@ test('claimTrialLicense: instalacao nova sem e-mail nenhum tambem libera o trial
   assert.equal(created.activeDeviceId, 'device-sem-email');
 });
 
-test('claimTrialLicense: mesmo dispositivo sem e-mail nao pega um segundo trial', async () => {
-  const { prisma } = makeFakeDb(null);
+test('claimTrialLicense: decisao explicita do dono do produto — repetir o mesmo dispositivo/e-mail/fingerprint NUNCA bloqueia, sempre concede um trial novo', async () => {
+  const { prisma, licenses } = makeFakeDb(null);
   const licenseService = loadServiceWithFakeDb(prisma);
 
   const first = await licenseService.claimTrialLicense(null, 'device-repetido', '1.0.14', '127.0.0.1', 'fp-1111111111111111');
   assert.equal(first.valid, true);
+  assert.equal(first.quota.itemsLimit, 11);
 
   const second = await licenseService.claimTrialLicense(null, 'device-repetido', '1.0.14', '127.0.0.1', 'fp-1111111111111111');
-  assert.equal(second.valid, false);
-  assert.equal(second.reason, 'already_used');
+  assert.equal(second.valid, true);
+  assert.equal(second.quota.itemsLimit, 11);
+  assert.equal(second.quota.itemsUsed, 0);
+
+  // Duas licencas distintas, cada uma com o proprio trial zerado — nao e a mesma
+  // reaproveitada, e o segundo pedido nao herda o consumo do primeiro.
+  assert.notEqual(first.licenseKey, second.licenseKey);
+  assert.ok(licenses[first.licenseKey]);
+  assert.ok(licenses[second.licenseKey]);
 });
 
 test('consumeTrialItems: dispositivo diferente do vinculado e rejeitado', async () => {

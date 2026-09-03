@@ -531,18 +531,12 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFi
 
   const emailNormalized = normalizeEmailForTrial(emailEfetivo);
   const fingerprint = normalizeTrialFingerprint(clientFingerprint);
-  const existing = await prisma.$queryRawUnsafe(
-    `SELECT * FROM "IrpTrialClaim"
-      WHERE "emailNormalized"=$1
-         OR "deviceId"=$2
-         OR ($3::text IS NOT NULL AND "clientFingerprint"=$3)
-      LIMIT 1`,
-    emailNormalized, deviceId, fingerprint
-  );
-  if (existing[0]) {
-    return { valid: false, reason: 'already_used', message: 'Você já utilizou seu teste grátis. Adquira uma licença para continuar usando.' };
-  }
-
+  // Decisao explicita do dono do produto (03/09/2026): "Testar grátis" NUNCA bloqueia
+  // ninguem, nem repetindo o mesmo e-mail/dispositivo/fingerprint — sempre concede um
+  // trial novo de `itemsLimit` itens. A tabela IrpTrialClaim continua sendo alimentada
+  // (auditoria/analytics de quantas vezes cada dispositivo pediu trial), so que sem
+  // mais bloquear nada com base nela. Ver LICENCAS.md pra reverter essa decisao se o
+  // dono do produto mudar de ideia depois.
   const itemsLimit = await getConfigNumber('trial_items_limit_default', TRIAL_ITEMS_LIMIT_FALLBACK);
   const safetyNetDays = await getConfigNumber('trial_safety_net_days', TRIAL_SAFETY_NET_DAYS_FALLBACK);
 
@@ -556,15 +550,18 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFi
   );
   await logEvent(license.id, 'trial_claimed', deviceId, extensionVersion);
 
+  // So auditoria agora (nunca bloqueia) — IrpTrialClaim tem indices unicos em
+  // emailNormalized/deviceId/clientFingerprint de quando essa tabela ainda bloqueava
+  // repeticao; num pedido repetido do mesmo dispositivo/e-mail/fingerprint essa
+  // insercao vai colidir com o registro anterior (esperado, nao e mais um erro) — so
+  // deixa de registrar essa tentativa especifica no historico, sem afetar o trial que
+  // ja foi concedido acima.
   try {
     await prisma.$executeRawUnsafe(
       `INSERT INTO "IrpTrialClaim" ("id","emailNormalized","deviceId","licenseKey","ip","clientFingerprint","createdAt") VALUES ($1,$2,$3,$4,$5,$6,NOW())`,
       uuid(), emailNormalized, deviceId, license.licenseKey, ip || null, fingerprint
     );
-  } catch (e) {
-    // Corrida entre duas requisições simultâneas — outro request já registrou o claim.
-    return { valid: false, reason: 'already_used', message: 'Você já utilizou seu teste grátis. Adquira uma licença para continuar usando.' };
-  }
+  } catch (e) { /* pedido repetido do mesmo dispositivo/e-mail/fingerprint — esperado */ }
 
   if (temEmailReal) {
     await emailService.sendIrpTrialEmail(emailEfetivo, license.licenseKey, license.expiresAt, itemsLimit);
