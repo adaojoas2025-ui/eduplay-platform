@@ -828,6 +828,16 @@ async function listLicenseAttempts({ page = 1, limit = 50, valid, action, prefix
   return { attempts, total: Number(total[0].count), page: safePage, limit: safeLimit, summary: summary[0] || {} };
 }
 
+// Apaga TODO o historico de uso/tentativas (IrpLicenseAttempt) — botao "Limpar" da secao
+// "Uso e tentativas recentes" na tela Admin > Licencas IRP. So um log de auditoria (nao
+// afeta licencas ativas nem valida/invalida nada), mas cresce indefinidamente; usado pra
+// zerar o log depois de uma rodada grande de testes.
+async function clearLicenseAttempts() {
+  await ensureLicenseSchema();
+  const rows = await prisma.$queryRawUnsafe(`DELETE FROM "IrpLicenseAttempt" RETURNING "id"`);
+  return { removed: rows.length };
+}
+
 async function getLicenseById(id) {
   await ensureLicenseSchema();
   const rows = await prisma.$queryRawUnsafe(`SELECT * FROM "IrpLicense" WHERE "id" = $1 LIMIT 1`, id);
@@ -887,6 +897,6 @@ module.exports = {
   renewLicense, renewLicenseFromPayment, claimLicenseByDevice, syncLicenseByDeviceId,
   claimTrialLicense, consumeTrialItems, resetTrialClaim,
   listLicenses, listTrialClaims, getLicenseById, getLicenseEvents,
-  recordLicenseAttempt, listLicenseAttempts,
+  recordLicenseAttempt, listLicenseAttempts, clearLicenseAttempts,
   blockLicense, unblockLicense, renewLicenseById, freeDevice,
 };

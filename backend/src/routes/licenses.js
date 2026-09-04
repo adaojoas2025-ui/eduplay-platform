@@ -167,6 +167,18 @@ router.get('/admin/attempts', authenticate, isAdmin, async (req, res) => {
   }
 });
 
+// POST /admin/clear-attempts — apaga TODO o historico de uso/tentativas (IrpLicenseAttempt).
+// Botao "Limpar" da secao "Uso e tentativas recentes". So um log de auditoria, nao afeta
+// licencas ativas.
+router.post('/admin/clear-attempts', adminOnly, async (req, res) => {
+  try {
+    const result = await licenseService.clearLicenseAttempts();
+    return res.status(200).json({ ok: true, ...result });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // GET /admin/:id/events — histórico de eventos da licença
 router.get('/admin/:id/events', adminOnly, async (req, res) => {
   try {

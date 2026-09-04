@@ -86,6 +86,16 @@ export default function AdminIrpLicenses() {
     }
   }
 
+  async function limparTentativas() {
+    if (!window.confirm('Apagar TODO o historico de uso e tentativas (' + attemptTotal + ' registro(s))? So um log de auditoria, nao afeta nenhuma licenca ativa. Nao pode ser desfeito.')) return;
+    try {
+      await api.post('/licenses/admin/clear-attempts');
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || err.response?.data?.error || err.message || 'Erro ao limpar historico.');
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
@@ -144,7 +154,7 @@ export default function AdminIrpLicenses() {
         </section>
 
         <section className="overflow-hidden rounded-lg border bg-white shadow-sm">
-          <div className="border-b px-4 py-3 md:flex md:items-center md:justify-between"><div><h2 className="text-lg font-bold text-gray-900">Uso e tentativas recentes</h2><p className="text-sm text-gray-600">Mostra chamadas permitidas e bloqueadas feitas pela extensao.</p></div><div className="mt-2 text-sm text-gray-600 md:mt-0">Total: {attemptTotal} | Permitidas: {Number(attemptSummary.allowed || 0)} | Bloqueadas: {Number(attemptSummary.denied || 0)}</div></div>
+          <div className="border-b px-4 py-3 md:flex md:items-center md:justify-between"><div><h2 className="text-lg font-bold text-gray-900">Uso e tentativas recentes</h2><p className="text-sm text-gray-600">Mostra chamadas permitidas e bloqueadas feitas pela extensao.</p></div><div className="mt-2 flex items-center gap-3 md:mt-0"><div className="text-sm text-gray-600">Total: {attemptTotal} | Permitidas: {Number(attemptSummary.allowed || 0)} | Bloqueadas: {Number(attemptSummary.denied || 0)}</div><button type="button" onClick={limparTentativas} className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">Limpar</button></div></div>
           <div className="overflow-x-auto"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr>
             {['Quando','Resultado','Acao','Motivo','Versao','Dispositivo','Chave','IP'].map((h) => <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{h}</th>)}
           </tr></thead><tbody className="divide-y divide-gray-100 bg-white">
