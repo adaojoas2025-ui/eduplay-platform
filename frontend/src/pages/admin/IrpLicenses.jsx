@@ -75,6 +75,17 @@ export default function AdminIrpLicenses() {
   function clearFilters() { setEmail(''); setSearchEmail(''); setState(''); setAttemptValid(''); setPage(1); }
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
+  async function apagarTeste(trial) {
+    if (!trial.email) return;
+    if (!window.confirm('Apagar o registro de teste gratis de "' + trial.email + '"? Isso libera um novo teste pra esse e-mail e nao pode ser desfeito. A licenca ja emitida (se ainda ativa) continua funcionando normalmente — so o registro de "ja usou o teste" e removido.')) return;
+    try {
+      await api.post('/licenses/admin/reset-trial-claim', { email: trial.email });
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || err.response?.data?.error || err.message || 'Erro ao apagar registro de teste.');
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
@@ -109,21 +120,23 @@ export default function AdminIrpLicenses() {
         </section>
 
         <section className="mb-6 overflow-hidden rounded-lg border bg-white shadow-sm">
-          <div className="border-b px-4 py-3"><h2 className="text-lg font-bold text-gray-900">Testes gratis de 1 dia</h2></div>
+          <div className="border-b px-4 py-3"><h2 className="text-lg font-bold text-gray-900">Testes gratis (limite de itens)</h2><p className="text-sm text-gray-600">Cada teste libera um numero limitado de itens processados (padrao 11), nao mais um prazo de 24h/1 dia. "Vence em" agora e so uma rede de seguranca (30 dias), raramente o motivo real de bloqueio.</p></div>
           <div className="overflow-x-auto"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr>
-            {['Email','Status','Inicio','Vence em','Ultimo uso','Versao','Dispositivo','Fingerprint','Chave'].map((h) => <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{h}</th>)}
+            {['Email','Status','Inicio','Itens usados/limite','Vence em (rede de seguranca)','Ultimo uso','Versao','Dispositivo','Fingerprint','Chave',''].map((h) => <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{h}</th>)}
           </tr></thead><tbody className="divide-y divide-gray-100 bg-white">
-            {loading ? <tr><td colSpan="9" className="px-4 py-8 text-center text-gray-600">Carregando testes IRP...</td></tr> : trials.length === 0 ? <tr><td colSpan="9" className="px-4 py-8 text-center text-gray-600">Nenhum teste encontrado.</td></tr> : trials.map((trial) => (
+            {loading ? <tr><td colSpan="11" className="px-4 py-8 text-center text-gray-600">Carregando testes IRP...</td></tr> : trials.length === 0 ? <tr><td colSpan="11" className="px-4 py-8 text-center text-gray-600">Nenhum teste encontrado.</td></tr> : trials.map((trial) => (
               <tr key={trial.id} className="hover:bg-gray-50">
                 <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">{trial.email}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm"><span className={['rounded-full px-2.5 py-1 text-xs font-semibold', statusClass(trial.status)].join(' ')}>{STATUS_LABELS[trial.status] || trial.status || '-'}</span></td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(trial.createdAt)}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{trial.trialItemsLimit != null ? `${trial.trialItemsUsed ?? 0} / ${trial.trialItemsLimit}` : '-'}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(trial.expiresAt)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(trial.lastSeenAt)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{trial.extensionVersion || '-'}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700" title={trial.deviceId || ''}>{shortValue(trial.deviceId)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700" title={trial.clientFingerprint || ''}>{shortValue(trial.clientFingerprint, 18)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700" title={trial.licenseKey || ''}>{maskKey(trial.licenseKey)}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm"><button type="button" onClick={() => apagarTeste(trial)} className="rounded-md border border-red-300 px-2.5 py-1 text-xs font-semibold text-red-700 hover:bg-red-50">Apagar</button></td>
               </tr>
             ))}
           </tbody></table></div>

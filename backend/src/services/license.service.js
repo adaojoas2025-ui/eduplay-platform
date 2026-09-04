@@ -715,7 +715,8 @@ async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {
               WHEN l."status" = 'active' AND l."expiresAt" < NOW() THEN 'expired'
               ELSE COALESCE(l."status", 'missing')
             END AS "status",
-            l."expiresAt", l."lastSeenAt", l."extensionVersion", l."notes"
+            l."expiresAt", l."lastSeenAt", l."extensionVersion", l."notes",
+            l."trialItemsUsed", l."trialItemsLimit"
        FROM "IrpTrialClaim" c
        LEFT JOIN "IrpLicense" l ON l."licenseKey" = c."licenseKey"
       WHERE 1=1${where}
