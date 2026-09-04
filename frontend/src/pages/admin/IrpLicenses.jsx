@@ -77,7 +77,7 @@ export default function AdminIrpLicenses() {
 
   async function apagarTeste(trial) {
     if (!trial.email) return;
-    if (!window.confirm('Apagar o registro de teste gratis de "' + trial.email + '"? Isso libera um novo teste pra esse e-mail e nao pode ser desfeito. A licenca ja emitida (se ainda ativa) continua funcionando normalmente — so o registro de "ja usou o teste" e removido.')) return;
+    if (!window.confirm('Apagar POR COMPLETO o teste gratis de "' + trial.email + '"? Isso remove a licenca de teste (IRP-*), o registro de "ja usou o teste" e o historico ligado a ela. Nao pode ser desfeito. Licencas pagas/cortesia desse e-mail nao sao afetadas.')) return;
     try {
       await api.post('/licenses/admin/reset-trial-claim', { email: trial.email });
       loadData();

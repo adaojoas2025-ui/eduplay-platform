@@ -600,7 +600,7 @@ export default function AdminDashboard() {
               <div className="text-3xl">IRP</div>
               <div>
                 <div className="font-semibold text-gray-800">Licencas IRP</div>
-                <div className="text-sm text-gray-600">Testes de 1 dia</div>
+                <div className="text-sm text-gray-600">Testes por limite de itens</div>
               </div>
             </Link>
 

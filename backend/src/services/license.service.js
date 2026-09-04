@@ -674,19 +674,36 @@ async function listLicenses({ page = 1, limit = 50, status, email, prefix } = {}
   return { licenses: rows, total: Number(total[0].count), page, limit };
 }
 
-// Remove o registro de "ja usou o teste gratis" de um e-mail, liberando um novo trial
-// pra esse e-mail (uso administrativo: suporte a cliente legitimo que trocou de
-// dispositivo/reinstalou, ou teste manual do proprio dono do produto). Nao mexe na
-// licenca de trial ja emitida anteriormente (se existir) nem no seu consumo — so libera
-// um NOVO pedido de teste gratis passar pela checagem de "already_used".
+// Apaga POR COMPLETO os registros de teste gratis de um e-mail: a licenca de trial
+// (IrpLicense), o registro de "ja usou o teste" (IrpTrialClaim), e tudo que referencia
+// essas licencas (IrpLicenseEvent, IrpTrialConsumption, IrpLicenseAttempt) — usado pelo
+// botao "Apagar" da tela Admin > Licencas IRP pra limpar dados de teste antigos.
+// Decisao explicita do dono do produto (04/09/2026): apagar de vez, nao so bloquear —
+// bloquear (status='blocked') deixaria o registro visivel/consultavel; apagar remove
+// completamente. So mexe em licencas de teste gratis (prefixo "IRP-"), nunca em licencas
+// pagas/cortesia (prefixo "BT-" ou outro) mesmo que o e-mail bata, para nao apagar por
+// engano uma compra real.
 async function resetTrialClaim(email) {
   await ensureLicenseSchema();
   const emailNormalized = normalizeEmailForTrial(email);
+  const licenses = await prisma.$queryRawUnsafe(
+    `SELECT "id","licenseKey" FROM "IrpLicense" WHERE "email" ILIKE $1 AND "licenseKey" LIKE 'IRP-%'`,
+    emailNormalized
+  );
+  for (const lic of licenses) {
+    await prisma.$executeRawUnsafe(`DELETE FROM "IrpLicenseEvent" WHERE "licenseId"=$1`, lic.id);
+    await prisma.$executeRawUnsafe(`DELETE FROM "IrpTrialConsumption" WHERE "licenseKey"=$1`, lic.licenseKey);
+    await prisma.$executeRawUnsafe(`DELETE FROM "IrpLicenseAttempt" WHERE "licenseKey"=$1`, lic.licenseKey);
+  }
+  await prisma.$executeRawUnsafe(
+    `DELETE FROM "IrpLicense" WHERE "email" ILIKE $1 AND "licenseKey" LIKE 'IRP-%'`,
+    emailNormalized
+  );
   const rows = await prisma.$queryRawUnsafe(
     `DELETE FROM "IrpTrialClaim" WHERE "emailNormalized"=$1 RETURNING "licenseKey"`,
     emailNormalized
   );
-  return { removed: rows.length, emailNormalized, licenseKeys: rows.map(r => r.licenseKey) };
+  return { removed: rows.length, emailNormalized, licensesRemoved: licenses.length, licenseKeys: licenses.map(l => l.licenseKey) };
 }
 
 async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {

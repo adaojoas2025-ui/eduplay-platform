@@ -119,11 +119,10 @@ router.post('/admin/create-auth', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-// POST /admin/reset-trial-claim — libera um novo teste gratis pra um e-mail (suporte a
-// cliente legitimo que trocou de dispositivo/reinstalou, ou teste manual do proprio
-// dono do produto). NAO cria licenca nenhuma — so remove o bloqueio de "ja usei o
-// teste gratis", deixando o proximo POST /trial (chamado normalmente pela extensao)
-// seguir o fluxo real de novo.
+// POST /admin/reset-trial-claim — apaga POR COMPLETO os registros de teste gratis
+// (licenca IRP-*, claim, eventos/consumo/tentativas ligados a ela) de um e-mail. Usado
+// pelo botao "Apagar" da tela Admin > Licencas IRP pra limpar dados de teste antigos.
+// Nunca apaga licencas pagas/cortesia (outro prefixo), mesmo que o e-mail bata.
 router.post('/admin/reset-trial-claim', adminOnly, async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'email required' });
