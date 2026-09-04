@@ -556,8 +556,15 @@ model IrpLicense {
   events           IrpLicenseEvent[]
   // Trial por quantidade de itens (em vez de so por tempo): NULL = licenca paga/cortesia,
   // sem limite de itens. Snapshot do limite vigente no momento da criacao do trial.
-  trialItemsLimit  Int?
-  trialItemsUsed   Int               @default(0)
+  // Pool SEPARADO por automacao (decisao explicita do dono do produto, 04/09/2026): cada
+  // fluxo que escreve no portal tem seu proprio limite de "trialItemsLimit" itens, em vez
+  // de um total compartilhado entre os tres — trialItemsUsed (legado) fica sem uso novo,
+  // mantido só pra nao quebrar linhas antigas ja gravadas antes dessa mudanca.
+  trialItemsLimit          Int?
+  trialItemsUsed           Int               @default(0)
+  trialItemsUsedUasg       Int               @default(0)
+  trialItemsUsedDetalhes   Int               @default(0)
+  trialItemsUsedBeneficios Int               @default(0)
 
   @@index([licenseKey])
   @@index([email])

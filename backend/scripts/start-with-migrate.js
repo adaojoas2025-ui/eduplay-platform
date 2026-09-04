@@ -35,6 +35,11 @@ async function ensureIrpTables() {
       // Trial por quantidade de itens (em vez de so por tempo) — NULL = licenca paga/cortesia
       `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "trialItemsLimit" INTEGER`,
       `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "trialItemsUsed" INTEGER NOT NULL DEFAULT 0`,
+      // Pool separado por automacao (04/09/2026): cada fluxo tem seu proprio contador,
+      // todos limitados ao mesmo "trialItemsLimit" (em vez de um total compartilhado).
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "trialItemsUsedUasg" INTEGER NOT NULL DEFAULT 0`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "trialItemsUsedDetalhes" INTEGER NOT NULL DEFAULT 0`,
+      `ALTER TABLE "IrpLicense" ADD COLUMN IF NOT EXISTS "trialItemsUsedBeneficios" INTEGER NOT NULL DEFAULT 0`,
       `CREATE UNIQUE INDEX IF NOT EXISTS "IrpLicense_licenseKey_key" ON "IrpLicense"("licenseKey")`,
       `CREATE INDEX IF NOT EXISTS "IrpLicense_email_idx" ON "IrpLicense"("email")`,
       `CREATE INDEX IF NOT EXISTS "IrpLicense_status_idx" ON "IrpLicense"("status")`,

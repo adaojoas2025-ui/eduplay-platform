@@ -68,6 +68,13 @@ async function ensureLicenseSchema() {
     // mudar o valor padrao depois nunca afeta trials ja concedidos.
     '"trialItemsLimit" INTEGER',
     '"trialItemsUsed" INTEGER NOT NULL DEFAULT 0',
+    // Pool separado por automacao (decisao explicita do dono do produto, 04/09/2026): cada
+    // fluxo que escreve no portal (UASG/Detalhes/Beneficios) tem seu proprio contador,
+    // todos limitados ao mesmo "trialItemsLimit" — em vez de um total compartilhado entre
+    // os tres. "trialItemsUsed" (acima) fica sem uso novo, mantido so por compatibilidade.
+    '"trialItemsUsedUasg" INTEGER NOT NULL DEFAULT 0',
+    '"trialItemsUsedDetalhes" INTEGER NOT NULL DEFAULT 0',
+    '"trialItemsUsedBeneficios" INTEGER NOT NULL DEFAULT 0',
   ];
 
   for (const column of licenseColumns) {
@@ -215,11 +222,25 @@ async function getConfigNumber(key, fallback) {
   }
 }
 
+// Pool de itens do trial SEPARADO por automacao (decisao explicita do dono do produto,
+// 04/09/2026): cada fluxo que escreve no portal tem seu proprio contador de uso, todos
+// limitados ao mesmo "trialItemsLimit" — nao mais um total compartilhado entre os tres.
+// Mapa fixo (nao vem de input do usuario) — seguro pra interpolar direto no SQL.
+const TRIAL_FLOW_COLUMNS = {
+  uasg_local: 'trialItemsUsedUasg',
+  detalhes: 'trialItemsUsedDetalhes',
+  beneficios: 'trialItemsUsedBeneficios',
+};
+
 function quotaFromLicense(license) {
   if (!license || license.trialItemsLimit == null) return null;
   const limit = Number(license.trialItemsLimit);
-  const used = Number(license.trialItemsUsed) || 0;
-  return { itemsLimit: limit, itemsUsed: used, itemsRemaining: Math.max(0, limit - used) };
+  const quota = {};
+  for (const flow of Object.keys(TRIAL_FLOW_COLUMNS)) {
+    const used = Number(license[TRIAL_FLOW_COLUMNS[flow]]) || 0;
+    quota[flow] = { itemsLimit: limit, itemsUsed: used, itemsRemaining: Math.max(0, limit - used) };
+  }
+  return quota;
 }
 
 // Normaliza e-mail para evitar burlar o teste grátis com variações (gmail.com ignora
@@ -573,10 +594,10 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFi
     licenseKey: license.licenseKey,
     expiresAt: license.expiresAt,
     daysRemaining: safetyNetDays,
-    quota: { itemsLimit, itemsUsed: 0, itemsRemaining: itemsLimit },
+    quota: quotaFromLicense({ trialItemsLimit: itemsLimit, trialItemsUsedUasg: 0, trialItemsUsedDetalhes: 0, trialItemsUsedBeneficios: 0 }),
     message: temEmailReal
-      ? `Teste grátis ativado! Você pode processar até ${itemsLimit} itens. A chave também foi enviada para o seu e-mail.`
-      : `Teste grátis ativado! Você pode processar até ${itemsLimit} itens.`,
+      ? `Teste grátis ativado! Você pode processar até ${itemsLimit} itens em cada automação (UASG, Detalhes, Benefícios). A chave também foi enviada para o seu e-mail.`
+      : `Teste grátis ativado! Você pode processar até ${itemsLimit} itens em cada automação (UASG, Detalhes, Benefícios).`,
   };
 }
 
@@ -604,6 +625,13 @@ async function consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, 
     return { valid: true, quota: null, applied: 0, alreadyConsumed: false };
   }
 
+  // Pool separado por automacao: cada fluxo tem sua propria coluna de uso. `flow`
+  // invalido/desconhecido e rejeitado explicitamente em vez de cair num fluxo por acaso.
+  const flowColumn = TRIAL_FLOW_COLUMNS[flow];
+  if (!flowColumn) {
+    return { valid: false, reason: 'invalid_flow', message: 'Fluxo de automação inválido.' };
+  }
+
   const itemsRequested = Math.max(0, Math.trunc(Number(itemsCompleted) || 0));
 
   try {
@@ -628,14 +656,14 @@ async function consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, 
   // que esse runId e processado, mesmo sob corrida entre requisicoes simultaneas.
   const updated = await prisma.$queryRawUnsafe(
     `UPDATE "IrpLicense"
-        SET "trialItemsUsed" = LEAST("trialItemsLimit", "trialItemsUsed" + $1), "updatedAt"=NOW()
+        SET "${flowColumn}" = LEAST("trialItemsLimit", "${flowColumn}" + $1), "updatedAt"=NOW()
       WHERE "id"=$2
-      RETURNING "trialItemsUsed","trialItemsLimit"`,
+      RETURNING *`,
     itemsRequested, license.id
   );
-  const novoUsado = updated[0].trialItemsUsed;
+  const novoUsado = updated[0][flowColumn];
   const limite = updated[0].trialItemsLimit;
-  const aplicado = novoUsado - (license.trialItemsUsed || 0);
+  const aplicado = novoUsado - (license[flowColumn] || 0);
 
   await prisma.$executeRawUnsafe(
     `UPDATE "IrpTrialConsumption" SET "itemsApplied"=$1 WHERE "runId"=$2`, aplicado, runId
@@ -644,7 +672,7 @@ async function consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, 
 
   return {
     valid: true,
-    quota: { itemsLimit: limite, itemsUsed: novoUsado, itemsRemaining: Math.max(0, limite - novoUsado) },
+    quota: quotaFromLicense(updated[0]),
     applied: aplicado,
     alreadyConsumed: false,
   };
@@ -733,7 +761,8 @@ async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {
               ELSE COALESCE(l."status", 'missing')
             END AS "status",
             l."expiresAt", l."lastSeenAt", l."extensionVersion", l."notes",
-            l."trialItemsUsed", l."trialItemsLimit"
+            l."trialItemsUsed", l."trialItemsLimit",
+            l."trialItemsUsedUasg", l."trialItemsUsedDetalhes", l."trialItemsUsedBeneficios"
        FROM "IrpTrialClaim" c
        LEFT JOIN "IrpLicense" l ON l."licenseKey" = c."licenseKey"
       WHERE 1=1${where}

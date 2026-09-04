@@ -566,15 +566,31 @@ protecao mais fraca que com e-mail, troca consciente aceita pelo dono do produto
   "licenseKey": "IRP-XXXX-XXXX-XXXX-XXXX",
   "expiresAt": "2026-10-03T00:00:00.000Z",
   "daysRemaining": 30,
-  "quota": { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 },
-  "message": "Teste grátis ativado! Você pode processar até 11 itens..."
+  "quota": {
+    "uasg_local":  { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 },
+    "detalhes":    { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 },
+    "beneficios":  { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 }
+  },
+  "message": "Teste grátis ativado! Você pode processar até 11 itens em cada automação (UASG, Detalhes, Benefícios)..."
 }
 ```
+
+> **Pool SEPARADO por automação (decisão explícita do dono do produto, 04/09/2026):**
+> `quota` deixou de ser um objeto plano (`{itemsLimit,itemsUsed,itemsRemaining}`) e passou a
+> ser um objeto por fluxo — `uasg_local`/`detalhes`/`beneficios`, cada um com seu próprio
+> `itemsLimit`/`itemsUsed`/`itemsRemaining`, todos limitados ao mesmo valor de
+> `trial_items_limit_default` (hoje 11), mas contados **independentemente**. Esgotar um
+> fluxo (ex: Benefícios) não afeta os outros dois — a extensão só bloqueia aquele fluxo
+> específico. Colunas reais: `IrpLicense.trialItemsUsedUasg` / `trialItemsUsedDetalhes` /
+> `trialItemsUsedBeneficios` (a coluna antiga `trialItemsUsed`, compartilhada, ficou sem
+> uso novo — mantida só por compatibilidade com linhas gravadas antes dessa mudança).
 
 ### POST /api/v1/licenses/trial/consume *(novo)*
 
 Chamado pela extensao apos cada execucao de UASG Local/Quantidade, Detalhes do Item ou
-Beneficios ME/EPP, reportando quantos itens foram processados com sucesso.
+Beneficios ME/EPP, reportando quantos itens foram processados com sucesso. `flow` precisa
+ser exatamente `"uasg_local"`, `"detalhes"` ou `"beneficios"` — qualquer outro valor é
+rejeitado com `reason:"invalid_flow"` (nunca cai silenciosamente num fluxo por acaso).
 
 **Request:**
 ```json
@@ -587,11 +603,15 @@ Beneficios ME/EPP, reportando quantos itens foram processados com sucesso.
 }
 ```
 
-**Response (licenca em trial):**
+**Response (licenca em trial — só a coluna do `flow` enviado muda, as outras duas ficam como estavam):**
 ```json
 {
   "valid": true,
-  "quota": { "itemsLimit": 11, "itemsUsed": 7, "itemsRemaining": 4 },
+  "quota": {
+    "uasg_local":  { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 },
+    "detalhes":    { "itemsLimit": 11, "itemsUsed": 7, "itemsRemaining": 4 },
+    "beneficios":  { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 }
+  },
   "applied": 7,
   "alreadyConsumed": false
 }
@@ -602,30 +622,30 @@ Beneficios ME/EPP, reportando quantos itens foram processados com sucesso.
 { "valid": true, "quota": null, "applied": 0, "alreadyConsumed": false }
 ```
 
-**Response (mesmo `runId` reenviado — idempotente, nao soma de novo):**
+**Response (mesmo `runId` reenviado — idempotente, nao soma de novo):** mesmo formato acima,
+com `"alreadyConsumed": true` e `applied` igual ao que já tinha sido aplicado antes.
+
+**Response (`flow` inválido/desconhecido):**
 ```json
-{
-  "valid": true,
-  "quota": { "itemsLimit": 11, "itemsUsed": 7, "itemsRemaining": 4 },
-  "applied": 7,
-  "alreadyConsumed": true
-}
+{ "valid": false, "reason": "invalid_flow", "message": "Fluxo de automação inválido." }
 ```
 
-Erros: `404` com `reason:"not_found"` (chave invalida) ou `409` com `reason:"device_changed"`
-(licenca ativada em outro dispositivo).
+Outros erros: `404` com `reason:"not_found"` (chave invalida) ou `409` com
+`reason:"device_changed"` (licenca ativada em outro dispositivo).
 
 ### `validate`, `heartbeat`, `activate`, `sync` — todos ganham `quota`
 
-Todas as respostas dessas quatro rotas passam a incluir o mesmo campo `quota` (ou `null`
-pra licenca sem limite de itens). Isso deixa a checagem de cota "de carona" na chamada de
-licenca que a extensao ja faz antes de cada acao — nenhuma chamada de rede nova e
-necessaria so pra saber se ainda sobra cota, apenas pra *reportar* uso depois de um run
+Todas as respostas dessas quatro rotas passam a incluir o mesmo campo `quota` por fluxo (ou
+`null` pra licenca sem limite de itens). Isso deixa a checagem de cota "de carona" na
+chamada de licenca que a extensao ja faz antes de cada acao — nenhuma chamada de rede nova
+e necessaria so pra saber se ainda sobra cota, apenas pra *reportar* uso depois de um run
 (`/trial/consume`).
 
 **Importante:** `valid:true` sozinho **nao** significa mais "pode iniciar uma nova automacao"
-para uma licenca em trial — e preciso checar tambem `quota.itemsRemaining > 0`. As duas
-condicoes sao independentes e precisam ser verdadeiras juntas.
+para uma licenca em trial — e preciso checar tambem `quota.<flow>.itemsRemaining > 0` **pro
+fluxo especifico** que vai rodar (ex: `quota.beneficios.itemsRemaining` antes de iniciar
+Benefícios ME/EPP). As duas condicoes sao independentes e precisam ser verdadeiras juntas,
+e um fluxo esgotado não implica nada sobre os outros dois.
 
 ### POST /api/v1/licenses/admin/reset-trial-claim *(novo)*
 

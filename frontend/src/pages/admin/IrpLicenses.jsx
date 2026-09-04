@@ -130,16 +130,16 @@ export default function AdminIrpLicenses() {
         </section>
 
         <section className="mb-6 overflow-hidden rounded-lg border bg-white shadow-sm">
-          <div className="border-b px-4 py-3"><h2 className="text-lg font-bold text-gray-900">Testes gratis (limite de itens)</h2><p className="text-sm text-gray-600">Cada teste libera um numero limitado de itens processados (padrao 11), nao mais um prazo de 24h/1 dia. "Vence em" agora e so uma rede de seguranca (30 dias), raramente o motivo real de bloqueio.</p></div>
+          <div className="border-b px-4 py-3"><h2 className="text-lg font-bold text-gray-900">Testes gratis (limite de itens por automacao)</h2><p className="text-sm text-gray-600">Cada teste libera um numero limitado de itens (padrao 11) EM CADA automacao (UASG, Detalhes, Beneficios) separadamente, nao mais um total compartilhado nem um prazo de 24h/1 dia. "Vence em" agora e so uma rede de seguranca (30 dias), raramente o motivo real de bloqueio.</p></div>
           <div className="overflow-x-auto"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr>
-            {['Email','Status','Inicio','Itens usados/limite','Vence em (rede de seguranca)','Ultimo uso','Versao','Dispositivo','Fingerprint','Chave',''].map((h) => <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{h}</th>)}
+            {['Email','Status','Inicio','Itens usados/limite (por automacao)','Vence em (rede de seguranca)','Ultimo uso','Versao','Dispositivo','Fingerprint','Chave',''].map((h) => <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{h}</th>)}
           </tr></thead><tbody className="divide-y divide-gray-100 bg-white">
             {loading ? <tr><td colSpan="11" className="px-4 py-8 text-center text-gray-600">Carregando testes IRP...</td></tr> : trials.length === 0 ? <tr><td colSpan="11" className="px-4 py-8 text-center text-gray-600">Nenhum teste encontrado.</td></tr> : trials.map((trial) => (
               <tr key={trial.id} className="hover:bg-gray-50">
                 <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">{trial.email}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm"><span className={['rounded-full px-2.5 py-1 text-xs font-semibold', statusClass(trial.status)].join(' ')}>{STATUS_LABELS[trial.status] || trial.status || '-'}</span></td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(trial.createdAt)}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{trial.trialItemsLimit != null ? `${trial.trialItemsUsed ?? 0} / ${trial.trialItemsLimit}` : '-'}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700" title="Cada automacao tem seu proprio limite de itens">{trial.trialItemsLimit != null ? `UASG ${trial.trialItemsUsedUasg ?? 0}/${trial.trialItemsLimit} · Detalhes ${trial.trialItemsUsedDetalhes ?? 0}/${trial.trialItemsLimit} · Beneficios ${trial.trialItemsUsedBeneficios ?? 0}/${trial.trialItemsLimit}` : '-'}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(trial.expiresAt)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(trial.lastSeenAt)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{trial.extensionVersion || '-'}</td>
