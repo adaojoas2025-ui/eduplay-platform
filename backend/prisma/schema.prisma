@@ -605,3 +605,22 @@ model IrpConfig {
   value     String
   updatedAt DateTime @default(now())
 }
+
+// Pool de itens do trial POR LICITACAO (decisao explicita do dono do produto, 06/09/2026):
+// cada combinacao (licenca, fluxo, licitacao) tem seu proprio contador de ate
+// "trialItemsLimit" itens (IrpLicense.trialItemsLimit) — processar 11 na licitacao A nao
+// consome nada da licitacao B. `contractId` vem do numero identificador da licitacao/IRP
+// na URL do proprio portal do governo (ex: "550740" em ".../execucao/edit?id=550740").
+// Cumulativo e permanente: reabrir a MESMA licitacao nunca reinicia o contador dela.
+model IrpTrialContractUsage {
+  id         String   @id @default(uuid())
+  licenseKey String
+  flow       String
+  contractId String
+  itemsUsed  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([licenseKey, flow, contractId])
+  @@index([licenseKey])
+}

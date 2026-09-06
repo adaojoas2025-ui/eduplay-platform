@@ -1,19 +1,29 @@
 /**
- * Testa a idempotencia e o incremento atomico de POST /trial/consume — o ponto de maior
- * risco de bug de receita da mudanca de trial por tempo pra trial por quantidade de itens
- * (um bug aqui deixaria um usuario de teste processar itens ilimitados de graca).
+ * Testa a idempotencia e o incremento do trial por quantidade de itens — o ponto de maior
+ * risco de bug de receita da extensao IRP Master.
  *
- * A partir de 04/09/2026, o pool de itens do trial e SEPARADO por automacao (uasg_local /
- * detalhes / beneficios) — cada uma tem sua propria coluna de uso (trialItemsUsedUasg,
- * trialItemsUsedDetalhes, trialItemsUsedBeneficios), todas limitadas ao mesmo
- * "trialItemsLimit". `quota` deixou de ser um objeto plano ({itemsLimit,itemsUsed,...}) e
- * passou a ser {uasg_local:{...}, detalhes:{...}, beneficios:{...}}.
+ * Historico do modelo (pra quem for mexer aqui de novo):
+ *  1. Trial por TEMPO (24h ilimitadas) — substituido por nao deixar terminar o trabalho
+ *     inteiro de graca numa unica sessao.
+ *  2. Trial por QUANTIDADE DE ITENS, total COMPARTILHADO entre as 3 automacoes (UASG,
+ *     Detalhes, Beneficios) — 11 itens no total, dividido entre as tres.
+ *  3. Trial por QUANTIDADE DE ITENS, pool SEPARADO por automacao — 11 itens EM CADA uma
+ *     das tres, independentes (esgotar Beneficios nao afeta UASG nem Detalhes).
+ *  4. (04/09/2026 -> 06/09/2026) Trial por QUANTIDADE DE ITENS, pool SEPARADO POR
+ *     LICITACAO — decisao explicita do dono do produto: cada combinacao (licenca, fluxo,
+ *     licitacao) tem seu proprio contador de 11 itens. Processar 11 na licitacao A nao
+ *     consome nada da licitacao B — o usuario pode abrir e trabalhar em quantas
+ *     licitacoes diferentes quiser, sempre com 11 disponiveis em cada uma, em cada
+ *     automacao. Mas a MESMA licitacao NUNCA reinicia o contador (cumulativo e
+ *     permanente) — nao pode processar 1 a 11, rodar de novo, e ir de 12 a 22.
+ *     `contractId` vem do numero identificador da licitacao/IRP na URL do portal do
+ *     governo (ex: "550740" em ".../execucao/edit?id=550740").
  *
  * Usa um "banco" falso em memoria que entende de verdade o indice unico de "runId" em
- * IrpTrialConsumption (rejeita insercao duplicada, igual o Postgres faria) e mantem o
- * estado de uso por fluxo entre chamadas, pra exercitar a logica real do service, nao so
- * uma sequencia de respostas roteirizadas. Mesmo padrao de mock (Module._load) ja usado
- * em tests/baixatudo-license-fix.test.js.
+ * IrpTrialConsumption (rejeita insercao duplicada, igual o Postgres faria) e o upsert por
+ * (licenseKey, flow, contractId) em IrpTrialContractUsage, pra exercitar a logica real do
+ * service, nao so uma sequencia de respostas roteirizadas. Mesmo padrao de mock
+ * (Module._load) ja usado em tests/baixatudo-license-fix.test.js.
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -24,6 +34,7 @@ function makeFakeDb(initialLicense) {
   const licenses = initialLicense ? { [initialLicense.licenseKey]: { ...initialLicense } } : {};
   const trialConsumptions = {};
   const trialClaims = {};
+  const contractUsages = {}; // chave: `${licenseKey}|${flow}|${contractId}` -> { itemsUsed }
 
   const prisma = {
     async $executeRawUnsafe(sql, ...params) {
@@ -40,6 +51,11 @@ function makeFakeDb(initialLicense) {
       if (sql.includes('UPDATE "IrpTrialConsumption" SET "itemsApplied"')) {
         const [itemsApplied, runId] = params;
         if (trialConsumptions[runId]) trialConsumptions[runId].itemsApplied = itemsApplied;
+        return 1;
+      }
+      if (sql.includes('INSERT INTO "IrpTrialContractUsage"')) {
+        const [, licenseKey, flow, contractId, itemsUsed] = params;
+        contractUsages[`${licenseKey}|${flow}|${contractId}`] = { itemsUsed };
         return 1;
       }
       if (sql.includes('INSERT INTO "IrpLicense"')) {
@@ -77,25 +93,15 @@ function makeFakeDb(initialLicense) {
     async $queryRawUnsafe(sql, ...params) {
       if (sql.includes('SELECT * FROM "IrpLicense" WHERE "licenseKey"')) {
         // Copia rasa: um SELECT real devolve um snapshot independente, nao uma referencia
-        // viva pro registro — mutar o "banco" depois nao pode alterar retroativamente um
-        // valor ja lido antes (foi exatamente esse erro que o teste pegou no mock antigo).
+        // viva pro registro.
         const licenseKey = params[0];
         const row = licenses[licenseKey];
         return row ? [{ ...row }] : [];
       }
-      if (sql.includes('UPDATE "IrpLicense"') && sql.includes('RETURNING')) {
-        // Pool separado por automacao: a coluna de verdade sendo incrementada vem
-        // interpolada no SQL (ex: SET "trialItemsUsedDetalhes" = LEAST(...)) — extrai o
-        // nome real em vez de assumir sempre a mesma coluna, pra exercitar o roteamento
-        // por fluxo de verdade.
-        const [delta, id] = params;
-        const row = Object.values(licenses).find(l => l.id === id);
-        if (!row) return [];
-        const match = sql.match(/SET "(\w+)" = LEAST/);
-        const column = match ? match[1] : 'trialItemsUsed';
-        const novoUsado = Math.min(row.trialItemsLimit, (row[column] || 0) + delta);
-        row[column] = novoUsado;
-        return [{ ...row }];
+      if (sql.includes('SELECT "itemsUsed" FROM "IrpTrialContractUsage"')) {
+        const [licenseKey, flow, contractId] = params;
+        const row = contractUsages[`${licenseKey}|${flow}|${contractId}`];
+        return row ? [{ itemsUsed: row.itemsUsed }] : [];
       }
       if (sql.includes('SELECT * FROM "IrpTrialConsumption" WHERE "runId"')) {
         const runId = params[0];
@@ -110,7 +116,7 @@ function makeFakeDb(initialLicense) {
       return [];
     },
   };
-  return { prisma, licenses, trialConsumptions, trialClaims };
+  return { prisma, licenses, trialConsumptions, trialClaims, contractUsages };
 }
 
 function loadServiceWithFakeDb(prisma) {
@@ -140,70 +146,94 @@ function baseLicense(overrides = {}) {
     activeDeviceId: 'device-1',
     trialItemsLimit: 15,
     trialItemsUsed: 0,
-    trialItemsUsedUasg: 0,
-    trialItemsUsedDetalhes: 0,
-    trialItemsUsedBeneficios: 0,
     ...overrides,
   };
 }
 
-test('consumeTrialItems: um runId repetido nunca soma duas vezes', async () => {
-  const { prisma, licenses } = makeFakeDb(baseLicense());
+test('consumeTrialItems: um runId repetido nunca soma duas vezes (mesma licitacao)', async () => {
+  const { prisma, contractUsages } = makeFakeDb(baseLicense());
   const licenseService = loadServiceWithFakeDb(prisma);
 
   const first = await licenseService.consumeTrialItems({
-    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-abc', itemsCompleted: 5, flow: 'detalhes',
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-abc', itemsCompleted: 5, flow: 'detalhes', contractId: '550740',
   });
   assert.equal(first.valid, true);
   assert.equal(first.alreadyConsumed, false);
   assert.equal(first.applied, 5);
-  assert.equal(first.quota.detalhes.itemsUsed, 5);
-  assert.equal(licenses['IRP-TEST-TEST-TEST-TEST'].trialItemsUsedDetalhes, 5);
+  assert.equal(first.quota.itemsUsed, 5);
+  assert.equal(contractUsages['IRP-TEST-TEST-TEST-TEST|detalhes|550740'].itemsUsed, 5);
 
   // Reenvio de rede: mesma execucao, mesmo runId.
   const second = await licenseService.consumeTrialItems({
-    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-abc', itemsCompleted: 5, flow: 'detalhes',
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-abc', itemsCompleted: 5, flow: 'detalhes', contractId: '550740',
   });
   assert.equal(second.valid, true);
   assert.equal(second.alreadyConsumed, true);
   assert.equal(second.applied, 5); // devolve o que ja tinha sido aplicado, nao soma de novo
-  assert.equal(second.quota.detalhes.itemsUsed, 5); // continua 5, NAO virou 10
+  assert.equal(second.quota.itemsUsed, 5); // continua 5, NAO virou 10
 
-  // Confirma no "banco": so uma vez.
-  assert.equal(licenses['IRP-TEST-TEST-TEST-TEST'].trialItemsUsedDetalhes, 5);
+  assert.equal(contractUsages['IRP-TEST-TEST-TEST-TEST|detalhes|550740'].itemsUsed, 5);
 });
 
 test('consumeTrialItems: trava no limite mesmo se o cliente mandar itemsCompleted inflado', async () => {
-  const { prisma, licenses } = makeFakeDb(baseLicense({ trialItemsUsedUasg: 10, trialItemsLimit: 15 }));
+  const { prisma, contractUsages } = makeFakeDb(baseLicense({ trialItemsLimit: 15 }));
   const licenseService = loadServiceWithFakeDb(prisma);
+  contractUsages['IRP-TEST-TEST-TEST-TEST|uasg_local|550740'] = { itemsUsed: 10 };
 
   const result = await licenseService.consumeTrialItems({
-    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-xyz', itemsCompleted: 999, flow: 'uasg_local',
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-xyz', itemsCompleted: 999, flow: 'uasg_local', contractId: '550740',
   });
   assert.equal(result.valid, true);
   assert.equal(result.applied, 5); // so faltavam 5 pro limite de 15
-  assert.equal(result.quota.uasg_local.itemsUsed, 15);
-  assert.equal(result.quota.uasg_local.itemsRemaining, 0);
-  assert.equal(licenses['IRP-TEST-TEST-TEST-TEST'].trialItemsUsedUasg, 15);
+  assert.equal(result.quota.itemsUsed, 15);
+  assert.equal(result.quota.itemsRemaining, 0);
+  assert.equal(contractUsages['IRP-TEST-TEST-TEST-TEST|uasg_local|550740'].itemsUsed, 15);
 });
 
-test('consumeTrialItems: pools de fluxos diferentes nao se misturam (Detalhes cheio nao afeta Beneficios)', async () => {
-  const { prisma, licenses } = makeFakeDb(baseLicense({ trialItemsLimit: 11, trialItemsUsedDetalhes: 11 }));
+test('consumeTrialItems: licitacoes diferentes tem pools INDEPENDENTES (nao se misturam)', async () => {
+  const { prisma, contractUsages } = makeFakeDb(baseLicense({ trialItemsLimit: 11 }));
   const licenseService = loadServiceWithFakeDb(prisma);
 
-  const result = await licenseService.consumeTrialItems({
-    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-beneficios-1', itemsCompleted: 4, flow: 'beneficios',
+  // Esgota o limite na licitacao 550740.
+  const a = await licenseService.consumeTrialItems({
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-lic-a', itemsCompleted: 11, flow: 'beneficios', contractId: '550740',
   });
-  assert.equal(result.valid, true);
-  assert.equal(result.applied, 4);
-  assert.equal(result.quota.beneficios.itemsUsed, 4);
-  assert.equal(result.quota.beneficios.itemsRemaining, 7);
-  // Detalhes continua no limite, Beneficios e UASG intocados por essa chamada.
-  assert.equal(result.quota.detalhes.itemsUsed, 11);
-  assert.equal(result.quota.detalhes.itemsRemaining, 0);
-  assert.equal(result.quota.uasg_local.itemsUsed, 0);
-  assert.equal(licenses['IRP-TEST-TEST-TEST-TEST'].trialItemsUsedDetalhes, 11);
-  assert.equal(licenses['IRP-TEST-TEST-TEST-TEST'].trialItemsUsedBeneficios, 4);
+  assert.equal(a.quota.itemsUsed, 11);
+  assert.equal(a.quota.itemsRemaining, 0);
+
+  // Mesma licenca, mesmo fluxo, LICITACAO DIFERENTE (999999) — comeca do zero, cheio de novo.
+  const b = await licenseService.consumeTrialItems({
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-lic-b', itemsCompleted: 7, flow: 'beneficios', contractId: '999999',
+  });
+  assert.equal(b.valid, true);
+  assert.equal(b.applied, 7);
+  assert.equal(b.quota.itemsUsed, 7);
+  assert.equal(b.quota.itemsRemaining, 4);
+
+  // As duas licitacoes ficam registradas separadamente, sem vazamento entre elas.
+  assert.equal(contractUsages['IRP-TEST-TEST-TEST-TEST|beneficios|550740'].itemsUsed, 11);
+  assert.equal(contractUsages['IRP-TEST-TEST-TEST-TEST|beneficios|999999'].itemsUsed, 7);
+});
+
+test('consumeTrialItems: a MESMA licitacao nunca reinicia o contador (nao pode ir do 11 pro 22)', async () => {
+  const { prisma, contractUsages } = makeFakeDb(baseLicense({ trialItemsLimit: 11 }));
+  const licenseService = loadServiceWithFakeDb(prisma);
+
+  const primeiraRodada = await licenseService.consumeTrialItems({
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-rodada-1', itemsCompleted: 11, flow: 'uasg_local', contractId: '550740',
+  });
+  assert.equal(primeiraRodada.quota.itemsUsed, 11);
+  assert.equal(primeiraRodada.quota.itemsRemaining, 0);
+
+  // Roda a automacao DE NOVO na MESMA licitacao (runId novo, execucao nova) — mesmo assim
+  // nao pode voltar a processar mais nada, porque o contador dessa licitacao ja esta cheio.
+  const segundaRodada = await licenseService.consumeTrialItems({
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-rodada-2', itemsCompleted: 11, flow: 'uasg_local', contractId: '550740',
+  });
+  assert.equal(segundaRodada.applied, 0); // ja estava no limite, nada novo aplicado
+  assert.equal(segundaRodada.quota.itemsUsed, 11); // continua 11, NUNCA vira 22
+  assert.equal(segundaRodada.quota.itemsRemaining, 0);
+  assert.equal(contractUsages['IRP-TEST-TEST-TEST-TEST|uasg_local|550740'].itemsUsed, 11);
 });
 
 test('consumeTrialItems: flow invalido/desconhecido e rejeitado', async () => {
@@ -211,26 +241,50 @@ test('consumeTrialItems: flow invalido/desconhecido e rejeitado', async () => {
   const licenseService = loadServiceWithFakeDb(prisma);
 
   const result = await licenseService.consumeTrialItems({
-    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-flow-invalido', itemsCompleted: 1, flow: 'relatorio',
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-flow-invalido', itemsCompleted: 1, flow: 'relatorio', contractId: '550740',
   });
   assert.equal(result.valid, false);
   assert.equal(result.reason, 'invalid_flow');
 });
 
-test('consumeTrialItems: licenca paga (trialItemsLimit=null) nunca e afetada', async () => {
-  const { prisma, licenses } = makeFakeDb(baseLicense({ trialItemsLimit: null, trialItemsUsed: 0 }));
+test('consumeTrialItems: sem contractId e rejeitado', async () => {
+  const { prisma } = makeFakeDb(baseLicense());
   const licenseService = loadServiceWithFakeDb(prisma);
 
   const result = await licenseService.consumeTrialItems({
-    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-paid', itemsCompleted: 50, flow: 'beneficios',
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-sem-licitacao', itemsCompleted: 1, flow: 'detalhes',
+  });
+  assert.equal(result.valid, false);
+  assert.equal(result.reason, 'missing_fields');
+});
+
+test('consumeTrialItems: licenca paga (trialItemsLimit=null) nunca e afetada', async () => {
+  const { prisma, contractUsages } = makeFakeDb(baseLicense({ trialItemsLimit: null, trialItemsUsed: 0 }));
+  const licenseService = loadServiceWithFakeDb(prisma);
+
+  const result = await licenseService.consumeTrialItems({
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', runId: 'run-paid', itemsCompleted: 50, flow: 'beneficios', contractId: '550740',
   });
   assert.equal(result.valid, true);
   assert.equal(result.quota, null);
   assert.equal(result.applied, 0);
-  assert.equal(licenses['IRP-TEST-TEST-TEST-TEST'].trialItemsUsedBeneficios, 0);
+  assert.equal(contractUsages['IRP-TEST-TEST-TEST-TEST|beneficios|550740'], undefined);
 });
 
-test('claimTrialLicense: sem linha em IrpConfig, usa o fallback de 11 itens (em cada automacao)', async () => {
+test('getContractQuota: le sem incrementar nada, licitacao nova comeca zerada', async () => {
+  const { prisma } = makeFakeDb(baseLicense({ trialItemsLimit: 11 }));
+  const licenseService = loadServiceWithFakeDb(prisma);
+
+  const result = await licenseService.getContractQuota({
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-1', flow: 'beneficios', contractId: '123456',
+  });
+  assert.equal(result.valid, true);
+  assert.equal(result.quota.itemsLimit, 11);
+  assert.equal(result.quota.itemsUsed, 0);
+  assert.equal(result.quota.itemsRemaining, 11);
+});
+
+test('claimTrialLicense: sem linha em IrpConfig, usa o fallback de 11 itens', async () => {
   const { prisma, licenses } = makeFakeDb(null);
   const licenseService = loadServiceWithFakeDb(prisma);
 
@@ -238,18 +292,10 @@ test('claimTrialLicense: sem linha em IrpConfig, usa o fallback de 11 itens (em 
     'novo.cliente@example.com', 'device-novo', '1.0.14', '127.0.0.1', 'fingerprint-1234567890abcdef',
   );
   assert.equal(result.valid, true);
-  assert.equal(result.quota.uasg_local.itemsLimit, 11);
-  assert.equal(result.quota.detalhes.itemsLimit, 11);
-  assert.equal(result.quota.beneficios.itemsLimit, 11);
-  assert.equal(result.quota.uasg_local.itemsUsed, 0);
-  assert.equal(result.quota.detalhes.itemsRemaining, 11);
   assert.match(result.licenseKey, /^IRP-/);
 
   const created = licenses[result.licenseKey];
   assert.equal(created.trialItemsLimit, 11);
-  assert.equal(created.trialItemsUsedUasg, 0);
-  assert.equal(created.trialItemsUsedDetalhes, 0);
-  assert.equal(created.trialItemsUsedBeneficios, 0);
   assert.equal(created.activeDeviceId, 'device-novo');
 });
 
@@ -261,7 +307,6 @@ test('claimTrialLicense: instalacao nova sem e-mail nenhum tambem libera o trial
     null, 'device-sem-email', '1.0.14', '127.0.0.1', 'fingerprint-abcdefabcdefabcdef',
   );
   assert.equal(result.valid, true);
-  assert.equal(result.quota.beneficios.itemsLimit, 11);
   assert.doesNotMatch(result.message, /e-mail/);
 
   const created = licenses[result.licenseKey];
@@ -275,12 +320,9 @@ test('claimTrialLicense: decisao explicita do dono do produto — repetir o mesm
 
   const first = await licenseService.claimTrialLicense(null, 'device-repetido', '1.0.14', '127.0.0.1', 'fp-1111111111111111');
   assert.equal(first.valid, true);
-  assert.equal(first.quota.uasg_local.itemsLimit, 11);
 
   const second = await licenseService.claimTrialLicense(null, 'device-repetido', '1.0.14', '127.0.0.1', 'fp-1111111111111111');
   assert.equal(second.valid, true);
-  assert.equal(second.quota.uasg_local.itemsLimit, 11);
-  assert.equal(second.quota.uasg_local.itemsUsed, 0);
 
   // Duas licencas distintas, cada uma com o proprio trial zerado — nao e a mesma
   // reaproveitada, e o segundo pedido nao herda o consumo do primeiro.
@@ -294,7 +336,18 @@ test('consumeTrialItems: dispositivo diferente do vinculado e rejeitado', async 
   const licenseService = loadServiceWithFakeDb(prisma);
 
   const result = await licenseService.consumeTrialItems({
-    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-outro', runId: 'run-x', itemsCompleted: 1, flow: 'detalhes',
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-outro', runId: 'run-x', itemsCompleted: 1, flow: 'detalhes', contractId: '550740',
+  });
+  assert.equal(result.valid, false);
+  assert.equal(result.reason, 'device_changed');
+});
+
+test('getContractQuota: dispositivo diferente do vinculado e rejeitado', async () => {
+  const { prisma } = makeFakeDb(baseLicense());
+  const licenseService = loadServiceWithFakeDb(prisma);
+
+  const result = await licenseService.getContractQuota({
+    licenseKey: 'IRP-TEST-TEST-TEST-TEST', deviceId: 'device-outro', flow: 'detalhes', contractId: '550740',
   });
   assert.equal(result.valid, false);
   assert.equal(result.reason, 'device_changed');

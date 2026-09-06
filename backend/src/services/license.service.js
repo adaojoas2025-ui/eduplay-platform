@@ -203,6 +203,28 @@ async function ensureLicenseSchema() {
     )
   `);
 
+  // Pool de itens do trial POR LICITACAO (decisao explicita do dono do produto,
+  // 06/09/2026): cada combinacao (licenca, fluxo, licitacao) tem seu proprio contador —
+  // processar 11 na licitacao A nao consome nada da licitacao B. Cumulativo e permanente:
+  // reabrir a MESMA licitacao nunca reinicia o contador dela.
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "IrpTrialContractUsage" (
+      "id" TEXT PRIMARY KEY,
+      "licenseKey" TEXT NOT NULL,
+      "flow" TEXT NOT NULL,
+      "contractId" TEXT NOT NULL,
+      "itemsUsed" INTEGER NOT NULL DEFAULT 0,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IrpTrialContractUsage_key_flow_contract_key" ON "IrpTrialContractUsage"("licenseKey","flow","contractId")`
+  );
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "IrpTrialContractUsage_licenseKey_idx" ON "IrpTrialContractUsage"("licenseKey")`
+  );
+
   licenseSchemaReady = true;
 }
 
@@ -601,16 +623,48 @@ async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFi
   };
 }
 
+// Le (sem incrementar nada) quantos itens ainda restam pra essa licenca NESSA licitacao
+// especifica (flow + contractId) — chamada pela extensao ANTES de iniciar uma automacao,
+// pra decidir se bloqueia ou corta a lista de itens. Pool POR LICITACAO (decisao explicita
+// do dono do produto, 06/09/2026): abrir uma licitacao diferente sempre comeca com o
+// limite cheio de novo; a MESMA licitacao nunca reinicia (contador cumulativo/permanente).
+async function getContractQuota({ licenseKey, deviceId, flow, contractId }) {
+  await ensureLicenseSchema();
+  if (!TRIAL_FLOW_COLUMNS[flow]) {
+    return { valid: false, reason: 'invalid_flow', message: 'Fluxo de automação inválido.' };
+  }
+  if (!contractId) {
+    return { valid: false, reason: 'missing_fields', message: 'Licitação não identificada.' };
+  }
+  const license = await findByKey(licenseKey);
+  if (!license) return { valid: false, reason: 'not_found', message: 'Chave de licença inválida.' };
+  if (license.activeDeviceId && license.activeDeviceId !== deviceId) {
+    return { valid: false, reason: 'device_changed', message: 'Esta licença foi ativada em outro dispositivo.' };
+  }
+  if (license.trialItemsLimit == null) {
+    return { valid: true, quota: null };
+  }
+  const rows = await prisma.$queryRawUnsafe(
+    `SELECT "itemsUsed" FROM "IrpTrialContractUsage" WHERE "licenseKey"=$1 AND "flow"=$2 AND "contractId"=$3 LIMIT 1`,
+    licenseKey, flow, contractId
+  );
+  const used = rows[0] ? rows[0].itemsUsed : 0;
+  const limit = Number(license.trialItemsLimit);
+  return { valid: true, quota: { itemsLimit: limit, itemsUsed: used, itemsRemaining: Math.max(0, limit - used) } };
+}
+
 // Registra itens realmente processados com sucesso por uma execucao de automacao
 // (identificada por runId, gerado uma vez pela extensao por execucao). Idempotente: um
-// runId ja processado nunca soma de novo, mesmo em reenvio de rede ou corrida entre
-// duas chamadas simultaneas com o mesmo runId (a unicidade de "runId" e a garantia
-// atomica — o INSERT em IrpTrialConsumption acontece ANTES do UPDATE em IrpLicense, e so
-// prossegue pro UPDATE quem realmente "ganhou" a insercao daquele runId).
-async function consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, flow }) {
+// runId ja processado nunca soma de novo, mesmo em reenvio de rede. Pool POR LICITACAO
+// (06/09/2026): o contador incrementado e o de (licenseKey, flow, contractId) especifico
+// dessa chamada — processar itens na licitacao A nunca consome nada da licitacao B.
+async function consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, flow, contractId }) {
   await ensureLicenseSchema();
   if (!licenseKey || !deviceId || !runId) {
     return { valid: false, reason: 'missing_fields', message: 'Dados incompletos para registrar uso do teste.' };
+  }
+  if (!contractId) {
+    return { valid: false, reason: 'missing_fields', message: 'Licitação não identificada.' };
   }
 
   const license = await findByKey(licenseKey);
@@ -625,10 +679,10 @@ async function consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, 
     return { valid: true, quota: null, applied: 0, alreadyConsumed: false };
   }
 
-  // Pool separado por automacao: cada fluxo tem sua propria coluna de uso. `flow`
-  // invalido/desconhecido e rejeitado explicitamente em vez de cair num fluxo por acaso.
-  const flowColumn = TRIAL_FLOW_COLUMNS[flow];
-  if (!flowColumn) {
+  // `flow` invalido/desconhecido e rejeitado explicitamente em vez de cair num fluxo por
+  // acaso (TRIAL_FLOW_COLUMNS so serve mais pra validar o nome aqui — o incremento de
+  // verdade vai pra IrpTrialContractUsage, nao mais pras colunas fixas de IrpLicense).
+  if (!TRIAL_FLOW_COLUMNS[flow]) {
     return { valid: false, reason: 'invalid_flow', message: 'Fluxo de automação inválido.' };
   }
 
@@ -643,27 +697,37 @@ async function consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, 
   } catch (e) {
     // runId ja existe (indice unico) — essa execucao ja foi contabilizada antes.
     const already = await prisma.$queryRawUnsafe(`SELECT * FROM "IrpTrialConsumption" WHERE "runId"=$1 LIMIT 1`, runId);
-    const fresh = await findByKey(licenseKey);
+    const quotaRepeat = await getContractQuota({ licenseKey, deviceId, flow, contractId });
     return {
       valid: true,
-      quota: quotaFromLicense(fresh),
+      quota: quotaRepeat.quota,
       applied: already[0] ? already[0].itemsApplied : 0,
       alreadyConsumed: true,
     };
   }
 
   // So chega aqui se o INSERT acima teve sucesso: esta e, garantidamente, a primeira vez
-  // que esse runId e processado, mesmo sob corrida entre requisicoes simultaneas.
-  const updated = await prisma.$queryRawUnsafe(
-    `UPDATE "IrpLicense"
-        SET "${flowColumn}" = LEAST("trialItemsLimit", "${flowColumn}" + $1), "updatedAt"=NOW()
-      WHERE "id"=$2
-      RETURNING *`,
-    itemsRequested, license.id
+  // que esse runId e processado. Le o valor atual do contador dessa licitacao especifica,
+  // soma travado no limite, e grava — nao e uma unica instrucao atomica (diferente da
+  // versao anterior baseada em UPDATE...LEAST numa coluna fixa), mas a idempotencia do
+  // runId acima ja impede a mesma execucao de contar duas vezes, que e o risco real de
+  // receita; corrida entre execucoes DIFERENTES do mesmo dispositivo na mesma licitacao e
+  // praticamente impossivel (a automacao roda sequencial, uma aba/uma vez).
+  const antesRows = await prisma.$queryRawUnsafe(
+    `SELECT "itemsUsed" FROM "IrpTrialContractUsage" WHERE "licenseKey"=$1 AND "flow"=$2 AND "contractId"=$3 LIMIT 1`,
+    licenseKey, flow, contractId
   );
-  const novoUsado = updated[0][flowColumn];
-  const limite = updated[0].trialItemsLimit;
-  const aplicado = novoUsado - (license[flowColumn] || 0);
+  const antes = antesRows[0] ? antesRows[0].itemsUsed : 0;
+  const limite = Number(license.trialItemsLimit);
+  const novoUsado = Math.min(limite, antes + itemsRequested);
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO "IrpTrialContractUsage" ("id","licenseKey","flow","contractId","itemsUsed","createdAt","updatedAt")
+     VALUES ($1,$2,$3,$4,$5,NOW(),NOW())
+     ON CONFLICT ("licenseKey","flow","contractId")
+     DO UPDATE SET "itemsUsed"=$5, "updatedAt"=NOW()`,
+    uuid(), licenseKey, flow, contractId, novoUsado
+  );
+  const aplicado = novoUsado - antes;
 
   await prisma.$executeRawUnsafe(
     `UPDATE "IrpTrialConsumption" SET "itemsApplied"=$1 WHERE "runId"=$2`, aplicado, runId
@@ -672,7 +736,7 @@ async function consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, 
 
   return {
     valid: true,
-    quota: quotaFromLicense(updated[0]),
+    quota: { itemsLimit: limite, itemsUsed: novoUsado, itemsRemaining: Math.max(0, limite - novoUsado) },
     applied: aplicado,
     alreadyConsumed: false,
   };
@@ -924,7 +988,7 @@ module.exports = {
   generateLicenseKey, createLicense, activateLicense, validateLicense,
   heartbeat, logoutLicense,
   renewLicense, renewLicenseFromPayment, claimLicenseByDevice, syncLicenseByDeviceId,
-  claimTrialLicense, consumeTrialItems, resetTrialClaim,
+  claimTrialLicense, consumeTrialItems, getContractQuota, resetTrialClaim,
   listLicenses, listTrialClaims, getLicenseById, getLicenseEvents,
   recordLicenseAttempt, listLicenseAttempts, clearLicenseAttempts,
   blockLicense, unblockLicense, renewLicenseById, freeDevice,

@@ -566,31 +566,69 @@ protecao mais fraca que com e-mail, troca consciente aceita pelo dono do produto
   "licenseKey": "IRP-XXXX-XXXX-XXXX-XXXX",
   "expiresAt": "2026-10-03T00:00:00.000Z",
   "daysRemaining": 30,
-  "quota": {
-    "uasg_local":  { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 },
-    "detalhes":    { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 },
-    "beneficios":  { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 }
-  },
   "message": "Teste grátis ativado! Você pode processar até 11 itens em cada automação (UASG, Detalhes, Benefícios)..."
 }
 ```
 
-> **Pool SEPARADO por automação (decisão explícita do dono do produto, 04/09/2026):**
-> `quota` deixou de ser um objeto plano (`{itemsLimit,itemsUsed,itemsRemaining}`) e passou a
-> ser um objeto por fluxo — `uasg_local`/`detalhes`/`beneficios`, cada um com seu próprio
-> `itemsLimit`/`itemsUsed`/`itemsRemaining`, todos limitados ao mesmo valor de
-> `trial_items_limit_default` (hoje 11), mas contados **independentemente**. Esgotar um
-> fluxo (ex: Benefícios) não afeta os outros dois — a extensão só bloqueia aquele fluxo
-> específico. Colunas reais: `IrpLicense.trialItemsUsedUasg` / `trialItemsUsedDetalhes` /
-> `trialItemsUsedBeneficios` (a coluna antiga `trialItemsUsed`, compartilhada, ficou sem
-> uso novo — mantida só por compatibilidade com linhas gravadas antes dessa mudança).
+> **Histórico do modelo de trial (pra quem for mexer aqui de novo):**
+> 1. Trial por TEMPO (24h ilimitadas) — trocado porque deixava terminar um trabalho
+>    inteiro de graça numa única sessão.
+> 2. Trial por QUANTIDADE DE ITENS, total COMPARTILHADO entre as 3 automações.
+> 3. *(04/09/2026)* Trial por QUANTIDADE DE ITENS, pool SEPARADO por automação — 11 itens
+>    EM CADA uma das três (`quota` virou um objeto por fluxo:
+>    `{uasg_local:{...},detalhes:{...},beneficios:{...}}`, colunas
+>    `IrpLicense.trialItemsUsedUasg/Detalhes/Beneficios`).
+> 4. **(06/09/2026, modelo atual) Trial por QUANTIDADE DE ITENS, pool SEPARADO POR
+>    LICITAÇÃO** — decisão explícita do dono do produto: cada combinação (licença, fluxo,
+>    **licitação**) tem seu próprio contador de 11 itens. Processar 11 itens na licitação A
+>    não consome nada da licitação B — o usuário pode abrir e trabalhar em quantas
+>    licitações diferentes quiser, sempre com 11 disponíveis em cada uma, em cada
+>    automação. A MESMA licitação, porém, **nunca reinicia** o contador (cumulativo e
+>    permanente) — não é possível processar os itens 1 a 11, rodar de novo, e ir de 12 a
+>    22. `contractId` é o número identificador da licitação/IRP extraído da URL do próprio
+>    portal do governo (ex: `"550740"` em `".../execucao/edit?id=550740"`).
+>
+> As colunas `trialItemsUsedUasg/Detalhes/Beneficios` (passo 3) ficaram sem uso novo a
+> partir do passo 4 — mantidas só por compatibilidade com o período em que existiram.
+> `quota` nas respostas de `validate`/`heartbeat`/`activate`/`sync`/`trial` **não reflete
+> mais o uso real** (ainda vem das colunas antigas, congeladas) — a única fonte de verdade
+> pra saber quanto resta é `POST /trial/quota`, que exige `flow` + `contractId`. Por isso a
+> extensão parou de cachear `quota` localmente e passou a consultar esse endpoint ao vivo,
+> sempre com o `contractId` da aba ativa, antes de cada automação.
 
-### POST /api/v1/licenses/trial/consume *(novo)*
+### POST /api/v1/licenses/trial/quota *(novo, 06/09/2026)*
+
+Consulta (sem incrementar nada) quantos itens restam pra uma licença NUMA licitação
+específica, num fluxo específico. Chamada pela extensão antes de iniciar qualquer
+automação — não existe mais como cachear isso localmente, já que existem N contadores
+possíveis (um por licitação).
+
+**Request:**
+```json
+{ "licenseKey": "IRP-XXXX-XXXX-XXXX-XXXX", "deviceId": "dev_...", "flow": "beneficios", "contractId": "550740" }
+```
+
+**Response (licença em trial, licitação nova ou parcialmente usada):**
+```json
+{ "valid": true, "quota": { "itemsLimit": 11, "itemsUsed": 4, "itemsRemaining": 7 } }
+```
+
+**Response (licença paga/cortesia — sem limite):**
+```json
+{ "valid": true, "quota": null }
+```
+
+Erros: `400` (faltando `licenseKey`/`deviceId`/`flow`/`contractId`), `404` com
+`reason:"not_found"`, `409` com `reason:"device_changed"` ou `reason:"invalid_flow"`.
+
+### POST /api/v1/licenses/trial/consume
 
 Chamado pela extensao apos cada execucao de UASG Local/Quantidade, Detalhes do Item ou
-Beneficios ME/EPP, reportando quantos itens foram processados com sucesso. `flow` precisa
-ser exatamente `"uasg_local"`, `"detalhes"` ou `"beneficios"` — qualquer outro valor é
-rejeitado com `reason:"invalid_flow"` (nunca cai silenciosamente num fluxo por acaso).
+Beneficios ME/EPP, reportando quantos itens foram processados com sucesso NUMA licitação
+específica (`contractId`, obrigatório desde 06/09/2026). `flow` precisa ser exatamente
+`"uasg_local"`, `"detalhes"` ou `"beneficios"` — qualquer outro valor é rejeitado com
+`reason:"invalid_flow"` (nunca cai silenciosamente num fluxo por acaso). O contador
+incrementado é o de `(licenseKey, flow, contractId)` — tabela `IrpTrialContractUsage`.
 
 **Request:**
 ```json
@@ -599,23 +637,22 @@ rejeitado com `reason:"invalid_flow"` (nunca cai silenciosamente num fluxo por a
   "deviceId": "dev_...",
   "runId": "uuid-gerado-pela-extensao-por-execucao",
   "itemsCompleted": 7,
-  "flow": "detalhes"
+  "flow": "detalhes",
+  "contractId": "550740"
 }
 ```
 
-**Response (licenca em trial — só a coluna do `flow` enviado muda, as outras duas ficam como estavam):**
+**Response (licenca em trial):**
 ```json
 {
   "valid": true,
-  "quota": {
-    "uasg_local":  { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 },
-    "detalhes":    { "itemsLimit": 11, "itemsUsed": 7, "itemsRemaining": 4 },
-    "beneficios":  { "itemsLimit": 11, "itemsUsed": 0, "itemsRemaining": 11 }
-  },
+  "quota": { "itemsLimit": 11, "itemsUsed": 7, "itemsRemaining": 4 },
   "applied": 7,
   "alreadyConsumed": false
 }
 ```
+(`quota` aqui é só da combinação `flow`+`contractId` enviada nessa chamada — outra
+licitação, ou outro fluxo na mesma licitação, tem seu próprio contador independente.)
 
 **Response (licenca paga/cortesia — `trialItemsLimit` NULL, nada a consumir):**
 ```json
@@ -625,27 +662,28 @@ rejeitado com `reason:"invalid_flow"` (nunca cai silenciosamente num fluxo por a
 **Response (mesmo `runId` reenviado — idempotente, nao soma de novo):** mesmo formato acima,
 com `"alreadyConsumed": true` e `applied` igual ao que já tinha sido aplicado antes.
 
-**Response (`flow` inválido/desconhecido):**
+**Response (`flow` inválido/desconhecido, ou `contractId` ausente):**
 ```json
 { "valid": false, "reason": "invalid_flow", "message": "Fluxo de automação inválido." }
+```
+```json
+{ "valid": false, "reason": "missing_fields", "message": "Licitação não identificada." }
 ```
 
 Outros erros: `404` com `reason:"not_found"` (chave invalida) ou `409` com
 `reason:"device_changed"` (licenca ativada em outro dispositivo).
 
-### `validate`, `heartbeat`, `activate`, `sync` — todos ganham `quota`
+### `validate`, `heartbeat`, `activate`, `sync`
 
-Todas as respostas dessas quatro rotas passam a incluir o mesmo campo `quota` por fluxo (ou
-`null` pra licenca sem limite de itens). Isso deixa a checagem de cota "de carona" na
-chamada de licenca que a extensao ja faz antes de cada acao — nenhuma chamada de rede nova
-e necessaria so pra saber se ainda sobra cota, apenas pra *reportar* uso depois de um run
-(`/trial/consume`).
+Essas quatro rotas **não** carregam mais a cota de itens de verdade (ver histórico acima —
+a cota por licitação só existe via `/trial/quota` e `/trial/consume`, que exigem
+`flow`+`contractId`, algo que essas quatro chamadas genéricas de licença não têm como
+saber). `quota`, quando aparece nessas respostas, é informativo/legado e não deve ser usado
+pra decidir se uma automação pode iniciar.
 
-**Importante:** `valid:true` sozinho **nao** significa mais "pode iniciar uma nova automacao"
-para uma licenca em trial — e preciso checar tambem `quota.<flow>.itemsRemaining > 0` **pro
-fluxo especifico** que vai rodar (ex: `quota.beneficios.itemsRemaining` antes de iniciar
-Benefícios ME/EPP). As duas condicoes sao independentes e precisam ser verdadeiras juntas,
-e um fluxo esgotado não implica nada sobre os outros dois.
+**Importante:** pra saber se uma automação pode iniciar, a extensão SEMPRE consulta
+`POST /trial/quota` com o `flow` e o `contractId` (número da licitação) daquela automação
+específica, logo antes de começar — nunca cacheia isso localmente.
 
 ### POST /api/v1/licenses/admin/reset-trial-claim *(novo)*
 

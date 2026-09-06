@@ -56,6 +56,11 @@ async function ensureIrpTables() {
       `CREATE INDEX IF NOT EXISTS "IrpTrialConsumption_licenseKey_idx" ON "IrpTrialConsumption"("licenseKey")`,
       // Config chave/valor pra ajustar limite de itens do trial sem publicar nova versao
       `CREATE TABLE IF NOT EXISTS "IrpConfig" ("key" TEXT NOT NULL,"value" TEXT NOT NULL,"updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "IrpConfig_pkey" PRIMARY KEY ("key"))`,
+      // Pool de itens do trial POR LICITACAO (06/09/2026) — cada (licenca, fluxo, licitacao)
+      // tem seu proprio contador de ate trialItemsLimit itens
+      `CREATE TABLE IF NOT EXISTS "IrpTrialContractUsage" ("id" TEXT NOT NULL,"licenseKey" TEXT NOT NULL,"flow" TEXT NOT NULL,"contractId" TEXT NOT NULL,"itemsUsed" INTEGER NOT NULL DEFAULT 0,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "IrpTrialContractUsage_pkey" PRIMARY KEY ("id"))`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "IrpTrialContractUsage_key_flow_contract_key" ON "IrpTrialContractUsage"("licenseKey","flow","contractId")`,
+      `CREATE INDEX IF NOT EXISTS "IrpTrialContractUsage_licenseKey_idx" ON "IrpTrialContractUsage"("licenseKey")`,
     ];
     for (const sql of sqls) {
       try { await p.$executeRawUnsafe(sql); } catch(e) { /* already exists */ }

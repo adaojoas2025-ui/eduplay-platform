@@ -53,14 +53,35 @@ router.post('/trial', async (req, res) => {
 
 // POST /trial/consume — extensão reporta quantos itens uma execução realmente processou
 // com sucesso, uma vez por execução (runId). Sem efeito (quota:null) numa licença paga.
+// `contractId` (06/09/2026): identifica a licitação/IRP (número da URL do portal) — o
+// contador de itens do trial é por (licença, fluxo, licitação), não mais um total fixo.
 router.post('/trial/consume', async (req, res) => {
-  const { licenseKey, deviceId, runId, itemsCompleted, flow } = req.body;
+  const { licenseKey, deviceId, runId, itemsCompleted, flow, contractId } = req.body;
   if (!licenseKey || !deviceId || !runId) {
     return res.status(400).json({ valid: false, message: 'licenseKey, deviceId e runId são obrigatórios.' });
   }
   try {
-    const result = await licenseService.consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, flow });
+    const result = await licenseService.consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, flow, contractId });
     await licenseService.recordLicenseAttempt({ action: 'trial_consume', licenseKey, deviceId, extensionVersion: null, ip: req.ip, valid: result.valid, reason: result.reason, message: result.message });
+    if (result.valid) return res.status(200).json(result);
+    if (result.reason === 'not_found') return res.status(404).json(result);
+    return res.status(409).json(result);
+  } catch (e) {
+    return res.status(500).json({ valid: false, message: e.message });
+  }
+});
+
+// POST /trial/quota — extensão consulta, ANTES de iniciar uma automação, quantos itens
+// ainda restam pra essa licença NESSA licitação especifica (flow + contractId). Sem
+// efeito visivel numa licença paga (quota:null, nunca bloqueia). Não incrementa nada —
+// só leitura; quem incrementa é /trial/consume, depois que os itens são processados.
+router.post('/trial/quota', async (req, res) => {
+  const { licenseKey, deviceId, flow, contractId } = req.body;
+  if (!licenseKey || !deviceId || !flow || !contractId) {
+    return res.status(400).json({ valid: false, message: 'licenseKey, deviceId, flow e contractId são obrigatórios.' });
+  }
+  try {
+    const result = await licenseService.getContractQuota({ licenseKey, deviceId, flow, contractId });
     if (result.valid) return res.status(200).json(result);
     if (result.reason === 'not_found') return res.status(404).json(result);
     return res.status(409).json(result);
