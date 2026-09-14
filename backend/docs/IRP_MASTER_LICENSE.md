@@ -98,9 +98,21 @@ createLicense(email, days, notes)
 // Cria nova licença + evento "created"
 // Retorna o objeto IrpLicense criado
 
-activateLicense(licenseKey, deviceId, extensionVersion)
-// Vincula deviceId à licença (primeira ativação ou troca de dispositivo)
-// Retorna { valid, status, expiresAt, daysRemaining, message }
+activateLicense(licenseKey, deviceId, extensionVersion, options)
+// Vincula deviceId à licença — PERMANENTEMENTE, no primeiro dispositivo que ativar.
+// CORRIGIDO em 11/09/2026 (bug real encontrado em producao): antes, qualquer pessoa
+// com a chave conseguia ativar em quantos dispositivos/contas Chrome quisesse, sempre
+// com sucesso — o controller do IRP Master nunca passava `strictDeviceBinding`, entao
+// a troca de dispositivo nunca era bloqueada de verdade. Foram avaliadas duas alternativas
+// mais leves (liberacao automatica apos 30 dias parado; cooldown entre trocas) e as duas
+// foram rejeitadas pelo dono do produto: "comprou so pode usar naquele que cadastrou
+// primeiro (...) depois disso tem que pagar novamente pra usar". Comportamento final:
+// se ja existe um activeDeviceId diferente do informado, SEMPRE bloqueia — sem excecao,
+// sem prazo, sem reclaim automatico. Nao ha transferencia self-service; mudar o dispositivo
+// de uma licenca ja ativada exige update manual direto no banco (`activeDeviceId`/
+// `lastSeenAt` em IrpLicense). `options.strictDeviceBinding` continua aceito só por
+// compatibilidade com o BaixaTudo — nao muda mais o comportamento (ja e sempre estrito).
+// Retorna { valid, status, expiresAt, daysRemaining, message } ou { valid:false, reason:'device_changed', message }
 
 validateLicense(licenseKey, deviceId, extensionVersion)
 // Valida chave + dispositivo a cada uso da extensão

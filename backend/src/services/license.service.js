@@ -376,13 +376,24 @@ async function activateLicense(licenseKey, deviceId, extensionVersion, options =
     return { valid: false, reason: 'expired', message: 'Licença vencida. Renove para continuar usando.' };
   }
 
+  // Uma licenca paga fica travada PERMANENTEMENTE no primeiro dispositivo que ativar —
+  // decisao explicita do dono do produto (11/09/2026), depois de confirmar em teste real
+  // que o controller do IRP Master nunca passava `strictDeviceBinding` pro service, entao
+  // QUALQUER pessoa com a chave conseguia ativar em quantos Chromes/contas quisesse, sem
+  // nunca ser bloqueada. Testados tambem um esquema de liberacao automatica apos X dias
+  // parado e um cooldown entre trocas, mas o dono do produto rejeitou os dois: "comprou so
+  // pode usar naquele que cadastrou primeiro (...) depois disso tem que pagar novamente
+  // pra usar" — ou seja, nao existe reclaim automatico, cooldown nem transferencia via
+  // suporte: pra usar em outro dispositivo e necessario comprar uma licenca nova.
+  // `options.strictDeviceBinding` continua aceito por compatibilidade com o BaixaTudo mas
+  // nao muda mais nada: o bloqueio ja e sempre o mesmo, com ou sem a flag.
   const deviceChanged = license.activeDeviceId && license.activeDeviceId !== deviceId;
-  if (options.strictDeviceBinding === true && deviceChanged) {
+  if (deviceChanged) {
     await logEvent(license.id, 'device_rejected', deviceId, extensionVersion);
     return {
       valid: false,
       reason: 'device_changed',
-      message: 'Esta licenca ja esta vinculada a outro dispositivo.',
+      message: 'Esta licença já está vinculada a outro dispositivo. Para usar em outro dispositivo, adquira uma nova licença.',
     };
   }
   await prisma.$executeRawUnsafe(
