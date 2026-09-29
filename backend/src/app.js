@@ -25,6 +25,9 @@ const app = express();
  */
 app.set('trust proxy', 1);
 
+// Dedicated tracker routes precede request logging so secret event URLs are not logged here.
+require('./gmail-tracker').mount(app);
+
 /**
  * Security middleware
  */

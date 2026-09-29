@@ -1,0 +1,22 @@
+const test=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto'),express=require('express');
+const {once}=require('node:events');const {createRouter}=require('../src/gmail-tracker');
+test('Tracker authentication, idempotency, pixel, explicit confirmation and route isolation',async t=>{
+  const records=new Map(),refs=new Map();const key=crypto.randomBytes(32).toString('hex');
+  const store={cleanup:async()=>{},register:async ref=>{if(refs.has(ref))return refs.get(ref);const token=crypto.randomBytes(24).toString('hex');refs.set(ref,token);records.set(token,{openedAt:null,confirmedAt:null});return token;},find:async token=>records.has(token),mark:async(token,field)=>{if(records.has(token))records.get(token)[field] ||= new Date().toISOString();},events:async tokens=>Object.fromEntries(tokens.filter(x=>records.has(x)).map(x=>[x,records.get(x)]))};
+  const app=express();app.use(createRouter({store,keyHash:crypto.createHash('sha256').update(key).digest('hex')}));app.get('/api/v1/health',(q,r)=>r.json({existing:true}));
+  const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>new Promise(r=>server.close(r)));
+  const base='http://127.0.0.1:'+server.address().port;
+  const post=(p,body,secret=key)=>fetch(base+p,{method:'POST',headers:{Authorization:'Bearer '+secret,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  assert.equal((await post('/v1/events',{tokens:[]},'wrong')).status,401);
+  const reference=crypto.randomUUID()+':'+crypto.randomUUID();
+  const {token}=await(await post('/v1/register',{reference})).json();
+  assert.equal((await(await post('/v1/register',{reference})).json()).token,token);
+  assert.equal((await post('/v1/events',{tokens:['bad']})).status,400);
+  await fetch(base+'/confirm/'+token);await fetch(base+'/pixel/'+token+'.gif',{method:'HEAD'});
+  assert.equal(records.get(token).openedAt,null);assert.equal(records.get(token).confirmedAt,null);
+  const pixel=await fetch(base+'/pixel/'+token+'.gif');assert.equal(pixel.headers.get('cross-origin-resource-policy'),'cross-origin');assert.ok(records.get(token).openedAt);
+  await fetch(base+'/confirm/'+token,{method:'POST'});assert.ok(records.get(token).confirmedAt);
+  assert.ok((await(await post('/v1/events',{tokens:[token]})).json()).events[token].confirmedAt);
+  assert.equal((await(await fetch(base+'/api/v1/health')).json()).existing,true);
+  assert.equal((await fetch(base+'/confirm/'+'f'.repeat(48))).status,404);
+});
