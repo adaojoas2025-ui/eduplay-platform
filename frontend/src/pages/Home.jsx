@@ -5,6 +5,7 @@ import axios from 'axios';
 import api from '../services/api';
 import { API_URL } from '../config/api.config';
 import ProductCard from '../components/ProductCard';
+import PlatformAvatar from '../components/PlatformAvatar';
 import { useCart } from '../contexts/CartContext';
 import { getUser, isAuthenticated } from '../lib/auth';
 
@@ -182,6 +183,7 @@ export default function Home() {
 
   return (
     <div>
+      <PlatformAvatar />
       {/* Promotional Banner Carousel */}
       <section className="pt-2 pb-3 md:py-8 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
