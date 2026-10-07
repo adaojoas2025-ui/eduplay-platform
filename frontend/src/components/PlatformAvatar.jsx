@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { FiMessageCircle, FiPlay, FiRotateCcw, FiVolume2, FiX } from 'react-icons/fi';
 
-const AVATAR_VIDEO = '/avatar/assistente-educaplay.mp4';
+const AVATAR_VIDEO = '/avatar/assistente-educaplay.mp4?v=bem-vindo-20261007';
 
 export default function PlatformAvatar() {
   const videoRef = useRef(null);
