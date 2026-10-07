@@ -81,6 +81,14 @@ export default function PlatformAvatar() {
           {hasEnded ? <FiRotateCcw aria-hidden="true" /> : hasAudio ? <FiPlay aria-hidden="true" /> : <FiVolume2 aria-hidden="true" />}
           {hasEnded ? 'Ouvir novamente' : hasAudio ? 'Reiniciar apresentação' : 'Ouvir apresentação'}
         </button>
+        <a
+          href="http://127.0.0.1:8790"
+          target="_blank"
+          rel="noreferrer"
+          className="flex w-full items-center justify-center rounded-lg border border-primary-200 px-3 py-2 text-xs font-bold text-primary-600 transition hover:bg-primary-50"
+        >
+          Criar meus vídeos
+        </a>
       </div>
     </aside>
   );

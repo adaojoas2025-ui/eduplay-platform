@@ -101,6 +101,9 @@ export default function Navbar() {
               <Link to="/admin/apps" className="text-xs font-semibold text-gray-700 hover:text-primary-500 px-3 py-1.5 whitespace-nowrap flex items-center gap-1">
                 📱 Apps
               </Link>
+              <a href="http://127.0.0.1:8790" target="_blank" rel="noreferrer" className="text-xs font-bold text-purple-600 hover:text-purple-700 px-3 py-1.5 whitespace-nowrap">
+                🎬 Criar Vídeo
+              </a>
               <Link to="/login" className="text-xs font-semibold text-gray-700 hover:text-primary-500 px-3 py-1.5 whitespace-nowrap border border-gray-300 rounded-lg">
                 Entrar
               </Link>
@@ -116,6 +119,9 @@ export default function Navbar() {
               <Link to="/admin/apps" className="text-xs font-semibold text-gray-700 hover:text-primary-500 px-3 py-1.5 whitespace-nowrap">
                 📱 Apps
               </Link>
+              <a href="http://127.0.0.1:8790" target="_blank" rel="noreferrer" className="text-xs font-bold text-purple-600 hover:text-purple-700 px-3 py-1.5 whitespace-nowrap">
+                🎬 Criar Vídeo
+              </a>
               <Link to="/my-products" className="text-xs font-semibold text-gray-700 hover:text-primary-500 px-3 py-1.5 whitespace-nowrap">
                 📚 Meus Cursos
               </Link>
@@ -242,6 +248,9 @@ export default function Navbar() {
                 <Link to="/admin/apps" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1">
                   📱 Apps Educativos
                 </Link>
+                <a href="http://127.0.0.1:8790" target="_blank" rel="noreferrer" className="text-purple-600 hover:text-purple-700 px-3 py-2 rounded-md text-sm font-bold transition-colors flex items-center gap-1">
+                  🎬 Criar Vídeo
+                </a>
                 {authenticated && (
                   <Link to="/my-products" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1">
                     📚 Meus Cursos
