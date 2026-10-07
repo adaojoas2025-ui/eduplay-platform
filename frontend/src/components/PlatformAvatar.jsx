@@ -15,12 +15,12 @@ export default function PlatformAvatar() {
         type="button"
         onClick={() => setIsOpen(true)}
         className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full bg-primary-500 px-4 py-3 font-bold text-white shadow-2xl transition hover:scale-105 hover:bg-primary-600 focus:outline-none focus:ring-4 focus:ring-primary-200 sm:bottom-6 sm:right-6"
-        aria-label="Abrir assistente virtual da EduPlay"
+        aria-label="Abrir mensagem de boas-vindas do EducaPlayJá"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
           <FiMessageCircle className="text-xl" aria-hidden="true" />
         </span>
-        <span className="text-sm">Assistente virtual</span>
+        <span className="text-sm">Bem-vindo ao EducaPlayJá</span>
       </button>
     );
   }
@@ -44,7 +44,7 @@ export default function PlatformAvatar() {
   return (
     <aside
       className="fixed bottom-3 right-3 z-50 w-44 overflow-hidden rounded-2xl border border-white/70 bg-white shadow-2xl sm:bottom-5 sm:right-5 sm:w-56 lg:w-64"
-      aria-label="Apresentação da assistente EduPlay"
+      aria-label="Mensagem de boas-vindas do EducaPlayJá"
     >
       <button
         type="button"
@@ -70,8 +70,8 @@ export default function PlatformAvatar() {
 
       <div className="space-y-2 p-3">
         <div>
-          <p className="text-sm font-bold text-gray-900">Bem-vindo à EduPlay!</p>
-          <p className="text-xs leading-4 text-gray-600">Conheça a plataforma com nossa assistente.</p>
+          <p className="text-sm font-bold text-gray-900">Bem-vindo ao EducaPlayJá!</p>
+          <p className="text-xs leading-4 text-gray-600">Clique abaixo para ouvir nossa apresentação.</p>
         </div>
         <button
           type="button"
