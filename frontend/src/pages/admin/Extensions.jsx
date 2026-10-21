@@ -288,7 +288,8 @@ export default function AdminExtensions() {
                 <ul className="space-y-2 text-sm text-gray-700 list-disc pl-5">
                   <li>Cortesia nao substitui venda pelo Mercado Pago.</li>
                   <li>O motivo e registrado nas notas da licenca.</li>
-                  <li>Se o email ja tiver uma licenca do prefixo selecionado, ela e renovada.</li>
+                  <li>Cada cortesia gera uma nova chave, mesmo para o mesmo email, com prazo contado a partir da emissao.</li>
+                  <li>No IRP Master, gerar uma cortesia revoga as licencas anteriores desse email para o IRP. O prazo escolhido comeca na nova emissao, sem acumular dias.</li>
                   <li>A extensao nao gera cortesia e nao recebe senha administrativa.</li>
                 </ul>
               </section>

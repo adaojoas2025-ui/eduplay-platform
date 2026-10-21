@@ -1,5 +1,19 @@
 # Admin de Extensoes - EducaplayJA
 
+## Atualizacao de cortesia IRP Master — 21/10/2026
+
+Cada emissao cria uma nova chave IRP e cancela as licencas ativas ou expiradas
+anteriores do mesmo email e prefixo IRP. A nova chave comeca sem dispositivo
+vinculado. O prazo escolhido conta a partir da emissao: 30 dias significam
+30 dias desde agora, sem acumular a validade anterior. Outros emails e o
+prefixo BT nao sao afetados. O historico e preservado.
+
+Criacao, cancelamento e eventos sao gravados na mesma transacao, com trava
+por conta para serializar emissoes simultaneas. Falhas revertem a operacao.
+O email e enviado apos a transacao. Esta regra substitui a renovacao de
+cortesia IRP descrita nas notas historicas abaixo; compras continuam usando
+o fluxo de renovacao existente.
+
 Data: 02/06/2026
 
 Esta documentacao registra a area administrativa criada para extensoes do EducaplayJA. Ela foi separada do fluxo de vendedor e financeiro para evitar confusao entre os dois menus de Admin.

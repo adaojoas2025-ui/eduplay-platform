@@ -364,6 +364,36 @@ async function createLicense(email, days, notes = '', options = {}) {
   return { id, licenseKey, email, status: 'active', expiresAt };
 }
 
+async function replaceCourtesyLicense(email, days, notes = '') {
+  await ensureLicenseSchema();
+  email = String(email).trim().toLowerCase();
+  if (!Number.isFinite(days) || days <= 0) throw new Error('Prazo invalido.');
+  return prisma.$transaction(async tx => {
+    // Serialize grants for this account, including when no prior key exists.
+    await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text AS locked', 'courtesy:IRP:' + email);
+    const id = uuid(), licenseKey = generateLicenseKey('IRP');
+    const expiresAt = addDays(new Date(), days);
+    const previous = await tx.$queryRawUnsafe(
+      `UPDATE "IrpLicense" SET "status"='cancelled', "updatedAt"=NOW()
+       WHERE LOWER("email")=$1 AND "licenseKey" LIKE 'IRP-%'
+         AND "status" IN ('active','expired') RETURNING "id"`, email
+    );
+    await tx.$executeRawUnsafe(
+      `INSERT INTO "IrpLicense" ("id","licenseKey","email","status","expiresAt","notes","createdAt","updatedAt")
+       VALUES ($1,$2,$3,'active',$4,$5,NOW(),NOW())`, id, licenseKey, email, expiresAt, notes
+    );
+    for (const old of previous) {
+      await tx.$executeRawUnsafe(
+        `INSERT INTO "IrpLicenseEvent" ("id","licenseId","eventType","createdAt") VALUES ($1,$2,'cancelled',NOW())`, uuid(), old.id
+      );
+    }
+    await tx.$executeRawUnsafe(
+      `INSERT INTO "IrpLicenseEvent" ("id","licenseId","eventType","createdAt") VALUES ($1,$2,'created',NOW())`, uuid(), id
+    );
+    return { id, licenseKey, email, status: 'active', expiresAt, revokedCount: previous.length };
+  });
+}
+
 async function activateLicense(licenseKey, deviceId, extensionVersion, options = {}) {
   const license = await findByKey(licenseKey);
   if (!license) return { valid: false, reason: 'not_found', message: 'Chave de licença inválida.' };
@@ -996,7 +1026,7 @@ async function freeDevice(id) {
 }
 
 module.exports = {
-  generateLicenseKey, createLicense, activateLicense, validateLicense,
+  generateLicenseKey, createLicense, replaceCourtesyLicense, activateLicense, validateLicense,
   heartbeat, logoutLicense,
   renewLicense, renewLicenseFromPayment, claimLicenseByDevice, syncLicenseByDeviceId,
   claimTrialLicense, consumeTrialItems, getContractQuota, resetTrialClaim,
