@@ -1,5 +1,41 @@
 # IRP Master Automação — Sistema de Licenças
 
+## Regra atual de cortesia IRP Master - 21/10/2026
+
+Cada nova cortesia no Admin gera uma chave IRP diferente e cancela as licencas
+anteriores ativas ou expiradas do mesmo email e prefixo IRP. A chave nova nasce
+sem dispositivo vinculado e pode ser ativada no dispositivo desejado; depois
+da ativacao, continua valendo a vinculacao por dispositivo.
+
+O prazo selecionado no formulario conta a partir da nova emissao, sem somar
+o tempo restante da chave antiga. Exemplo: uma nova cortesia de 30 dias vale
+por 30 dias desde a emissao, mesmo que a anterior ainda tivesse validade.
+Outros prazos selecionados seguem a mesma regra; nao existe prazo fixo de
+30 dias para todas as cortesias.
+
+Criacao da chave, cancelamento das anteriores e eventos de auditoria ficam
+na mesma transacao. Uma falha reverte a operacao; emissoes simultaneas da
+mesma conta sao serializadas. O envio de email acontece apos a transacao e
+uma falha de email nao invalida a chave criada.
+
+Escopo: apenas a emissao administrativa de cortesia IRP. Outros emails e
+licencas BT nao sao cancelados por essa operacao. A renovacao de compras
+continua no fluxo existente. Os registros anteriores ficam no historico.
+
+Para resolver o aviso de chave vinculada a outro dispositivo, apos o deploy,
+gere uma nova cortesia no Admin e ative a NOVA chave na extensao. Gerar a
+nova cortesia revoga a anterior; apenas recarregar ou reutilizar a chave
+antiga nao resolve. A mudanca nao exige novo pacote da extensao.
+
+Implementacao: backend/src/services/license.service.js (replaceCourtesyLicense)
+e backend/src/api/routes/admin-extension.routes.js. Publicado no GitHub em
+c3650f5. Push confirmado; conclusao do deploy e ativacao em producao ainda
+nao verificadas nesta sessao. Validacao local: 9 testes isolados aprovados.
+
+Esta secao substitui instrucoes historicas que dizem que gerar cortesia IRP
+renova a mesma chave e acumula a validade anterior.
+
+
 Documentação das mudanças realizadas na plataforma Educaplayja para suportar o licenciamento da extensão Chrome **IRP Master Automação**.
 
 ---
