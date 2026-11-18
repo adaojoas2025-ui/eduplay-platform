@@ -23,17 +23,16 @@ router.post('/sync', async (req, res) => {
   if (!deviceId) return res.status(400).json({ valid: false, message: 'deviceId obrigatório.' });
   try {
     const result = await licenseService.syncLicenseByDeviceId(deviceId);
+    await licenseService.recordLicenseAttempt({ action: 'sync', deviceId, licenseKey: result.licenseKey,
+      extensionVersion: req.body.extensionVersion, chromeProfileEmail: req.body.chromeProfileEmail,
+      ip: req.ip, valid: result.valid, reason: result.reason, message: result.message });
     return res.status(result.valid ? 200 : 404).json(result);
   } catch (e) {
     return res.status(500).json({ valid: false, message: e.message });
   }
 });
 
-// POST /trial — gera licença de teste grátis limitada por quantidade de itens. Decisão
-// explícita do dono do produto (03/09/2026): NUNCA bloqueia, nem repetindo o mesmo
-// e-mail/dispositivo/fingerprint — cada chamada concede um trial novo de
-// `trial_items_limit_default` itens. E-mail continua opcional (quando informado,
-// também recebe a chave por e-mail).
+// POST /trial — teste de 24 horas sem cota de itens; repetição não reinicia prazo.
 router.post('/trial', async (req, res) => {
   const { email, deviceId, extensionVersion, clientFingerprint } = req.body;
   if (!deviceId) return res.status(400).json({ valid: false, message: 'Dispositivo é obrigatório.' });
@@ -41,8 +40,8 @@ router.post('/trial', async (req, res) => {
     return res.status(400).json({ valid: false, message: 'E-mail inválido.' });
   }
   try {
-    const result = await licenseService.claimTrialLicense(email, deviceId, extensionVersion, req.ip, clientFingerprint);
-    await licenseService.recordLicenseAttempt({ action: 'trial', licenseKey: result.licenseKey, deviceId, extensionVersion, ip: req.ip, valid: result.valid, reason: result.reason, message: result.message });
+    const result = await licenseService.claimTrialLicense(email, deviceId, extensionVersion, req.ip, clientFingerprint, req.body.chromeProfileEmail);
+    await licenseService.recordLicenseAttempt({ action: 'trial', licenseKey: result.licenseKey, deviceId, extensionVersion, ip: req.ip, chromeProfileEmail: req.body.chromeProfileEmail, valid: result.valid, reason: result.reason, message: result.message });
     if (result.valid) return res.status(200).json(result);
     if (result.reason === 'limit_reached') return res.status(429).json(result);
     return res.status(409).json(result);
@@ -62,7 +61,7 @@ router.post('/trial/consume', async (req, res) => {
   }
   try {
     const result = await licenseService.consumeTrialItems({ licenseKey, deviceId, runId, itemsCompleted, flow, contractId });
-    await licenseService.recordLicenseAttempt({ action: 'trial_consume', licenseKey, deviceId, extensionVersion: null, ip: req.ip, valid: result.valid, reason: result.reason, message: result.message });
+    await licenseService.recordLicenseAttempt({ action: 'trial_consume', licenseKey, deviceId, extensionVersion: null, ip: req.ip, chromeProfileEmail: req.body.chromeProfileEmail, valid: result.valid, reason: result.reason, message: result.message });
     if (result.valid) return res.status(200).json(result);
     if (result.reason === 'not_found') return res.status(404).json(result);
     return res.status(409).json(result);
@@ -179,9 +178,9 @@ router.get('/admin/trials', authenticate, isAdmin, async (req, res) => {
 
 // GET /admin/attempts - lista usos e tentativas bloqueadas da extensao
 router.get('/admin/attempts', authenticate, isAdmin, async (req, res) => {
-  const { page = 1, limit = 50, valid, action, prefix } = req.query;
+  const { page = 1, limit = 50, valid, action, prefix, email } = req.query;
   try {
-    const result = await licenseService.listLicenseAttempts({ page, limit, valid, action, prefix });
+    const result = await licenseService.listLicenseAttempts({ page, limit, valid, action, prefix, email });
     return res.status(200).json(result);
   } catch (e) {
     return res.status(500).json({ error: e.message });

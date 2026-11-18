@@ -1,7 +1,7 @@
 /**
  * IRP Master Automação — License Service
  * Uses raw SQL via prisma.$queryRaw to avoid Prisma client cache issues.
- * The server receives ONLY: licenseKey, deviceId, extensionVersion.
+ * License authentication uses licenseKey + deviceId. Chrome profile email is optional usage metadata.
  */
 
 const { prisma } = require('../config/database');
@@ -53,6 +53,7 @@ async function ensureLicenseSchema() {
   `);
 
   const licenseColumns = [
+    '"trialMode" TEXT',
     '"licenseKey" TEXT',
     '"email" TEXT',
     '"status" TEXT NOT NULL DEFAULT \'active\'',
@@ -150,6 +151,7 @@ async function ensureLicenseSchema() {
   `);
 
   const attemptColumns = [
+    '"chromeProfileEmail" TEXT',
     "\"action\" TEXT NOT NULL DEFAULT 'validate'",
     '"licenseKey" TEXT',
     '"deviceId" TEXT',
@@ -225,6 +227,7 @@ async function ensureLicenseSchema() {
     `CREATE INDEX IF NOT EXISTS "IrpTrialContractUsage_licenseKey_idx" ON "IrpTrialContractUsage"("licenseKey")`
   );
 
+  await trial24.ensureSchema();
   licenseSchemaReady = true;
 }
 
@@ -401,7 +404,7 @@ async function activateLicense(licenseKey, deviceId, extensionVersion, options =
   if (license.status === 'cancelled') return { valid: false, reason: 'cancelled', message: 'Licença cancelada.' };
 
   const now = new Date();
-  if (new Date(license.expiresAt) < now) {
+  if (new Date(license.expiresAt) <= now) {
     await prisma.$executeRawUnsafe(`UPDATE "IrpLicense" SET "status"='expired',"updatedAt"=NOW() WHERE "id"=$1`, license.id);
     return { valid: false, reason: 'expired', message: 'Licença vencida. Renove para continuar usando.' };
   }
@@ -433,7 +436,7 @@ async function activateLicense(licenseKey, deviceId, extensionVersion, options =
   await logEvent(license.id, deviceChanged ? 'device_changed' : 'activated', deviceId, extensionVersion);
 
   const daysRemaining = Math.ceil((new Date(license.expiresAt) - now) / 86400000);
-  return { valid: true, status: 'active', expiresAt: license.expiresAt, daysRemaining, quota: quotaFromLicense(license), message: 'Licença ativada com sucesso.' };
+  return { valid: true, status: 'active', expiresAt: license.expiresAt, daysRemaining, quota: quotaFromLicense(license), isTrial: license.trialMode === 'time24', trialType: license.trialMode || null, message: 'Licença ativada com sucesso.' };
 }
 
 async function validateLicense(licenseKey, deviceId, extensionVersion) {
@@ -443,7 +446,7 @@ async function validateLicense(licenseKey, deviceId, extensionVersion) {
   if (license.status === 'cancelled') return { valid: false, reason: 'cancelled', message: 'Licença cancelada.' };
 
   const now = new Date();
-  if (new Date(license.expiresAt) < now) {
+  if (new Date(license.expiresAt) <= now) {
     await prisma.$executeRawUnsafe(`UPDATE "IrpLicense" SET "status"='expired',"updatedAt"=NOW() WHERE "id"=$1`, license.id);
     return { valid: false, reason: 'expired', message: 'Licença vencida. Renove para continuar usando.' };
   }
@@ -459,20 +462,20 @@ async function validateLicense(licenseKey, deviceId, extensionVersion) {
   await logEvent(license.id, 'validated', deviceId, extensionVersion);
 
   const daysRemaining = Math.ceil((new Date(license.expiresAt) - now) / 86400000);
-  return { valid: true, status: 'active', expiresAt: license.expiresAt, daysRemaining, quota: quotaFromLicense(license), message: 'Licença válida.' };
+  return { valid: true, status: 'active', expiresAt: license.expiresAt, daysRemaining, quota: quotaFromLicense(license), isTrial: license.trialMode === 'time24', trialType: license.trialMode || null, message: 'Licença válida.' };
 }
 
 async function heartbeat(licenseKey, deviceId) {
   const license = await findByKey(licenseKey);
   if (!license) return { valid: false, reason: 'not_found' };
   if (license.status !== 'active') return { valid: false, reason: license.status };
-  if (new Date(license.expiresAt) < new Date()) return { valid: false, reason: 'expired' };
+  if (new Date(license.expiresAt) <= new Date()) return { valid: false, reason: 'expired' };
   if (license.activeDeviceId && license.activeDeviceId !== deviceId) return { valid: false, reason: 'device_changed' };
 
   await prisma.$executeRawUnsafe(
     `UPDATE "IrpLicense" SET "lastSeenAt"=NOW(),"updatedAt"=NOW() WHERE "id"=$1`, license.id
   );
-  return { valid: true, quota: quotaFromLicense(license) };
+  return { valid: true, quota: quotaFromLicense(license), expiresAt: license.expiresAt, isTrial: license.trialMode === 'time24', trialType: license.trialMode || null };
 }
 
 async function logoutLicense(licenseKey, deviceId) {
@@ -510,7 +513,7 @@ async function renewLicense(email, days, options = {}) {
     if (deviceId) {
       await prisma.$executeRawUnsafe(
         `UPDATE "IrpLicense"
-         SET "status"='active', "expiresAt"=$1, "activeDeviceId"=$2,
+         SET "status"='active', "trialMode"=NULL, "trialItemsLimit"=NULL, "expiresAt"=$1, "activeDeviceId"=$2,
              "notes"=CASE WHEN COALESCE("notes",'')='' THEN $4 ELSE "notes"||E'\\n'||$4 END,
              "updatedAt"=NOW()
          WHERE "id"=$3`,
@@ -519,7 +522,7 @@ async function renewLicense(email, days, options = {}) {
     } else {
       await prisma.$executeRawUnsafe(
         `UPDATE "IrpLicense"
-         SET "status"='active', "expiresAt"=$1,
+         SET "status"='active', "trialMode"=NULL, "trialItemsLimit"=NULL, "expiresAt"=$1,
              "notes"=CASE WHEN COALESCE("notes",'')='' THEN $3 ELSE "notes"||E'\\n'||$3 END,
              "updatedAt"=NOW()
          WHERE "id"=$2`,
@@ -578,7 +581,7 @@ async function syncLicenseByDeviceId(deviceId) {
   const rows = await prisma.$queryRawUnsafe(
     `SELECT * FROM "IrpLicense"
      WHERE "activeDeviceId"=$1 AND "status"='active' AND "expiresAt" > NOW()
-     ORDER BY "updatedAt" DESC LIMIT 1`,
+     ORDER BY CASE WHEN "trialItemsLimit" IS NULL AND "trialMode" IS DISTINCT FROM 'time24' THEN 0 ELSE 1 END, "updatedAt" DESC LIMIT 1`,
     deviceId
   );
   const license = rows[0];
@@ -586,7 +589,7 @@ async function syncLicenseByDeviceId(deviceId) {
   const now = new Date();
   const daysRemaining = Math.ceil((new Date(license.expiresAt) - now) / 86400000);
   await logEvent(license.id, 'synced', deviceId, null);
-  return { valid: true, licenseKey: license.licenseKey, expiresAt: license.expiresAt, daysRemaining, quota: quotaFromLicense(license), message: 'Licença sincronizada.' };
+  return { valid: true, licenseKey: license.licenseKey, expiresAt: license.expiresAt, daysRemaining, quota: quotaFromLicense(license), isTrial: license.trialMode === 'time24', trialType: license.trialMode || null, message: 'Licença sincronizada.' };
 }
 
 // Gera licenca de teste gratis limitada por QUANTIDADE DE ITENS (nao mais por tempo),
@@ -595,73 +598,17 @@ async function syncLicenseByDeviceId(deviceId) {
 // como rede de seguranca (dias), mas quem realmente bloqueia o uso e trialItemsLimit/
 // trialItemsUsed, verificado a cada validate/heartbeat via `quota` e consumido pela
 // extensao via `consumeTrialItems`/POST /trial/consume.
-async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFingerprint) {
+const { createTrial24Service } = require('./irp-trial24.service');
+const trial24 = createTrial24Service({ prisma, uuid, generateLicenseKey, normalizeEmailForTrial, normalizeTrialFingerprint });
+async function claimTrialLicense(email, deviceId, extensionVersion, ip, clientFingerprint, profileEmail) {
   await ensureLicenseSchema();
-  if (!deviceId) {
-    return { valid: false, reason: 'missing_fields', message: 'Dispositivo é obrigatório.' };
+  const payload = await trial24.claim({ email, deviceId, extensionVersion, ip, clientFingerprint, profileEmail });
+  if (payload.result?.valid && payload.created && email) {
+    // Falha de e-mail não cria outro teste nem reverte o prazo já concedido.
+    try { await emailService.sendIrpTrialEmail(email, payload.result.licenseKey, payload.result.expiresAt); }
+    catch (error) { logger.warn('Could not send trial24 email', { error: error.message }); }
   }
-
-  // E-mail agora e opcional: instalacao nova sem e-mail nenhum tambem pode pegar o
-  // trial (liberacao automatica, sem pedir nada na tela). Nesse caso a protecao
-  // antiabuso fica so por conta de deviceId/clientFingerprint (mais fraca que com
-  // e-mail real, decisao consciente do dono do produto). Usa um e-mail placeholder
-  // derivado do proprio deviceId so pra preencher as colunas que ainda exigem um
-  // valor (IrpLicense.email, IrpTrialClaim.emailNormalized) — nunca enviado, nunca
-  // mostrado como se fosse um e-mail real de cliente.
-  const temEmailReal = !!(email && String(email).trim());
-  const emailEfetivo = temEmailReal
-    ? String(email).trim()
-    : 'device-' + String(deviceId).replace(/[^A-Za-z0-9]/g, '').slice(0, 40) + '@sem-email.irpmaster.local';
-
-  const emailNormalized = normalizeEmailForTrial(emailEfetivo);
-  const fingerprint = normalizeTrialFingerprint(clientFingerprint);
-  // Decisao explicita do dono do produto (03/09/2026): "Testar grátis" NUNCA bloqueia
-  // ninguem, nem repetindo o mesmo e-mail/dispositivo/fingerprint — sempre concede um
-  // trial novo de `itemsLimit` itens. A tabela IrpTrialClaim continua sendo alimentada
-  // (auditoria/analytics de quantas vezes cada dispositivo pediu trial), so que sem
-  // mais bloquear nada com base nela. Ver LICENCAS.md pra reverter essa decisao se o
-  // dono do produto mudar de ideia depois.
-  const itemsLimit = await getConfigNumber('trial_items_limit_default', TRIAL_ITEMS_LIMIT_FALLBACK);
-  const safetyNetDays = await getConfigNumber('trial_safety_net_days', TRIAL_SAFETY_NET_DAYS_FALLBACK);
-
-  const license = await createLicense(emailEfetivo, safetyNetDays, 'free trial - item-limited' + (temEmailReal ? '' : ' (sem e-mail, liberacao automatica)'), { prefix: 'IRP' });
-  await prisma.$executeRawUnsafe(
-    `UPDATE "IrpLicense"
-       SET "activeDeviceId"=$1,"extensionVersion"=$2,"lastSeenAt"=NOW(),
-           "trialItemsLimit"=$3,"trialItemsUsed"=0,"updatedAt"=NOW()
-     WHERE "id"=$4`,
-    deviceId, extensionVersion || null, itemsLimit, license.id
-  );
-  await logEvent(license.id, 'trial_claimed', deviceId, extensionVersion);
-
-  // So auditoria agora (nunca bloqueia) — IrpTrialClaim tem indices unicos em
-  // emailNormalized/deviceId/clientFingerprint de quando essa tabela ainda bloqueava
-  // repeticao; num pedido repetido do mesmo dispositivo/e-mail/fingerprint essa
-  // insercao vai colidir com o registro anterior (esperado, nao e mais um erro) — so
-  // deixa de registrar essa tentativa especifica no historico, sem afetar o trial que
-  // ja foi concedido acima.
-  try {
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO "IrpTrialClaim" ("id","emailNormalized","deviceId","licenseKey","ip","clientFingerprint","createdAt") VALUES ($1,$2,$3,$4,$5,$6,NOW())`,
-      uuid(), emailNormalized, deviceId, license.licenseKey, ip || null, fingerprint
-    );
-  } catch (e) { /* pedido repetido do mesmo dispositivo/e-mail/fingerprint — esperado */ }
-
-  if (temEmailReal) {
-    await emailService.sendIrpTrialEmail(emailEfetivo, license.licenseKey, license.expiresAt, itemsLimit);
-  }
-  logger.info('IRP trial license claimed', { email: emailNormalized, licenseKey: license.licenseKey, itemsLimit, temEmailReal });
-
-  return {
-    valid: true,
-    licenseKey: license.licenseKey,
-    expiresAt: license.expiresAt,
-    daysRemaining: safetyNetDays,
-    quota: quotaFromLicense({ trialItemsLimit: itemsLimit, trialItemsUsedUasg: 0, trialItemsUsedDetalhes: 0, trialItemsUsedBeneficios: 0 }),
-    message: temEmailReal
-      ? `Teste grátis ativado! Você pode processar até ${itemsLimit} itens em cada automação (UASG, Detalhes, Benefícios). A chave também foi enviada para o seu e-mail.`
-      : `Teste grátis ativado! Você pode processar até ${itemsLimit} itens em cada automação (UASG, Detalhes, Benefícios).`,
-  };
+  return payload.result || payload;
 }
 
 // Le (sem incrementar nada) quantos itens ainda restam pra essa licenca NESSA licitacao
@@ -866,9 +813,14 @@ async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {
               ELSE COALESCE(l."status", 'missing')
             END AS "status",
             l."expiresAt", l."lastSeenAt", l."extensionVersion", l."notes",
-            l."trialItemsUsed", l."trialItemsLimit",
+            l."trialItemsUsed", l."trialItemsLimit", l."trialMode",
             l."trialItemsUsedUasg", l."trialItemsUsedDetalhes", l."trialItemsUsedBeneficios"
-       FROM "IrpTrialClaim" c
+       FROM (
+         SELECT old."id", old."emailNormalized", old."deviceId", old."licenseKey", old."clientFingerprint", old."createdAt"
+         FROM "IrpTrialClaim" old WHERE NOT EXISTS (SELECT 1 FROM "IrpTrial24Claim" t WHERE t."deviceId"=old."deviceId")
+         UNION ALL
+         SELECT "id", "emailNormalized", "deviceId", "licenseKey", "clientFingerprint", "startedAt" AS "createdAt" FROM "IrpTrial24Claim"
+       ) c
        LEFT JOIN "IrpLicense" l ON l."licenseKey" = c."licenseKey"
       WHERE 1=1${where}
       ORDER BY c."createdAt" DESC
@@ -878,7 +830,12 @@ async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {
   const countParams = params.slice(0, params.length - 2);
   const total = await prisma.$queryRawUnsafe(
     `SELECT COUNT(*)::int AS count
-       FROM "IrpTrialClaim" c
+       FROM (
+         SELECT old."id", old."emailNormalized", old."deviceId", old."licenseKey", old."clientFingerprint", old."createdAt"
+         FROM "IrpTrialClaim" old WHERE NOT EXISTS (SELECT 1 FROM "IrpTrial24Claim" t WHERE t."deviceId"=old."deviceId")
+         UNION ALL
+         SELECT "id", "emailNormalized", "deviceId", "licenseKey", "clientFingerprint", "startedAt" AS "createdAt" FROM "IrpTrial24Claim"
+       ) c
        LEFT JOIN "IrpLicense" l ON l."licenseKey" = c."licenseKey"
       WHERE 1=1${where}`,
     ...countParams
@@ -887,79 +844,65 @@ async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {
   return { trials: rows, total: Number(total[0].count), page: safePage, limit: safeLimit };
 }
 
-async function recordLicenseAttempt({ action, licenseKey, deviceId, extensionVersion, ip, valid, reason, message } = {}) {
+async function recordLicenseAttempt({ action, licenseKey, deviceId, extensionVersion, ip, valid, reason, message, chromeProfileEmail } = {}) {
   try {
     await ensureLicenseSchema();
+    const email = String(chromeProfileEmail || '').trim().toLowerCase();
     await prisma.$executeRawUnsafe(
-      `INSERT INTO "IrpLicenseAttempt" ("id","action","licenseKey","deviceId","extensionVersion","ip","valid","reason","message","createdAt")
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())`,
-      uuid(),
-      String(action || 'validate').slice(0, 40),
+      `INSERT INTO "IrpLicenseAttempt" ("id","action","licenseKey","deviceId","extensionVersion","ip","valid","reason","message","chromeProfileEmail","createdAt")
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())`,
+      uuid(), String(action || 'validate').slice(0, 40),
       licenseKey ? String(licenseKey).slice(0, 80) : null,
       deviceId ? String(deviceId).slice(0, 180) : null,
       extensionVersion ? String(extensionVersion).slice(0, 40) : null,
-      ip ? String(ip).slice(0, 80) : null,
-      Boolean(valid),
+      ip ? String(ip).slice(0, 80) : null, Boolean(valid),
       reason ? String(reason).slice(0, 80) : null,
-      message ? String(message).slice(0, 300) : null
+      message ? String(message).slice(0, 300) : null,
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254 ? email : null
     );
   } catch (e) {
     logger.warn('Could not record IRP license attempt', { error: e.message });
   }
 }
-
-async function listLicenseAttempts({ page = 1, limit = 50, valid, action, prefix } = {}) {
+async function listLicenseAttempts({ page = 1, limit = 50, valid, action, prefix, email } = {}) {
   await ensureLicenseSchema();
-  const safePage = Math.max(1, Number(page) || 1);
-  const safeLimit = Math.min(100, Math.max(1, Number(limit) || 50));
-  const offset = (safePage - 1) * safeLimit;
+  const safePage = Math.max(1, Math.floor(Number(page) || 1));
+  const safeLimit = Math.min(100, Math.max(1, Math.floor(Number(limit) || 50)));
   const params = [];
   let where = '';
-
-  if (valid === 'true' || valid === true) {
-    where += ' AND "valid" = true';
-  } else if (valid === 'false' || valid === false) {
-    where += ' AND "valid" = false';
-  }
-  if (action) {
-    params.push(String(action).trim());
-    where += ` AND "action" = $${params.length}`;
-  }
+  if (valid === 'true' || valid === true) where += ' AND a."valid" = true';
+  else if (valid === 'false' || valid === false) where += ' AND a."valid" = false';
+  if (action) { params.push(String(action).trim()); where += ' AND a."action" = $' + params.length; }
   if (prefix) {
-    params.push(`${normalizePrefix(prefix)}-%`);
-    where += ` AND "licenseKey" LIKE $${params.length}`;
+    params.push(normalizePrefix(prefix) + '-%');
+    where += ' AND (a."licenseKey" LIKE $' + params.length +
+      (normalizePrefix(prefix) === 'IRP' ? " OR (a.\"licenseKey\" IS NULL AND a.\"action\" = 'sync')" : '') + ')';
   }
-
-  params.push(safeLimit, offset);
+  if (email && String(email).trim()) {
+    params.push('%' + String(email).trim().slice(0, 254) + '%');
+    where += ' AND (l."email" ILIKE $' + params.length + ' OR a."chromeProfileEmail" ILIKE $' + params.length + ')';
+  }
+  const from = ' FROM "IrpLicenseAttempt" a LEFT JOIN "IrpLicense" l ON l."licenseKey" = a."licenseKey" WHERE 1=1' + where;
   const attempts = await prisma.$queryRawUnsafe(
-    `SELECT "id", "action", "licenseKey", "deviceId", "extensionVersion", "ip", "valid", "reason", "message", "createdAt"
-       FROM "IrpLicenseAttempt"
-      WHERE 1=1${where}
-      ORDER BY "createdAt" DESC
-      LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    'SELECT a."id", a."action", a."licenseKey", a."deviceId", a."extensionVersion", a."ip", a."valid", a."reason", a."message", a."createdAt", a."chromeProfileEmail", l."email" AS "licenseEmail", l."expiresAt" AS "licenseExpiresAt"' + from +
+    ' ORDER BY a."createdAt" DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2),
+    ...params, safeLimit, (safePage - 1) * safeLimit
+  );
+  const total = await prisma.$queryRawUnsafe('SELECT COUNT(*)::int AS count' + from, ...params);
+  const summary = await prisma.$queryRawUnsafe(
+    `SELECT COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE a."valid" = true)::int AS allowed,
+      COUNT(*) FILTER (WHERE a."valid" = false)::int AS denied,
+      COUNT(*) FILTER (WHERE a."createdAt" >= NOW() - INTERVAL '24 hours')::int AS last24h,
+      COUNT(*) FILTER (WHERE a."valid" = true AND a."createdAt" >= NOW() - INTERVAL '24 hours')::int AS allowed24h,
+      COUNT(*) FILTER (WHERE a."valid" = false AND a."createdAt" >= NOW() - INTERVAL '24 hours')::int AS denied24h,
+      COUNT(DISTINCT a."deviceId") FILTER (WHERE a."valid" = true AND a."createdAt" >= NOW() - INTERVAL '24 hours')::int AS "activeDevices24h",
+      COUNT(DISTINCT COALESCE(a."chromeProfileEmail", CASE WHEN l."email" NOT LIKE '%@sem-email.irpmaster.local' THEN l."email" END)) FILTER (WHERE a."valid" = true AND a."createdAt" >= NOW() - INTERVAL '24 hours')::int AS "activeEmails24h"` + from,
     ...params
   );
-  const countParams = params.slice(0, params.length - 2);
-  const total = await prisma.$queryRawUnsafe(
-    `SELECT COUNT(*)::int AS count FROM "IrpLicenseAttempt" WHERE 1=1${where}`,
-    ...countParams
-  );
-  const summaryWhere = prefix ? ` WHERE "licenseKey" LIKE $1` : '';
-  const summaryParams = prefix ? [`${normalizePrefix(prefix)}-%`] : [];
-  const summary = await prisma.$queryRawUnsafe(
-    `SELECT
-        COUNT(*)::int AS total,
-        COUNT(*) FILTER (WHERE "valid" = true)::int AS allowed,
-        COUNT(*) FILTER (WHERE "valid" = false)::int AS denied,
-        COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '24 hours')::int AS last24h,
-        COUNT(*) FILTER (WHERE "valid" = true AND "createdAt" >= NOW() - INTERVAL '24 hours')::int AS allowed24h,
-        COUNT(*) FILTER (WHERE "valid" = false AND "createdAt" >= NOW() - INTERVAL '24 hours')::int AS denied24h,
-        COUNT(DISTINCT "deviceId") FILTER (WHERE "valid" = true AND "createdAt" >= NOW() - INTERVAL '24 hours' AND "deviceId" IS NOT NULL)::int AS "activeDevices24h"
-       FROM "IrpLicenseAttempt"${summaryWhere}`,
-    ...summaryParams
-  );
-
-  return { attempts, total: Number(total[0].count), page: safePage, limit: safeLimit, summary: summary[0] || {} };
+  return { attempts: attempts.map(attempt => ({ ...attempt,
+    daysRemaining: attempt.licenseExpiresAt ? Math.max(0, Math.ceil((new Date(attempt.licenseExpiresAt) - Date.now()) / 86400000)) : null
+  })), total: Number(total[0].count), page: safePage, limit: safeLimit, summary: summary[0] || {} };
 }
 
 // Apaga TODO o historico de uso/tentativas (IrpLicenseAttempt) — botao "Limpar" da secao

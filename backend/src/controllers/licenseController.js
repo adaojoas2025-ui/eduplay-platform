@@ -18,11 +18,11 @@ const activate = async (req, res) => {
   try {
     if (!licenseKey || !deviceId) {
       const result = { valid: false, reason: 'missing_fields', message: 'licenseKey e deviceId sao obrigatorios.' };
-      await recordAttemptSafe({ action: 'activate', licenseKey, deviceId, extensionVersion, ip: req.ip, ...result });
+      await recordAttemptSafe({ action: 'activate', licenseKey, deviceId, extensionVersion, ip: req.ip, chromeProfileEmail: req.body.chromeProfileEmail, ...result });
       return res.status(400).json(result);
     }
     const result = await licenseService.activateLicense(licenseKey, deviceId, extensionVersion);
-    await recordAttemptSafe({ action: 'activate', licenseKey, deviceId, extensionVersion, ip: req.ip, ...result });
+    await recordAttemptSafe({ action: 'activate', licenseKey, deviceId, extensionVersion, ip: req.ip, chromeProfileEmail: req.body.chromeProfileEmail, ...result });
     return res.status(result.valid ? 200 : 403).json(result);
   } catch (err) {
     logger.error('License activate error', { error: err.message });
@@ -39,11 +39,11 @@ const validate = async (req, res) => {
   try {
     if (!licenseKey || !deviceId) {
       const result = { valid: false, reason: 'missing_fields', message: 'licenseKey e deviceId sao obrigatorios.' };
-      await recordAttemptSafe({ action: 'validate', licenseKey, deviceId, extensionVersion, ip: req.ip, ...result });
+      await recordAttemptSafe({ action: 'validate', licenseKey, deviceId, extensionVersion, ip: req.ip, chromeProfileEmail: req.body.chromeProfileEmail, ...result });
       return res.status(400).json(result);
     }
     const result = await licenseService.validateLicense(licenseKey, deviceId, extensionVersion);
-    await recordAttemptSafe({ action: 'validate', licenseKey, deviceId, extensionVersion, ip: req.ip, ...result });
+    await recordAttemptSafe({ action: 'validate', licenseKey, deviceId, extensionVersion, ip: req.ip, chromeProfileEmail: req.body.chromeProfileEmail, ...result });
     return res.status(result.valid ? 200 : 403).json(result);
   } catch (err) {
     logger.error('License validate error', { error: err.message });
@@ -60,11 +60,11 @@ const heartbeat = async (req, res) => {
   try {
     if (!licenseKey || !deviceId) {
       const result = { valid: false, reason: 'missing_fields' };
-      await recordAttemptSafe({ action: 'heartbeat', licenseKey, deviceId, ip: req.ip, ...result });
+      await recordAttemptSafe({ action: 'heartbeat', licenseKey, deviceId, ip: req.ip, chromeProfileEmail: req.body.chromeProfileEmail, ...result });
       return res.status(400).json(result);
     }
     const result = await licenseService.heartbeat(licenseKey, deviceId);
-    await recordAttemptSafe({ action: 'heartbeat', licenseKey, deviceId, ip: req.ip, ...result });
+    await recordAttemptSafe({ action: 'heartbeat', licenseKey, deviceId, ip: req.ip, chromeProfileEmail: req.body.chromeProfileEmail, ...result });
     return res.status(200).json(result);
   } catch (err) {
     logger.error('License heartbeat error', { error: err.message });

@@ -722,16 +722,14 @@ const sendIrpLicenseEmail = async (email, licenseKey, expiresAt) => {
 };
 
 /**
- * Send IRP Master item-limited free trial license key
+ * Send IRP Master 24-hour unlimited free trial license key
  * @param {string} email - Requester email
  * @param {string} licenseKey - Generated trial license key
- * @param {Date} expiresAt - Safety-net expiration date (not the real limit)
- * @param {number} itemsLimit - How many items the trial allows processing
+ * @param {Date} expiresAt - Absolute server expiration date and time
  */
-const sendIrpTrialEmail = async (email, licenseKey, expiresAt, itemsLimit) => {
+const sendIrpTrialEmail = async (email, licenseKey, expiresAt) => {
   try {
-    const expiry = new Date(expiresAt).toLocaleDateString('pt-BR');
-    const limite = Number(itemsLimit) || 11;
+    const expiry = new Date(expiresAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #1D4ED8 0%, #0D6E4B 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
@@ -740,21 +738,21 @@ const sendIrpTrialEmail = async (email, licenseKey, expiresAt, itemsLimit) => {
         </div>
         <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
           <p>Olá,</p>
-          <p>Aqui está sua chave de teste gratuito, liberada para processar até <strong>${limite} itens</strong> em qualquer uma das automações (UASG Local/Quantidade, Detalhes do Item ou Benefícios ME/EPP):</p>
+          <p>Aqui está sua chave de teste gratuito, liberada por <strong>24 horas sem limite de itens</strong> em qualquer uma das automações (UASG Local/Quantidade, Detalhes do Item ou Benefícios ME/EPP):</p>
           <div style="background: white; border: 2px solid #1D4ED8; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
             <p style="font-size: 22px; font-weight: bold; color: #1D4ED8; letter-spacing: 2px; margin: 0;">${licenseKey}</p>
           </div>
-          <p style="color: #6b7280; font-size: 14px;"><strong>Válida até:</strong> ${expiry} (o que vier primeiro entre essa data e os ${limite} itens)</p>
+          <p style="color: #6b7280; font-size: 14px;"><strong>Válida até:</strong> ${expiry} (horário de Brasília; o prazo não reinicia em outro PC)</p>
           <h3 style="color: #333;">Como ativar:</h3>
           <ol style="color: #374151; line-height: 2;">
             <li>Instale a extensão <strong>IRP Master Automação</strong> no Chrome</li>
             <li>Abra a extensão — ela pedirá a chave de licença</li>
             <li>Cole a chave acima e clique em <strong>Ativar</strong></li>
-            <li>Pronto — processe até ${limite} itens gratuitamente</li>
+            <li>Pronto — use todas as funções durante as 24 horas de teste</li>
           </ol>
           <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; margin: 20px 0;">
             <p style="margin: 0; font-size: 13px; color: #78350f;">
-              ⚠️ Este teste é único por e-mail e por dispositivo. Após usar os ${limite} itens, será
+              ⚠️ Este teste é único por e-mail e por dispositivo. Após as 24 horas, será
               necessário adquirir uma licença para continuar usando sem limite de itens.
               Acesse <a href="https://educaplayja.com.br/irp-master">educaplayja.com.br/irp-master</a> para assinar.
             </p>
@@ -767,7 +765,7 @@ const sendIrpTrialEmail = async (email, licenseKey, expiresAt, itemsLimit) => {
 
     await emailConfig.sendEmail({
       to: email,
-      subject: `🎁 Seu teste grátis IRP Master Automação (${limite} itens)`,
+      subject: `🎁 Seu teste grátis IRP Master Automação (24 horas sem limite de itens)`,
       html,
     });
 

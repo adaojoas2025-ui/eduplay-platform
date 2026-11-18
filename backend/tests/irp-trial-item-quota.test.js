@@ -284,52 +284,8 @@ test('getContractQuota: le sem incrementar nada, licitacao nova comeca zerada', 
   assert.equal(result.quota.itemsRemaining, 11);
 });
 
-test('claimTrialLicense: sem linha em IrpConfig, usa o fallback de 11 itens', async () => {
-  const { prisma, licenses } = makeFakeDb(null);
-  const licenseService = loadServiceWithFakeDb(prisma);
-
-  const result = await licenseService.claimTrialLicense(
-    'novo.cliente@example.com', 'device-novo', '1.0.14', '127.0.0.1', 'fingerprint-1234567890abcdef',
-  );
-  assert.equal(result.valid, true);
-  assert.match(result.licenseKey, /^IRP-/);
-
-  const created = licenses[result.licenseKey];
-  assert.equal(created.trialItemsLimit, 11);
-  assert.equal(created.activeDeviceId, 'device-novo');
-});
-
-test('claimTrialLicense: instalacao nova sem e-mail nenhum tambem libera o trial', async () => {
-  const { prisma, licenses } = makeFakeDb(null);
-  const licenseService = loadServiceWithFakeDb(prisma);
-
-  const result = await licenseService.claimTrialLicense(
-    null, 'device-sem-email', '1.0.14', '127.0.0.1', 'fingerprint-abcdefabcdefabcdef',
-  );
-  assert.equal(result.valid, true);
-  assert.doesNotMatch(result.message, /e-mail/);
-
-  const created = licenses[result.licenseKey];
-  assert.match(created.email, /@sem-email\.irpmaster\.local$/);
-  assert.equal(created.activeDeviceId, 'device-sem-email');
-});
-
-test('claimTrialLicense: decisao explicita do dono do produto — repetir o mesmo dispositivo/e-mail/fingerprint NUNCA bloqueia, sempre concede um trial novo', async () => {
-  const { prisma, licenses } = makeFakeDb(null);
-  const licenseService = loadServiceWithFakeDb(prisma);
-
-  const first = await licenseService.claimTrialLicense(null, 'device-repetido', '1.0.14', '127.0.0.1', 'fp-1111111111111111');
-  assert.equal(first.valid, true);
-
-  const second = await licenseService.claimTrialLicense(null, 'device-repetido', '1.0.14', '127.0.0.1', 'fp-1111111111111111');
-  assert.equal(second.valid, true);
-
-  // Duas licencas distintas, cada uma com o proprio trial zerado — nao e a mesma
-  // reaproveitada, e o segundo pedido nao herda o consumo do primeiro.
-  assert.notEqual(first.licenseKey, second.licenseKey);
-  assert.ok(licenses[first.licenseKey]);
-  assert.ok(licenses[second.licenseKey]);
-});
+// Emissão ilimitada por tempo é coberta por irp-trial24.test.js.
+// Os testes abaixo e acima preservam cotas de licenças legadas.
 
 test('consumeTrialItems: dispositivo diferente do vinculado e rejeitado', async () => {
   const { prisma } = makeFakeDb(baseLicense());

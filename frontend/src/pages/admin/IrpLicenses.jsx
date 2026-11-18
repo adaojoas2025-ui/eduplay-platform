@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import api from '../../services/api';
 
 const STATUS_LABELS = { active: 'Ativo', expired: 'Vencido', blocked: 'Bloqueado', revoked: 'Revogado', missing: 'Sem licenca' };
-const ACTION_LABELS = { activate: 'Ativacao', validate: 'Uso/validacao', heartbeat: 'Uso continuo', trial: 'Teste gratis' };
+const ACTION_LABELS = { activate: 'Ativacao', validate: 'Uso/validacao', heartbeat: 'Uso continuo', trial: 'Teste gratis', sync: 'Recuperação da licença' };
+
+function displayEmail(value) {
+  return value && !/@sem-email\.irpmaster\.local$/i.test(value) ? value : 'Não informado';
+}
 
 function formatDate(value) {
   if (!value) return '-';
@@ -38,6 +42,7 @@ export default function AdminIrpLicenses() {
   const [state, setState] = useState('');
   const [email, setEmail] = useState('');
   const [searchEmail, setSearchEmail] = useState('');
+  const [attemptPage, setAttemptPage] = useState(1);
   const [attemptValid, setAttemptValid] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -50,7 +55,7 @@ export default function AdminIrpLicenses() {
     return acc;
   }, { active: 0, expired: 0, blocked: 0 }), [trials]);
 
-  useEffect(() => { loadData(); }, [page, state, searchEmail, attemptValid]);
+  useEffect(() => { loadData(); }, [page, state, searchEmail, attemptValid, attemptPage]);
 
   async function loadData() {
     setLoading(true);
@@ -58,7 +63,7 @@ export default function AdminIrpLicenses() {
     try {
       const [trialsResponse, attemptsResponse] = await Promise.all([
         api.get('/licenses/admin/trials', { params: { page, limit, state: state || undefined, email: searchEmail || undefined } }),
-        api.get('/licenses/admin/attempts', { params: { page: 1, limit: 30, valid: attemptValid || undefined } }),
+        api.get('/licenses/admin/attempts', { params: { page: attemptPage, limit: 30, prefix: 'IRP', email: searchEmail || undefined, valid: attemptValid || undefined } }),
       ]);
       setTrials(trialsResponse.data?.trials || []);
       setTotal(trialsResponse.data?.total || 0);
@@ -71,8 +76,8 @@ export default function AdminIrpLicenses() {
       setLoading(false);
     }
   }
-  function applyFilters(event) { event.preventDefault(); setPage(1); setSearchEmail(email.trim()); }
-  function clearFilters() { setEmail(''); setSearchEmail(''); setState(''); setAttemptValid(''); setPage(1); }
+  function applyFilters(event) { event.preventDefault(); setPage(1); setSearchEmail(email.trim()); setAttemptPage(1); }
+  function clearFilters() { setEmail(''); setSearchEmail(''); setState(''); setAttemptValid(''); setPage(1); setAttemptPage(1); }
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   async function apagarTeste(trial) {
@@ -123,23 +128,23 @@ export default function AdminIrpLicenses() {
           <form onSubmit={applyFilters} className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_180px_180px_auto_auto] md:items-end">
             <div><label className="mb-1 block text-sm font-semibold text-gray-700">Buscar por email</label><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none" placeholder="cliente@email.com" /></div>
             <div><label className="mb-1 block text-sm font-semibold text-gray-700">Status teste</label><select value={state} onChange={(event) => { setState(event.target.value); setPage(1); }} className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none"><option value="">Todos</option><option value="active">Ativos</option><option value="expired">Vencidos</option></select></div>
-            <div><label className="mb-1 block text-sm font-semibold text-gray-700">Tentativas</label><select value={attemptValid} onChange={(event) => setAttemptValid(event.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none"><option value="">Todas</option><option value="true">Permitidas</option><option value="false">Bloqueadas</option></select></div>
+            <div><label className="mb-1 block text-sm font-semibold text-gray-700">Tentativas</label><select value={attemptValid} onChange={(event) => { setAttemptValid(event.target.value); setAttemptPage(1); }} className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none"><option value="">Todas</option><option value="true">Permitidas</option><option value="false">Bloqueadas</option></select></div>
             <button type="submit" className="rounded-md bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700">Filtrar</button>
             <button type="button" onClick={clearFilters} className="rounded-md border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50">Limpar</button>
           </form>
         </section>
 
         <section className="mb-6 overflow-hidden rounded-lg border bg-white shadow-sm">
-          <div className="border-b px-4 py-3"><h2 className="text-lg font-bold text-gray-900">Testes gratis (limite de itens por automacao)</h2><p className="text-sm text-gray-600">Cada teste libera um numero limitado de itens (padrao 11) EM CADA automacao (UASG, Detalhes, Beneficios) separadamente, nao mais um total compartilhado nem um prazo de 24h/1 dia. "Vence em" agora e so uma rede de seguranca (30 dias), raramente o motivo real de bloqueio.</p></div>
+          <div className="border-b px-4 py-3"><h2 className="text-lg font-bold text-gray-900">Testes grátis — 24 horas sem limite de itens</h2><p className="text-sm text-gray-600">O teste atual libera 24 horas desde a primeira ativação, sem limite de itens e sem reiniciar ao trocar de PC. Testes antigos mantêm as condições anteriores. </p></div>
           <div className="overflow-x-auto"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr>
-            {['Email','Status','Inicio','Itens usados/limite (por automacao)','Vence em (rede de seguranca)','Ultimo uso','Versao','Dispositivo','Fingerprint','Chave',''].map((h) => <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{h}</th>)}
+            {['Email','Status','Inicio','Tipo do teste / limite','Vencimento do teste','Ultimo uso','Versao','Dispositivo','Fingerprint','Chave',''].map((h) => <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{h}</th>)}
           </tr></thead><tbody className="divide-y divide-gray-100 bg-white">
             {loading ? <tr><td colSpan="11" className="px-4 py-8 text-center text-gray-600">Carregando testes IRP...</td></tr> : trials.length === 0 ? <tr><td colSpan="11" className="px-4 py-8 text-center text-gray-600">Nenhum teste encontrado.</td></tr> : trials.map((trial) => (
               <tr key={trial.id} className="hover:bg-gray-50">
-                <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">{trial.email}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">{displayEmail(trial.email)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm"><span className={['rounded-full px-2.5 py-1 text-xs font-semibold', statusClass(trial.status)].join(' ')}>{STATUS_LABELS[trial.status] || trial.status || '-'}</span></td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(trial.createdAt)}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700" title="Cada automacao tem seu proprio limite de itens">{trial.trialItemsLimit != null ? `UASG ${trial.trialItemsUsedUasg ?? 0}/${trial.trialItemsLimit} · Detalhes ${trial.trialItemsUsedDetalhes ?? 0}/${trial.trialItemsLimit} · Beneficios ${trial.trialItemsUsedBeneficios ?? 0}/${trial.trialItemsLimit}` : '-'}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700" title="Cada automacao tem seu proprio limite de itens">{trial.trialMode === 'time24' ? '24 horas · itens ilimitados' : trial.trialItemsLimit != null ? `UASG ${trial.trialItemsUsedUasg ?? 0}/${trial.trialItemsLimit} · Detalhes ${trial.trialItemsUsedDetalhes ?? 0}/${trial.trialItemsLimit} · Beneficios ${trial.trialItemsUsedBeneficios ?? 0}/${trial.trialItemsLimit}` : '-'}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(trial.expiresAt)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(trial.lastSeenAt)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{trial.extensionVersion || '-'}</td>
@@ -154,13 +159,17 @@ export default function AdminIrpLicenses() {
         </section>
 
         <section className="overflow-hidden rounded-lg border bg-white shadow-sm">
-          <div className="border-b px-4 py-3 md:flex md:items-center md:justify-between"><div><h2 className="text-lg font-bold text-gray-900">Uso e tentativas recentes</h2><p className="text-sm text-gray-600">Mostra chamadas permitidas e bloqueadas feitas pela extensao.</p></div><div className="mt-2 flex items-center gap-3 md:mt-0"><div className="text-sm text-gray-600">Total: {attemptTotal} | Permitidas: {Number(attemptSummary.allowed || 0)} | Bloqueadas: {Number(attemptSummary.denied || 0)}</div><button type="button" onClick={limparTentativas} className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">Limpar</button></div></div>
+          <div className="border-b px-4 py-3 md:flex md:items-center md:justify-between"><div><h2 className="text-lg font-bold text-gray-900">Uso e tentativas recentes</h2><p className="text-sm text-gray-600">Mostra uso e tentativas. O titular vem da licença; a conta Chrome é informada pela extensão e pode ser diferente. Esse e-mail é auditoria, não autoriza transferir licença.</p></div><div className="mt-2 flex items-center gap-3 md:mt-0"><div className="text-sm text-gray-600">E-mails com uso em 24h: {Number(attemptSummary.activeEmails24h || 0)} | Total: {attemptTotal} | Permitidas: {Number(attemptSummary.allowed || 0)} | Bloqueadas: {Number(attemptSummary.denied || 0)}</div><button type="button" onClick={limparTentativas} className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">Limpar</button></div></div>
           <div className="overflow-x-auto"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr>
-            {['Quando','Resultado','Acao','Motivo','Versao','Dispositivo','Chave','IP'].map((h) => <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{h}</th>)}
+            {['Quando','Titular da licença','Conta Chrome','Vencimento','Dias restantes','Resultado','Acao','Motivo','Versao','Identificador sincronizado','Chave','IP'].map((h) => <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{h}</th>)}
           </tr></thead><tbody className="divide-y divide-gray-100 bg-white">
-            {loading ? <tr><td colSpan="8" className="px-4 py-8 text-center text-gray-600">Carregando tentativas...</td></tr> : attempts.length === 0 ? <tr><td colSpan="8" className="px-4 py-8 text-center text-gray-600">Nenhuma tentativa registrada ainda.</td></tr> : attempts.map((attempt) => (
+            {loading ? <tr><td colSpan="12" className="px-4 py-8 text-center text-gray-600">Carregando tentativas...</td></tr> : attempts.length === 0 ? <tr><td colSpan="12" className="px-4 py-8 text-center text-gray-600">Nenhuma tentativa registrada ainda.</td></tr> : attempts.map((attempt) => (
               <tr key={attempt.id} className="hover:bg-gray-50">
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(attempt.createdAt)}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{displayEmail(attempt.licenseEmail)}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{displayEmail(attempt.chromeProfileEmail)}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{formatDate(attempt.licenseExpiresAt)}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{attempt.daysRemaining ?? '-'}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm"><span className={['rounded-full px-2.5 py-1 text-xs font-semibold', attemptClass(attempt.valid)].join(' ')}>{attempt.valid ? 'Permitida' : 'Bloqueada'}</span></td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{ACTION_LABELS[attempt.action] || attempt.action || '-'}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700" title={attempt.message || ''}>{attempt.reason || '-'}</td>
@@ -171,6 +180,13 @@ export default function AdminIrpLicenses() {
               </tr>
             ))}
           </tbody></table></div>
+          <div className="flex items-center justify-between gap-3 border-t px-4 py-3">
+            <span className="text-sm text-gray-600">Página {attemptPage} de {Math.max(1, Math.ceil(attemptTotal / 30))}</span>
+            <div className="flex gap-2">
+              <button type="button" disabled={loading || attemptPage <= 1} onClick={() => setAttemptPage(p => Math.max(1, p - 1))} className="rounded-md border px-3 py-2 text-sm disabled:opacity-50">Anterior</button>
+              <button type="button" disabled={loading || attemptPage * 30 >= attemptTotal} onClick={() => setAttemptPage(p => p + 1)} className="rounded-md border px-3 py-2 text-sm disabled:opacity-50">Próxima</button>
+            </div>
+          </div>
         </section>
       </div>
     </div>
