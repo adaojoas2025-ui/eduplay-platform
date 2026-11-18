@@ -1,3 +1,5 @@
+> **Status em 18/11/2026:** código publicado na main em e715a18. Frontend Render antigo na última verificação; versão do backend não confirmada pelo health. [Procedimento de deploy e identificação de e-mails](IRP_PUBLICACAO_1.0.34.md).
+
 > Atualização 1.0.34 preparada em 18/11/2026: teste opcional de 24h sem cota, com ativação paga direta desde o início. Guia atual: docs/IRP_TESTE_24_HORAS.md. Menções abaixo a teste de 24h ainda não implementado são históricas e foram superadas.
 
 # IRP Master 1.0.33 — sincronização e identificação de uso

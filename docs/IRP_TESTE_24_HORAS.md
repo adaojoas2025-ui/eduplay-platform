@@ -1,6 +1,8 @@
+> **Status em 18/11/2026:** código publicado na main em e715a18. Frontend Render antigo na última verificação; versão do backend não confirmada pelo health. [Procedimento de deploy e identificação de e-mails](IRP_PUBLICACAO_1.0.34.md).
+
 # IRP Master 1.0.34 — teste de 24 horas
 
-Data: 18/11/2026. Código e pacotes preparados localmente, sem publicação em produção nesta sessão.
+Data: 18/11/2026. Código publicado no GitHub em e715a18; deploy Render ainda não confirmado.
 
 ## Regra atual
 
