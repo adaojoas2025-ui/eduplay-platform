@@ -572,6 +572,7 @@ export default function AdminDashboard() {
             Ações Rápidas
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Link to="/admin/catmat-licenses" className="flex items-center gap-3 rounded-lg bg-emerald-50 p-4 hover:bg-emerald-100"><div className="text-3xl">CMT</div><div><div className="font-semibold text-gray-800">Caçador de CATMAT</div><div className="text-sm text-gray-600">Licenças, usuários e cortesia</div></div></Link>
             <Link
               to="/admin/extensions"
               className="flex items-center gap-3 p-4 bg-red-50 hover:bg-red-100 rounded-lg transition"

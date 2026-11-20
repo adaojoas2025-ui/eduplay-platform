@@ -151,6 +151,7 @@ async function ensureLicenseSchema() {
   `);
 
   const attemptColumns = [
+    '"productPrefix" TEXT',
     '"chromeProfileEmail" TEXT',
     "\"action\" TEXT NOT NULL DEFAULT 'validate'",
     '"licenseKey" TEXT',
@@ -580,7 +581,7 @@ async function syncLicenseByDeviceId(deviceId) {
   await ensureLicenseSchema();
   const rows = await prisma.$queryRawUnsafe(
     `SELECT * FROM "IrpLicense"
-     WHERE "activeDeviceId"=$1 AND "status"='active' AND "expiresAt" > NOW()
+     WHERE "licenseKey" LIKE 'IRP-%' AND "activeDeviceId"=$1 AND "status"='active' AND "expiresAt" > NOW()
      ORDER BY CASE WHEN "trialItemsLimit" IS NULL AND "trialMode" IS DISTINCT FROM 'time24' THEN 0 ELSE 1 END, "updatedAt" DESC LIMIT 1`,
     deviceId
   );
@@ -844,13 +845,13 @@ async function listTrialClaims({ page = 1, limit = 50, state, email } = {}) {
   return { trials: rows, total: Number(total[0].count), page: safePage, limit: safeLimit };
 }
 
-async function recordLicenseAttempt({ action, licenseKey, deviceId, extensionVersion, ip, valid, reason, message, chromeProfileEmail } = {}) {
+async function recordLicenseAttempt({ action, licenseKey, deviceId, extensionVersion, ip, valid, reason, message, chromeProfileEmail, productPrefix } = {}) {
   try {
     await ensureLicenseSchema();
     const email = String(chromeProfileEmail || '').trim().toLowerCase();
     await prisma.$executeRawUnsafe(
-      `INSERT INTO "IrpLicenseAttempt" ("id","action","licenseKey","deviceId","extensionVersion","ip","valid","reason","message","chromeProfileEmail","createdAt")
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())`,
+      `INSERT INTO "IrpLicenseAttempt" ("id","action","licenseKey","deviceId","extensionVersion","ip","valid","reason","message","chromeProfileEmail","productPrefix","createdAt")
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW())`,
       uuid(), String(action || 'validate').slice(0, 40),
       licenseKey ? String(licenseKey).slice(0, 80) : null,
       deviceId ? String(deviceId).slice(0, 180) : null,
@@ -858,7 +859,8 @@ async function recordLicenseAttempt({ action, licenseKey, deviceId, extensionVer
       ip ? String(ip).slice(0, 80) : null, Boolean(valid),
       reason ? String(reason).slice(0, 80) : null,
       message ? String(message).slice(0, 300) : null,
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254 ? email : null
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254 ? email : null,
+      ['IRP','BT','CMT'].includes(productPrefix) ? productPrefix : (licenseKey ? String(licenseKey).split('-')[0].toUpperCase() : null)
     );
   } catch (e) {
     logger.warn('Could not record IRP license attempt', { error: e.message });
@@ -874,9 +876,12 @@ async function listLicenseAttempts({ page = 1, limit = 50, valid, action, prefix
   else if (valid === 'false' || valid === false) where += ' AND a."valid" = false';
   if (action) { params.push(String(action).trim()); where += ' AND a."action" = $' + params.length; }
   if (prefix) {
-    params.push(normalizePrefix(prefix) + '-%');
-    where += ' AND (a."licenseKey" LIKE $' + params.length +
-      (normalizePrefix(prefix) === 'IRP' ? " OR (a.\"licenseKey\" IS NULL AND a.\"action\" = 'sync')" : '') + ')';
+    const product = normalizePrefix(prefix);
+    params.push(product + '-%');
+    let filter = 'a."licenseKey" LIKE $' + params.length;
+    if (product === 'IRP') filter += " OR (a.\"licenseKey\" IS NULL AND a.\"action\" = 'sync')";
+    if (product === 'CMT') filter += " OR a.\"productPrefix\" = 'CMT'";
+    where += ' AND (' + filter + ')';
   }
   if (email && String(email).trim()) {
     params.push('%' + String(email).trim().slice(0, 254) + '%');
@@ -969,7 +974,7 @@ async function freeDevice(id) {
 }
 
 module.exports = {
-  generateLicenseKey, createLicense, replaceCourtesyLicense, activateLicense, validateLicense,
+  ensureLicenseSchema, generateLicenseKey, createLicense, replaceCourtesyLicense, activateLicense, validateLicense,
   heartbeat, logoutLicense,
   renewLicense, renewLicenseFromPayment, claimLicenseByDevice, syncLicenseByDeviceId,
   claimTrialLicense, consumeTrialItems, getContractQuota, resetTrialClaim,

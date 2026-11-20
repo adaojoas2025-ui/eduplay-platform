@@ -183,6 +183,10 @@ router.post('/mercadopago', async (req, res) => {
     });
 
     if (payment.status !== 'approved') return;
+    if (payment.metadata?.product_type === 'catmat_license') {
+      await require('../../services/catmat-license.service').getCatmatLicensing().approvedPayment(payment);
+      return;
+    }
 
     // Only generate a license for supported extension products.
     const description = (payment.description || '').toLowerCase();

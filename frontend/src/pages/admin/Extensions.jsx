@@ -22,7 +22,7 @@ function formatDate(value) {
 
 export default function AdminExtensions() {
   const [extensions, setExtensions] = useState([]);
-  const [selectedId, setSelectedId] = useState('baixatudo');
+  const [selectedId, setSelectedId] = useState(() => new URLSearchParams(window.location.hash.split('?')[1] || window.location.search).get('product') || 'baixatudo');
   const [form, setForm] = useState({
     email: '',
     durationValue: 30,
@@ -103,10 +103,10 @@ export default function AdminExtensions() {
             </p>
           </div>
           <Link
-            to="/admin/baixatudo-licenses"
+            to={selectedId === 'cacador-catmat' ? '/admin/catmat-licenses' : selectedId === 'irp-master' ? '/admin/irp-licenses' : '/admin/baixatudo-licenses'}
             className="rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
           >
-            Ver uso e tentativas do BaixaTudo
+            Ver uso e tentativas da extensão
           </Link>
         </div>
 
@@ -289,7 +289,7 @@ export default function AdminExtensions() {
                   <li>Cortesia nao substitui venda pelo Mercado Pago.</li>
                   <li>O motivo e registrado nas notas da licenca.</li>
                   <li>Cada cortesia gera uma nova chave, mesmo para o mesmo email, com prazo contado a partir da emissao.</li>
-                  <li>No IRP Master, gerar uma cortesia revoga as licencas anteriores desse email para o IRP. O prazo escolhido comeca na nova emissao, sem acumular dias.</li>
+                  <li>No IRP Master e no Caçador de CATMAT, gerar uma cortesia revoga as licencas anteriores desse email para o IRP. O prazo escolhido comeca na nova emissao, sem acumular dias.</li>
                   <li>A extensao nao gera cortesia e nao recebe senha administrativa.</li>
                 </ul>
               </section>

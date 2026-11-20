@@ -829,7 +829,15 @@ const sendBaixaTudoLicenseEmail = async (email, licenseKey, expiresAt, planLabel
   }
 };
 
+const sendCatmatLicenseEmail = async (email, licenseKey, expiresAt, label = 'Licença') => {
+  const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const date = new Date(expiresAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  return emailConfig.sendEmail({ to: email, subject: 'Sua licença do Caçador de CATMAT',
+    html: '<div style="font:16px Arial;max-width:600px;margin:auto"><h1 style="color:#0d6e4b">Caçador de CATMAT</h1><p>' + escape(label) + '</p><p>Chave: <strong>' + escape(licenseKey) + '</strong></p><p>Válida até ' + escape(date) + ' (Brasília).</p><p>Na extensão, clique em Ativar licença e cole a chave. O vencimento é preservado nos PCs com a mesma instalação sincronizada.</p><p><a href="https://educaplayja.com.br/cacador-catmat">Planos e instruções</a> · <a href="https://educaplayja.com.br/cacador-catmat/privacidade">Privacidade</a></p></div>' });
+};
+
 module.exports = {
+  sendCatmatLicenseEmail,
   sendWelcomeEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,

@@ -54,6 +54,9 @@ import ResetPassword from './pages/ResetPassword';
 import BaixaTudo from './pages/BaixaTudo';
 import BaixaTudoPrivacy from './pages/BaixaTudoPrivacy';
 import IrpMaster from './pages/IrpMaster';
+import CacadorCatmat from './pages/CacadorCatmat';
+import CacadorCatmatPrivacy from './pages/CacadorCatmatPrivacy';
+import CatmatLicenses from './pages/admin/CatmatLicenses';
 import IrpMasterPrivacy from './pages/IrpMasterPrivacy';
 import IrpMasterTutorial from './pages/IrpMasterTutorial';
 
@@ -918,6 +921,9 @@ function App() {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/baixatudo" element={<BaixaTudo />} />
         <Route path="/baixatudo/privacidade" element={<BaixaTudoPrivacy />} />
+        <Route path="/cacador-catmat" element={<CacadorCatmat />} />
+        <Route path="/cacador-catmat/privacidade" element={<CacadorCatmatPrivacy />} />
+        <Route path="/admin/catmat-licenses" element={<ProtectedRoute><CatmatLicenses /></ProtectedRoute>} />
         <Route path="/irp-master" element={<IrpMaster />} />
         <Route path="/irp-master/tutorial" element={<IrpMasterTutorial />} />
         <Route path="/irp-master/privacidade" element={<IrpMasterPrivacy />} />

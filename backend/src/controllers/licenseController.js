@@ -5,6 +5,12 @@
 const licenseService = require('../services/license.service');
 const logger = require('../utils/logger');
 
+function rejectCatmatKey(req, res) {
+  if (!/^CMT-/i.test(String(req.body?.licenseKey || ''))) return false;
+  res.status(403).json({ valid: false, reason: 'wrong_product', message: 'Esta chave pertence ao Caçador de CATMAT. Use a extensão correspondente.' });
+  return true;
+}
+
 async function recordAttemptSafe(payload) {
   await licenseService.recordLicenseAttempt(payload);
 }
@@ -14,6 +20,7 @@ async function recordAttemptSafe(payload) {
  * First activation - binds deviceId to the license.
  */
 const activate = async (req, res) => {
+  if (rejectCatmatKey(req, res)) return;
   const { licenseKey, deviceId, extensionVersion } = req.body;
   try {
     if (!licenseKey || !deviceId) {
@@ -35,6 +42,7 @@ const activate = async (req, res) => {
  * Called before every automation - validates key + device.
  */
 const validate = async (req, res) => {
+  if (rejectCatmatKey(req, res)) return;
   const { licenseKey, deviceId, extensionVersion } = req.body;
   try {
     if (!licenseKey || !deviceId) {
@@ -56,6 +64,7 @@ const validate = async (req, res) => {
  * Called every hour during active use.
  */
 const heartbeat = async (req, res) => {
+  if (rejectCatmatKey(req, res)) return;
   const { licenseKey, deviceId } = req.body;
   try {
     if (!licenseKey || !deviceId) {
@@ -77,6 +86,7 @@ const heartbeat = async (req, res) => {
  * Unbinds the current device.
  */
 const logout = async (req, res) => {
+  if (rejectCatmatKey(req, res)) return;
   try {
     const { licenseKey, deviceId } = req.body;
     if (!licenseKey || !deviceId) {

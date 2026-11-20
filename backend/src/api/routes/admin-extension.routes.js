@@ -13,6 +13,11 @@ const emailService = require('../../services/email.service');
 const logger = require('../../utils/logger');
 
 const EXTENSIONS = {
+  'cacador-catmat': {
+    id: 'cacador-catmat', name: 'Caçador de CATMAT', licensePrefix: 'CMT', product: 'cacador-catmat',
+    publicPage: 'https://educaplayja.com.br/cacador-catmat',
+    get plans() { return Object.entries(require('../../services/catmat-license.service').getPlans()).map(([id, value]) => ({ ...value, id })); }
+  },
   baixatudo: {
     id: 'baixatudo',
     name: 'BaixaTudo',
@@ -158,7 +163,9 @@ router.post('/:extensionId/courtesy-licenses', async (req, res, next) => {
 
     // Each courtesy grant gets its own key and expiry from issuance, so a
     // previous device binding never prevents activation of the new grant.
-    const license = extension.id === 'irp-master'
+    const license = extension.id === 'cacador-catmat'
+      ? await require('../../services/catmat-license.service').getCatmatLicensing().courtesy({ email, days: duration.days, notes })
+      : extension.id === 'irp-master'
       ? await licenseService.replaceCourtesyLicense(email, duration.days, notes)
       : await licenseService.createLicense(email, duration.days, notes, {
         prefix: extension.licensePrefix,
@@ -168,7 +175,9 @@ router.post('/:extensionId/courtesy-licenses', async (req, res, next) => {
     let emailError = null;
     if (sendEmail) {
       try {
-        if (extension.id === 'irp-master') {
+        if (extension.id === 'cacador-catmat') {
+          await emailService.sendCatmatLicenseEmail(email, license.licenseKey, license.expiresAt, 'Cortesia');
+        } else if (extension.id === 'irp-master') {
           await emailService.sendIrpLicenseEmail(email, license.licenseKey, license.expiresAt);
         } else {
           await emailService.sendBaixaTudoLicenseEmail(email, license.licenseKey, license.expiresAt, `${extension.name} Pro Cortesia`);

@@ -71,6 +71,7 @@ router.use('/contact', contactRoutes);
 router.use('/licenses', licenseRoutes);
 router.use('/baixatudo', baixatudoRoutes);
 router.use('/irp-master', irpMasterRoutes);
+router.use('/cacador-catmat', require('../../routes/cacador-catmat'));
 
 /**
  * 404 handler for API routes
