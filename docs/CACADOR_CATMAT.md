@@ -1,3 +1,11 @@
+# Referência atual — extensão 1.4.1
+
+Na primeira abertura, a extensão procura uma licença existente. Se não encontrar e não houver uma licença local anterior ou saída explícita, solicita automaticamente o teste grátis de 24 horas ao servidor. O prazo é único, sem limite de itens e sem reiniciar ao reabrir ou trocar de PC com o mesmo identificador sincronizado. A barra mostra o tempo restante e o vencimento. Depois do prazo, o acesso é bloqueado até ativar uma licença válida. O manual continua acessível.
+
+O balão do Detetive e a conversa avisam que o teste dura 24 horas e que, depois, será necessário pagar e ativar a licença para continuar. O chat mostra os botões **Comprar licença** e **Ativar licença**: Comprar abre a página de planos; Ativar abre a tela para informar a chave CMT. Licenças pagas ou cortesias válidas não recebem esse aviso de compra. Não há redirecionamento automático para cobrança nem renovação automática do teste.
+
+API de planos conferida em 20/11/2026: HTTP 200. Pagamento e e-mail reais ainda requerem validação.
+
 # Integração EducaPlay — Caçador de CATMAT
 
 Produto: cacador-catmat. Prefixo: CMT. Banco compartilhado IrpLicense/IrpLicenseAttempt com separação por prefixo; trial em CatmatTrial24Claim. Não reutiliza trial ou licença IRP/BT.
@@ -35,7 +43,7 @@ Publicação do código no GitHub não comprova deploy no Render nem publicaçã
 
 ## Primeiro uso
 
-O Caçador abre a tela de licença antes de carregar a aplicação. Ativar licença, Comprar, Recuperar e Testar por 24 horas estão disponíveis. O teste inicia automaticamente na primeira abertura após procurar uma licença existente. O manual e a ajuda continuam acessíveis.
+Na primeira abertura, a extensão procura uma licença existente. Se não encontrar e não houver uma licença local anterior ou saída explícita, solicita automaticamente o teste grátis de 24 horas ao servidor. O prazo é único, sem limite de itens e sem reiniciar ao reabrir ou trocar de PC com o mesmo identificador sincronizado. A barra mostra o tempo restante e o vencimento. Depois do prazo, o acesso é bloqueado até ativar uma licença válida. O manual continua acessível.
 
 Busca, preços e acesso à aplicação exigem licença paga/cortesia válida ou teste de 24h vigente. O menu de seleção que adiciona códigos também valida o acesso. Favoritos e planilha não são apagados ao vencer ou sair.
 
