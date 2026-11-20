@@ -35,7 +35,7 @@ Publicação do código no GitHub não comprova deploy no Render nem publicaçã
 
 ## Primeiro uso
 
-O Caçador abre a tela de licença antes de carregar a aplicação. Ativar licença, Comprar, Recuperar e Testar por 24 horas estão disponíveis. O teste não é criado automaticamente. O manual e a ajuda continuam acessíveis.
+O Caçador abre a tela de licença antes de carregar a aplicação. Ativar licença, Comprar, Recuperar e Testar por 24 horas estão disponíveis. O teste inicia automaticamente na primeira abertura após procurar uma licença existente. O manual e a ajuda continuam acessíveis.
 
 Busca, preços e acesso à aplicação exigem licença paga/cortesia válida ou teste de 24h vigente. O menu de seleção que adiciona códigos também valida o acesso. Favoritos e planilha não são apagados ao vencer ou sair.
 

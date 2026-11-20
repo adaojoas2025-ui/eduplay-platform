@@ -48,7 +48,7 @@ export default [
   [
     "Prazo de acesso e retenção",
     [
-      "O teste é opcional, dura 24 horas desde a primeira emissão e não reinicia ao trocar de computador com o mesmo identificador sincronizado. Depois do teste é necessário adquirir ou ativar uma licença válida. É possível comprar ou ativar diretamente sem fazer o teste. As licenças mensal e anual são pagamentos por período, sem renovação automática.",
+      "O teste inicia automaticamente na primeira abertura, dura 24 horas desde a primeira emissão e não reinicia ao trocar de computador com o mesmo identificador sincronizado. Depois do teste é necessário adquirir ou ativar uma licença válida. É possível substituir o teste por uma licença paga ou cortesia a qualquer momento. As licenças mensal e anual são pagamentos por período, sem renovação automática.",
       "Os registros de emissão, teste e auditoria são persistentes e não são apagados apenas porque a extensão foi removida. No backend atual não há exclusão automática por um prazo fixo. Pedidos de acesso, correção e exclusão podem ser feitos ao suporte e serão avaliados considerando a operação da licença, a prevenção de repetição do teste e as obrigações aplicáveis aos registros de pagamento."
     ]
   ],
@@ -57,7 +57,7 @@ export default [
     [
       "As comunicações com o EducaPlay usam HTTPS. Chaves de pagamento ficam no servidor. Remover a extensão apaga seu armazenamento local, mas não apaga os registros mantidos no servidor.",
       "Para consultar ou corrigir o e-mail, pedir esclarecimentos, tratar cobrança/reembolso ou solicitar exclusão de dados, entre em contato com ja.eduplay@gmail.com. Não envie senha do Chrome, cartão ou documentos de compras públicas para resolver um problema de licença.",
-      "Atualizações que alterem os dados ou finalidades serão refletidas nesta página e nas declarações da loja. Esta política descreve a versão 1.4.0 e não se aplica automaticamente a outras extensões do EducaPlay."
+      "Atualizações que alterem os dados ou finalidades serão refletidas nesta página e nas declarações da loja. Esta política descreve a versão 1.4.1 e não se aplica automaticamente a outras extensões do EducaPlay."
     ]
   ]
 ];
